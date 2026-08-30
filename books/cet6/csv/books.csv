@@ -1,0 +1,2 @@
+﻿book_id,book_code,book_name,target_exam,total_words_metadata,enumerated_unique_words,metadata_difference,root_count,purchase_status,lifecycle_status,is_active,currently_available,current_period_ends_at,final_ends_at
+b55b4dec-300a-4caa-a704-2a1fa40a90b1,cet6,大学英语六级,cet6,5169,5166,3,1862,purchased,published,true,true,2030-08-16T15:34:54+00:00,2030-08-16T15:34:54+00:00

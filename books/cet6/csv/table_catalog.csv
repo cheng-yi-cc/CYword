@@ -1,0 +1,19 @@
+﻿table_file,row_count,primary_key,description
+books.csv,1,book_id,账号当前可访问词书及数量一致性信息
+words.csv,5166,word_id,单词主表：基础词义、记忆材料、进度、内容计数与权限元数据
+sentence_zones.csv,5166,word_id,每个单词的句子区状态与内容计数
+examples.csv,5148,example_id,普通例句
+long_sentences.csv,5166,long_sentence_id,长难句主表
+long_sentence_segments.csv,44932,long_sentence_id + segment_index,长难句结构切分片段
+long_sentence_analysis.csv,23773,long_sentence_id + section_index + item_index,长难句难点、目标词与迁移分析
+exam_examples.csv,5163,exam_example_id,真题例句及来源
+frequencies.csv,4493,word_id + exam_type,考试词频
+collocations.csv,5993,collocation_id,固定搭配与示例
+word_markup_links.csv,27266,word_id + link_index,单词正文中的双向标记链接
+root_markups.csv,12813,word_id + root_index,单词关联的词根、前缀、后缀或词基
+root_markup_links.csv,3065,word_id + root_id + link_index,构词元素内部标记链接
+relations.csv,2073,word_id + relation_index,同义、近义、派生等关系分组
+relation_words.csv,2317,word_id + relation_type + related_index,关系分组下的相关词
+analysis_seen_marks.csv,0,word_id,分析查看标记；本次账号数据为空但保留表结构
+raw_field_inventory.csv,221,field_path,原始 JSON 全字段路径、实际类型与出现次数
+field_dictionary.csv,162,table_file + field_name,所有规范化 CSV 的字段字典

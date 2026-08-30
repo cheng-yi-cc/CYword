@@ -1,0 +1,13 @@
+* text=auto
+
+*.md text eol=lf
+*.json text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+
+# 规范 CSV 的引号字段含有原始多行正文和有意义的行尾空格。
+books/**/*.csv text eol=lf whitespace=-trailing-space

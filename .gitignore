@@ -1,0 +1,9 @@
+node_modules/
+dist/
+release/
+data/
+.work/
+.artifact-work/
+outputs/
+*.log
+.vite/

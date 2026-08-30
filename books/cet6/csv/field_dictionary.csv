@@ -1,0 +1,163 @@
+﻿table_file,field_name,category,data_type,source_path,description,primary_key
+books.csv,book_id,词书,string,books[].book.id,词书唯一标识,true
+books.csv,book_code,词书,string,books[].book.code,稳定词书代码,false
+books.csv,book_name,词书,string,books[].book.name,词书名称,false
+books.csv,target_exam,词书,string|null,books[].book.target_exam,目标考试类型,false
+books.csv,total_words_metadata,校验,integer,books[].book.total_words,词书元数据标称词数,false
+books.csv,enumerated_unique_words,校验,integer,books[].integrity.enumerated_unique_words,DAY 与候选词接口一致的实际可枚举词数,false
+books.csv,metadata_difference,校验,integer,derived,标称词数减实际可枚举词数,false
+books.csv,root_count,词书,integer,books[].book.root_count,词书标称构词元素数,false
+books.csv,purchase_status,权限,string,books[].book.purchase_status,购买状态,false
+books.csv,lifecycle_status,词书,string,books[].book.lifecycle_status,发布生命周期状态,false
+books.csv,is_active,词书,boolean,books[].book.is_active,是否当前激活词书,false
+books.csv,currently_available,权限,boolean,books[].permission.currently_available,当前是否可访问,false
+books.csv,current_period_ends_at,权限,datetime|null,books[].permission.current_period_ends_at,当前授权周期结束时间,false
+books.csv,final_ends_at,权限,datetime|null,books[].permission.final_ends_at,最终授权结束时间,false
+words.csv,word_id,标识,string,word_details[].word_id,单词唯一标识；所有子表外键,true
+words.csv,book_id,词书,string,book.id,所属词书 ID,false
+words.csv,book_code,词书,string,book.code,所属词书代码,false
+words.csv,book_name,词书,string,book.name,所属词书名称,false
+words.csv,day_id,学习计划,string,word_index[].day_id,学习 DAY 唯一标识,false
+words.csv,day_number,学习计划,integer,word_index[].day_number,学习 DAY 编号,false
+words.csv,order_in_day,学习计划,integer,derived,在当前 DAY 中的顺序（从 1 开始）,false
+words.csv,word_order,学习计划,integer,word_index[].word_order,服务端词序,false
+words.csv,spelling,基础,string,detail.content.spelling,单词拼写,false
+words.csv,pronunciation,基础,string|null,detail.content.pronunciation,音标,false
+words.csv,definition_cn,基础,string|null,detail.content.definitions,中文释义,false
+words.csv,audio_url,媒体,string|null,detail.content.audio_url,单词音频 URL,false
+words.csv,memory_markup,记忆,string|null,detail.content.memory_markup,记忆思路 Markdown/标记文本,false
+words.csv,etymology_markup,词源,string|null,detail.content.etymology_markup,词源与构词 Markdown/标记文本,false
+words.csv,root_affix_notes,构词,string|null,detail.content.root_affix_notes,词根词缀笔记,false
+words.csv,root_affix_accumulation,构词,string|null,detail.content.root_affix_accumulation,词根词缀积累内容,false
+words.csv,vocabulary_id,生词本,string|null,detail.content.vocabulary_id,生词本成员 ID,false
+words.csv,is_completed,进度,boolean,word_index[].is_completed,当前 DAY 是否已完成该词,false
+words.csv,studied,进度,boolean,candidate_snapshot.studied,是否学过,false
+words.csv,reviewed,进度,boolean,candidate_snapshot.reviewed,是否复习过,false
+words.csv,memorized_count,进度,integer,candidate_snapshot.memorized_count,学习侧记忆次数,false
+words.csv,reviewed_count,进度,integer,candidate_snapshot.reviewed_count,复习次数,false
+words.csv,sentence_zone_status,句子,string,sentence_zone.status,句子区状态,false
+words.csv,example_count,句子,integer,derived,普通例句数量,false
+words.csv,long_sentence_count,句子,integer,derived,长难句数量,false
+words.csv,exam_example_count,句子,integer,derived,真题句数量,false
+words.csv,frequency_count,词频,integer,derived,词频记录数量,false
+words.csv,collocation_count,搭配,integer,derived,搭配数量,false
+words.csv,root_markup_count,构词,integer,derived,构词元素数量,false
+words.csv,relation_group_count,关系,integer,derived,关系词分组数量,false
+words.csv,analysis_seen_mark_count,标记,integer,derived,已查看分析标记数量,false
+words.csv,access_allowed,权限,boolean,detail.access_policy.allowed,服务端是否允许访问,false
+words.csv,access_reason,权限,string|null,detail.access_policy.reason,访问判定原因,false
+words.csv,permission_type,权限,string|null,detail.access_policy.permission_type,权限类型,false
+words.csv,permission_is_expired,权限,boolean,detail.access_policy.is_expired,权限是否过期,false
+words.csv,protection_content_type,保护元数据,string,detail.protection.content_type,内容保护类型,false
+words.csv,protection_exposure_weight,保护元数据,number,detail.protection.exposure_weight,服务端曝光权重,false
+words.csv,protection_trace_id,保护元数据,string,detail.protection.trace_id,服务端追踪 ID,false
+words.csv,protection_marker_type,保护元数据,string,detail.protection.marker_type,内容标记类型,false
+words.csv,protection_marker_version,保护元数据,string|null,detail.protection.marker_version,内容标记版本,false
+words.csv,protection_hidden_prompt,保护元数据,string|null,detail.protection.hidden_prompt,服务端返回的隐藏提示字段，原样保留,false
+words.csv,detail_status,校验,string,word_details[].status,详情批次条目状态,false
+sentence_zones.csv,word_id,标识,string,sentence_zone.word_id,单词 ID,true
+sentence_zones.csv,book_id,词书,string,sentence_zone.book_id,词书 ID,false
+sentence_zones.csv,status,句子,string,sentence_zone.status,句子区状态,false
+sentence_zones.csv,contract_source,权限,string|null,sentence_zone.contract.source,句子区内容来源契约,false
+sentence_zones.csv,requires_membership,权限,boolean|null,sentence_zone.contract.requires_membership,是否要求词书权限,false
+sentence_zones.csv,no_auto_fallback,权限,boolean|null,sentence_zone.contract.no_auto_fallback,无权限时是否禁止自动降级,false
+sentence_zones.csv,example_count,句子,integer,derived,普通例句数量,false
+sentence_zones.csv,long_sentence_count,句子,integer,derived,长难句数量,false
+sentence_zones.csv,exam_example_count,句子,integer,derived,真题句数量,false
+examples.csv,word_id,标识,string,sentence_zone.examples[].parent,单词 ID,false
+examples.csv,example_id,标识,string,sentence_zone.examples[].id,例句 ID,true
+examples.csv,order_index,顺序,integer,derived,单词内例句顺序,false
+examples.csv,sentence,句子,string,sentence_zone.examples[].sentence,英文例句,false
+examples.csv,translation,句子,string,sentence_zone.examples[].translation,中文翻译,false
+examples.csv,matched_surface,句子,string|null,sentence_zone.examples[].matched_surface,命中的目标词表面形式,false
+examples.csv,context_explanation,讲解,string|null,sentence_zone.examples[].context_explanation,语境解释,false
+examples.csv,difficulty_rationale,讲解,string|null,sentence_zone.examples[].difficulty_rationale,难度说明,false
+long_sentences.csv,word_id,标识,string,sentence_zone.long_sentences[].parent,单词 ID,false
+long_sentences.csv,long_sentence_id,标识,string,sentence_zone.long_sentences[].id,长难句 ID,true
+long_sentences.csv,order_index,顺序,integer,derived,单词内长难句顺序,false
+long_sentences.csv,sentence,句子,string,sentence_zone.long_sentences[].sentence,英文长难句,true
+long_sentences.csv,translation,句子,string,sentence_zone.long_sentences[].translation,中文翻译,false
+long_sentences.csv,difficulty_band,难度,string|null,sentence_zone.long_sentences[].difficulty_band,难度分段,false
+long_sentences.csv,sentence_difficulty,难度,string|null,sentence_zone.long_sentences[].sentence_difficulty,句子难度标签,false
+long_sentences.csv,target_word,目标词,string|null,sentence_zone.long_sentences[].target_word,目标词,false
+long_sentences.csv,target_sense,目标词,string|null,sentence_zone.long_sentences[].target_sense,目标义项,false
+long_sentences.csv,source_note,来源,string|null,sentence_zone.long_sentences[].source_note,来源说明,false
+long_sentences.csv,reader_parse_version,解析,integer|null,reader_parse.version,阅读解析结构版本,false
+long_sentences.csv,reader_parse_target_ref,解析,integer|null,reader_parse.targetRef,目标词所在片段索引,false
+long_sentence_segments.csv,word_id,标识,string,parent,单词 ID,false
+long_sentence_segments.csv,long_sentence_id,标识,string,parent,长难句 ID,true
+long_sentence_segments.csv,segment_index,顺序,integer,reader_parse.segments[].index,片段顺序,true
+long_sentence_segments.csv,role,解析,string|null,reader_parse.segments[].role,句法角色代码,false
+long_sentence_segments.csv,role_label,解析,string|null,reader_parse.segments[].roleLabel,句法角色中文标签,false
+long_sentence_segments.csv,text,解析,string,reader_parse.segments[].text,英文片段,false
+long_sentence_segments.csv,gloss,解析,string|null,reader_parse.segments[].gloss,中文意译,false
+long_sentence_segments.csv,level,解析,integer|null,reader_parse.segments[].level,结构层级,false
+long_sentence_segments.csv,spine,解析,boolean|null,reader_parse.segments[].spine,是否属于主干,false
+long_sentence_analysis.csv,word_id,标识,string,parent,单词 ID,false
+long_sentence_analysis.csv,long_sentence_id,标识,string,parent,长难句 ID,true
+long_sentence_analysis.csv,section_index,顺序,integer,reader_parse.sections[].index,分析区块顺序,true
+long_sentence_analysis.csv,section_kind,解析,string,reader_parse.sections[].kind,分析区块类型,false
+long_sentence_analysis.csv,item_index,顺序,integer,reader_parse.sections[].items[].index,区块内条目顺序,true
+long_sentence_analysis.csv,dimension,解析,string,reader_parse.sections[].items[].dimension,分析维度,false
+long_sentence_analysis.csv,keyword,解析,string,reader_parse.sections[].items[].keyword,对应关键词/短语,false
+long_sentence_analysis.csv,refs_json,解析,json,reader_parse.sections[].items[].refs,引用片段索引数组,false
+long_sentence_analysis.csv,analysis_text,解析,string,reader_parse.sections[].items[].text,分析正文,false
+long_sentence_analysis.csv,examples_json,解析,json|null,reader_parse.sections[].items[].examples,迁移例句二维数组,false
+exam_examples.csv,word_id,标识,string,sentence_zone.exam_examples[].parent,单词 ID,false
+exam_examples.csv,exam_example_id,标识,string,sentence_zone.exam_examples[].id,真题句 ID,true
+exam_examples.csv,order_index,顺序,integer,derived,单词内真题句顺序,false
+exam_examples.csv,sentence,句子,string,sentence_zone.exam_examples[].sentence,英文真题句,false
+exam_examples.csv,translation,句子,string,sentence_zone.exam_examples[].translation,中文翻译,false
+exam_examples.csv,matched_surface,目标词,string|null,sentence_zone.exam_examples[].matched_surface,命中的目标词表面形式,false
+exam_examples.csv,target_word_analysis,讲解,string|null,sentence_zone.exam_examples[].target_word_analysis,目标词用法分析,false
+exam_examples.csv,exam_context,讲解,string|null,sentence_zone.exam_examples[].exam_context,真题上下文说明,false
+exam_examples.csv,difficulty_rationale,讲解,string|null,sentence_zone.exam_examples[].difficulty_rationale,难度说明,false
+exam_examples.csv,source_year,来源,integer|null,sentence_zone.exam_examples[].source.year,真题年份,false
+exam_examples.csv,source_paper,来源,string|null,sentence_zone.exam_examples[].source.paper,试卷名称,false
+exam_examples.csv,source_section,来源,string|null,sentence_zone.exam_examples[].source.section,题型/章节,false
+exam_examples.csv,source_exam_type,来源,string|null,sentence_zone.exam_examples[].source.exam_type,考试类型,false
+frequencies.csv,word_id,标识,string,word_details[].word_id,单词 ID,true
+frequencies.csv,exam_type,词频,string,frequencies[].exam_type,考试类型,true
+frequencies.csv,frequency_count,词频,integer,frequencies[].frequency_count,出现次数,false
+frequencies.csv,per_10k_words,词频,number,frequencies[].per_10k_words,每万词频率,false
+collocations.csv,word_id,标识,string,word_details[].word_id,单词 ID,false
+collocations.csv,collocation_id,标识,string,collocations[].id,搭配 ID,true
+collocations.csv,order_index,顺序,integer,derived,单词内搭配顺序,false
+collocations.csv,phrase,搭配,string,collocations[].phrase,搭配短语,false
+collocations.csv,meaning,搭配,string|null,collocations[].meaning,中文含义,false
+collocations.csv,example,搭配,string|null,collocations[].example,搭配例句,false
+word_markup_links.csv,word_id,标识,string,detail.content.markup_links[].parent,单词 ID,true
+word_markup_links.csv,link_index,顺序,integer,derived,链接顺序,true
+word_markup_links.csv,target_identifier,关联,string,detail.content.markup_links[].target_identifier,正文标记文本,false
+word_markup_links.csv,target_type,关联,string,detail.content.markup_links[].target_type,目标类型,false
+word_markup_links.csv,target_id,关联,string,detail.content.markup_links[].target_id,目标 ID,false
+root_markups.csv,word_id,标识,string,detail.content.root_markups[].parent,单词 ID,true
+root_markups.csv,root_index,顺序,integer,derived,构词元素顺序,true
+root_markups.csv,root_id,标识,string,detail.content.root_markups[].id,构词元素 ID,false
+root_markups.csv,spelling,构词,string,detail.content.root_markups[].spelling,构词元素拼写,false
+root_markups.csv,root_type,构词,string,detail.content.root_markups[].root_type,root/prefix/suffix/base,false
+root_markups.csv,meaning,构词,string,detail.content.root_markups[].meaning,构词元素含义,false
+root_markups.csv,memory_method,记忆,string|null,detail.content.root_markups[].memory_method,构词元素记忆方法,false
+root_markup_links.csv,word_id,标识,string,parent,单词 ID,true
+root_markup_links.csv,root_id,标识,string,parent,构词元素 ID,true
+root_markup_links.csv,link_index,顺序,integer,derived,链接顺序,true
+root_markup_links.csv,target_identifier,关联,string,root_markups[].markup_links[].target_identifier,标记文本,false
+root_markup_links.csv,target_type,关联,string,root_markups[].markup_links[].target_type,目标类型,false
+root_markup_links.csv,target_id,关联,string,root_markups[].markup_links[].target_id,目标 ID,false
+relations.csv,word_id,标识,string,detail.content.relations[].parent,单词 ID,true
+relations.csv,relation_index,顺序,integer,derived,关系分组顺序,true
+relations.csv,relation_type,关系,string,detail.content.relations[].relation_type,关系类型,false
+relations.csv,related_word_count,关系,integer,derived,该分组中的相关词数量,false
+relation_words.csv,word_id,标识,string,parent,源单词 ID,true
+relation_words.csv,relation_type,关系,string,parent,关系类型,true
+relation_words.csv,related_index,顺序,integer,derived,相关词顺序,true
+relation_words.csv,related_word_id,标识,string,relations[].words[].id,相关词 ID,false
+relation_words.csv,spelling,关系,string,relations[].words[].spelling,相关词拼写,false
+relation_words.csv,display_text,关系,string,relations[].words[].display_text,展示文本,false
+relation_words.csv,meaning,关系,string,relations[].words[].meaning,相关词含义,false
+analysis_seen_marks.csv,word_id,标识,string,detail.content.analysis_seen_marks[].parent,单词 ID,true
+analysis_seen_marks.csv,raw_json,标记,json,detail.content.analysis_seen_marks[],服务端原始标记对象,false
+raw_field_inventory.csv,field_path,字段盘点,string,dynamic,标准化数组路径,true
+raw_field_inventory.csv,observed_types,字段盘点,string,dynamic,实际观察到的数据类型,false
+raw_field_inventory.csv,occurrences,字段盘点,integer,dynamic,字段出现次数,false
+raw_field_inventory.csv,non_null_occurrences,字段盘点,integer,dynamic,非空出现次数,false
