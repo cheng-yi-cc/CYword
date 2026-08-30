@@ -1,6 +1,6 @@
 {
   "name": "cyword",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "type": "module",
   "description": "词根驱动的本地英语记忆桌面应用",
@@ -9,7 +9,8 @@
   "scripts": {
     "data:verify": "node scripts/verify-book-data.mjs",
     "data:build": "npm run data:verify && node scripts/build-app-data.mjs",
-    "dev": "npm run data:build && concurrently -k \"vite\" \"wait-on http://127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\"",
+    "dev": "npm run data:build && concurrently -k \"vite\" \"wait-on http-get://127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\"",
+    "dev:web": "vite",
     "build:web": "tsc --noEmit && vite build",
     "build": "npm run data:build && npm run build:web",
     "dist": "npm run build && electron-builder --win nsis --publish never",
