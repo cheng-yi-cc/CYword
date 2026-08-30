@@ -31,14 +31,14 @@ npm run dist
 
 ## 标签自动构建
 
-推送形如 `v0.2.0` 的标签会触发 `.github/workflows/build-tag.yml`。Windows runner 会检查标签与 `package.json` 版本一致，执行 `npm ci`、自动测试和 NSIS 打包，然后上传保留 30 天的安装程序构建产物。
+推送形如 `v0.2.0` 的标签会触发 `.github/workflows/build-tag.yml`。Windows runner 会检查标签与 `package.json` 版本一致，执行 `npm ci`、自动测试和 NSIS 打包，然后创建同名 GitHub Release，并把 `CYword-Setup-<version>.exe` 直接附加到 Release。
 
 ```powershell
 git tag -a v0.2.0 -m "CYword v0.2.0"
 git push origin v0.2.0
 ```
 
-该流程只生成 GitHub Actions artifact，不自动创建 GitHub Release。需要发布正式 Release 时应另行加入明确的发布步骤和写入权限。
+工作流不会再额外上传一份 GitHub Actions artifact，以免重复占用存储。相同标签的任务重新运行时，会替换 Release 中的同名安装包；Release 和安装包会一直保留，直到维护者手动删除。
 
 ## 选择另一本文书做数据验证
 

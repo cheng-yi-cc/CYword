@@ -6,7 +6,7 @@ on:
       - "v*"
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: build-${{ github.ref }}
@@ -48,10 +48,29 @@ jobs:
       - name: Build NSIS installer
         run: npm run dist
 
-      - name: Upload Windows installer
-        uses: actions/upload-artifact@v7
-        with:
-          name: CYword-${{ github.ref_name }}-windows
-          path: release/CYword-Setup-*.exe
-          if-no-files-found: error
-          retention-days: 30
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          $installers = @(Get-ChildItem -LiteralPath release -Filter "CYword-Setup-*.exe" -File)
+          if ($installers.Count -ne 1) {
+            throw "Expected exactly one Windows installer, found $($installers.Count)."
+          }
+
+          $installer = $installers[0].FullName
+          gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $env:RELEASE_TAG $installer --repo $env:GITHUB_REPOSITORY --clobber
+          } else {
+            gh release create $env:RELEASE_TAG $installer `
+              --repo $env:GITHUB_REPOSITORY `
+              --verify-tag `
+              --title "CYword $env:RELEASE_TAG" `
+              --generate-notes
+          }
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "GitHub Release publishing failed."
+          }
