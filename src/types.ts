@@ -118,6 +118,14 @@ export interface AppProgress {
   }>;
 }
 
+export interface UpdateStatus {
+  status: "idle" | "available" | "downloading" | "downloaded";
+  currentVersion: string;
+  version?: string;
+  percent?: number;
+  message?: string;
+}
+
 declare global {
   interface Window {
     cyword: {
@@ -125,6 +133,10 @@ declare global {
       readWord: (wordId: string) => Promise<WordDetail>;
       readProgress: () => Promise<unknown>;
       writeProgress: (progress: AppProgress) => Promise<boolean>;
+      getUpdateStatus?: () => Promise<UpdateStatus>;
+      downloadUpdate?: () => Promise<UpdateStatus>;
+      installUpdate?: () => Promise<boolean>;
+      onUpdateStatus?: (listener: (status: UpdateStatus) => void) => () => void;
     };
   }
 }

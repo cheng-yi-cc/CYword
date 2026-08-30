@@ -21,7 +21,7 @@ books/<code>/book.json + csv/*.csv
 
 ## 桌面边界
 
-Electron 主进程只开放读取目录、读取指定 UUID 单词和读写进度四类 IPC。渲染进程启用上下文隔离、关闭 Node 集成并开启沙箱；外部 HTTP 链接交给系统浏览器。生产进度原子写入 Electron `userData/progress.json`，网页预览才使用 localStorage。
+Electron 主进程提供词书目录读取、单词详情按需读取、进度原子读写，以及基于 electron-updater 的版本更新管理（检查、下载与重启安装）IPC。渲染进程启用上下文隔离、关闭 Node 集成并开启沙箱；外部 HTTP 链接交给系统浏览器。生产进度原子写入 Electron `userData/progress.json`，网页预览环境降级使用 localStorage。
 
 ## 排课与复习
 

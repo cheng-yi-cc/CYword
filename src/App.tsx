@@ -22,6 +22,7 @@ import type {
   PlanDay,
   Proficiency,
   StudyGroup,
+  UpdateStatus,
   ViewName,
   WordDetail,
 } from "./types";
@@ -408,6 +409,74 @@ function VocabularyView({ catalog, progress, detail, loadWord, onToggleBookmark 
   return <div className="page vocabulary-page"><PageHeader eyebrow="VOCABULARY BOOK" title="生词本" description="学习或复习时随手收藏，集中查看仍需要额外注意的单词。" aside={<label className="search-box"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索生词" /></label>} />{ids.length ? <div className="vocabulary-layout"><aside>{ids.map((id) => <button className={detail?.id === id ? "active" : ""} key={id} onClick={() => loadWord(id)}><b>{catalog.words[id].spelling}</b><span>{catalog.words[id].pronunciation}</span><small>{catalog.words[id].definitionCn}</small><i className={progress.words[id]?.proficiency}>{progress.words[id] ? proficiencyCopy[progress.words[id].proficiency].label : "未学习"}</i></button>)}</aside><WordDetailPanel detail={detail} bookmarked={Boolean(detail && progress.bookmarks[detail.id])} onToggleBookmark={() => detail && onToggleBookmark(detail.id)} /></div> : <div className="vocabulary-empty"><span>◇</span><h2>生词本还是空的</h2><p>在单词详情中点击“加入生词本”，它会出现在这里。</p></div>}</div>;
 }
 
+function UpdateControl() {
+  const [update, setUpdate] = useState<UpdateStatus>({ status: "idle", currentVersion: "" });
+
+  useEffect(() => {
+    let active = true;
+    const unsubscribe = window.cyword.onUpdateStatus?.((status) => {
+      if (active) setUpdate(status);
+    });
+    window.cyword.getUpdateStatus?.().then((status) => {
+      if (active) setUpdate(status);
+    }).catch(() => undefined);
+    return () => {
+      active = false;
+      unsubscribe?.();
+    };
+  }, []);
+
+  if (update.status === "idle") return null;
+
+  const percent = Math.round(update.percent ?? 0);
+  const label = update.status === "available"
+    ? `${update.message || `发现 ${update.version ?? "新"} 版本`}，点击下载`
+    : update.status === "downloading"
+      ? `正在下载 ${update.version ?? "新版本"}：${percent}%`
+      : `${update.version ?? "新版本"} 已下载，点击重启更新`;
+
+  const handleClick = async () => {
+    if (update.status === "available") {
+      const next = await window.cyword.downloadUpdate?.();
+      if (next) setUpdate(next);
+    } else if (update.status === "downloaded") {
+      await window.cyword.installUpdate?.();
+    }
+  };
+
+  return (
+    <div className={`update-control ${update.status}`}>
+      <button
+        type="button"
+        aria-label={label}
+        title={label}
+        disabled={update.status === "downloading"}
+        onClick={() => void handleClick()}
+      >
+        <span
+          className="update-icon"
+          style={{ "--update-progress": `${percent}%` } as React.CSSProperties}
+        >
+          {update.status === "downloaded" ? (
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19 8a7.5 7.5 0 0 0-12.7-2L4 8" />
+              <path d="M4 4v4h4" />
+              <path d="M5 16a7.5 7.5 0 0 0 12.7 2L20 16" />
+              <path d="M20 20v-4h-4" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 4v10" />
+              <path d="m8 11 4 4 4-4" />
+              <path d="M5 19h14" />
+            </svg>
+          )}
+        </span>
+      </button>
+    </div>
+  );
+}
+
 function App() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [progress, setProgress] = useState<AppProgress | null>(null);
@@ -450,7 +519,23 @@ function App() {
   const currentDayNumber = currentPlanDayNumber(progress, plan.length);
   const current = plan[currentDayNumber - 1];
   const toggleWordBookmark = (wordId: string) => saveProgress(toggleBookmark(progress, wordId));
-  return <div className="app-shell"><aside className="sidebar"><div className="brand"><div>Cy</div><span><b>词根记忆</b><small>Rooted recall</small></span></div><nav>{navItems.map((item) => <button className={view === item.id ? "active" : ""} key={item.id} onClick={() => setView(item.id)}><i>{item.glyph}</i><b>{item.label}</b>{item.id === "vocabulary" && Object.keys(progress.bookmarks).length > 0 && <em>{Object.keys(progress.bookmarks).length}</em>}</button>)}</nav><footer><span>大学英语六级</span><p>Day {current.day} / {plan.length}</p><i><b style={{ width: `${(current.day - 1 + planDayFraction(progress, current)) / plan.length * 100}%` }} /></i><small>数据与进度保存在本机</small></footer></aside><main>{view === "home" && <HomeView catalog={catalog} progress={progress} plan={plan} current={current} goToday={() => setView("today")} />}{view === "plan" && <PlanView plan={plan} progress={progress} current={current} openToday={() => setView("today")} />}{view === "today" && (current.kind === "study" ? <StudyToday catalog={catalog} progress={progress} plan={current} detail={detail} loadWord={loadWord} saveProgress={saveProgress} onToggleBookmark={toggleWordBookmark} /> : <ReviewToday catalog={catalog} progress={progress} plan={current} detail={detail} loadWord={loadWord} saveProgress={saveProgress} onToggleBookmark={toggleWordBookmark} />)}{view === "vocabulary" && <VocabularyView catalog={catalog} progress={progress} detail={detail} loadWord={loadWord} onToggleBookmark={toggleWordBookmark} />}</main>{loadingWord && <div className="word-loading">正在展开 {catalog.words[loadingWord]?.spelling}…</div>}</div>;
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <div className="brand"><div>Cy</div><span><b>CYword</b></span></div>
+        <nav>{navItems.map((item) => <button className={view === item.id ? "active" : ""} key={item.id} onClick={() => setView(item.id)}><i>{item.glyph}</i><b>{item.label}</b>{item.id === "vocabulary" && Object.keys(progress.bookmarks).length > 0 && <em>{Object.keys(progress.bookmarks).length}</em>}</button>)}</nav>
+        <footer><span>大学英语六级</span><p>Day {current.day} / {plan.length}</p><i><b style={{ width: `${(current.day - 1 + planDayFraction(progress, current)) / plan.length * 100}%` }} /></i><small>数据与进度保存在本机</small></footer>
+      </aside>
+      <main>
+        {view === "home" && <HomeView catalog={catalog} progress={progress} plan={plan} current={current} goToday={() => setView("today")} />}
+        {view === "plan" && <PlanView plan={plan} progress={progress} current={current} openToday={() => setView("today")} />}
+        {view === "today" && (current.kind === "study" ? <StudyToday catalog={catalog} progress={progress} plan={current} detail={detail} loadWord={loadWord} saveProgress={saveProgress} onToggleBookmark={toggleWordBookmark} /> : <ReviewToday catalog={catalog} progress={progress} plan={current} detail={detail} loadWord={loadWord} saveProgress={saveProgress} onToggleBookmark={toggleWordBookmark} />)}
+        {view === "vocabulary" && <VocabularyView catalog={catalog} progress={progress} detail={detail} loadWord={loadWord} onToggleBookmark={toggleWordBookmark} />}
+      </main>
+      <UpdateControl />
+      {loadingWord && <div className="word-loading">正在展开 {catalog.words[loadingWord]?.spelling}…</div>}
+    </div>
+  );
 }
 
 export default App;

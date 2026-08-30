@@ -27,15 +27,17 @@ npm run build:web
 npm run dist
 ```
 
-最终文件是 `release/CYword-Setup-<version>.exe`。0.2.0 版未配置代码签名，首次下载或安装时 Windows 可能显示 SmartScreen；发布前如有证书，应在构建环境配置签名，不要把证书或密码写入仓库。
+主要安装文件是 `release/CYword-Setup-<version>.exe`。`latest.yml` 和 `CYword-Setup-<version>.exe.blockmap` 是应用内更新元数据，三者必须发布在同一个 GitHub Release。0.2.1 版未配置代码签名，首次下载或安装时 Windows 可能显示 SmartScreen；发布前如有证书，应在构建环境配置签名，不要把证书或密码写入仓库。
+
+安装器为交互式 NSIS：首次安装可选择目录；手动运行新版安装包时会从注册表读取旧目录作为默认值，用户仍可修改。应用内更新使用同一个安装器静默覆盖旧版本，并保留 Electron `userData` 中的学习进度。
 
 ## 标签自动构建
 
-推送形如 `v0.2.0` 的标签会触发 `.github/workflows/build-tag.yml`。Windows runner 会检查标签与 `package.json` 版本一致，执行 `npm ci`、自动测试和 NSIS 打包，然后创建同名 GitHub Release，并把 `CYword-Setup-<version>.exe` 直接附加到 Release。
+推送形如 `v0.2.1` 的标签会触发 `.github/workflows/build-tag.yml`。Windows runner 会检查标签与 `package.json` 版本一致，执行 `npm ci`、自动测试和 NSIS 打包，然后创建同名 GitHub Release，并上传安装器、`latest.yml` 与 `.exe.blockmap`。
 
 ```powershell
-git tag -a v0.2.0 -m "CYword v0.2.0"
-git push origin v0.2.0
+git tag -a v0.2.1 -m "CYword v0.2.1"
+git push origin v0.2.1
 ```
 
 工作流不会再额外上传一份 GitHub Actions artifact，以免重复占用存储。相同标签的任务重新运行时，会替换 Release 中的同名安装包；Release 和安装包会一直保留，直到维护者手动删除。
@@ -49,7 +51,7 @@ npm run data:build
 Remove-Item Env:CYWORD_BOOK
 ```
 
-默认值始终是 `cet6`。0.2.0 版安装包只携带构建时选中的一本词书。
+默认值始终是 `cet6`。0.2.1 版安装包只携带构建时选中的一本词书。
 
 ## 启动故障
 
@@ -63,4 +65,4 @@ Remove-Item Env:CYWORD_BOOK
 1. `npm ci` 能在干净依赖环境完成。
 2. `npm run data:verify`、`npm test`、`npm run build:web` 全部通过。
 3. 安装包能安装、启动并读取 5166 词目录。
-4. `release/` 只保留需要交付的安装程序；`data/`、`dist/` 和检查截图不提交。
+4. `release/` 中存在安装器、`latest.yml` 和对应 `.exe.blockmap`；`data/`、`dist/`、`release/` 和检查截图不提交。

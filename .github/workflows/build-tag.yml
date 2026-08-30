@@ -59,12 +59,21 @@ jobs:
             throw "Expected exactly one Windows installer, found $($installers.Count)."
           }
 
-          $installer = $installers[0].FullName
+          $metadata = @(Get-ChildItem -LiteralPath release -Filter "latest.yml" -File)
+          if ($metadata.Count -ne 1) {
+            throw "Expected exactly one updater metadata file, found $($metadata.Count)."
+          }
+          $blockmaps = @(Get-ChildItem -LiteralPath release -Filter "CYword-Setup-*.exe.blockmap" -File)
+          if ($blockmaps.Count -ne 1) {
+            throw "Expected exactly one updater blockmap, found $($blockmaps.Count)."
+          }
+
+          $releaseAssets = @($installers[0].FullName, $metadata[0].FullName, $blockmaps[0].FullName)
           gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY *> $null
           if ($LASTEXITCODE -eq 0) {
-            gh release upload $env:RELEASE_TAG $installer --repo $env:GITHUB_REPOSITORY --clobber
+            gh release upload $env:RELEASE_TAG $releaseAssets --repo $env:GITHUB_REPOSITORY --clobber
           } else {
-            gh release create $env:RELEASE_TAG $installer `
+            gh release create $env:RELEASE_TAG $releaseAssets `
               --repo $env:GITHUB_REPOSITORY `
               --verify-tag `
               --title "CYword $env:RELEASE_TAG" `
