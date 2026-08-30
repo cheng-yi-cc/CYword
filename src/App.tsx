@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import DOMPurify from "dompurify";
 import { marked } from "marked";
 import {
@@ -13,7 +13,6 @@ import {
   rateStudyWord,
   reviewCandidates,
   startReviewDay,
-  todayKey,
   toggleBookmark,
 } from "./progress";
 import type {
@@ -33,6 +32,47 @@ const navItems: Array<{ id: ViewName; label: string; glyph: string }> = [
   { id: "today", label: "今日学习", glyph: "▷" },
   { id: "vocabulary", label: "生词本", glyph: "◇" },
 ];
+
+type ViewTransitionDocument = Document & {
+  startViewTransition?: (update: () => void) => unknown;
+};
+
+type TransitionPhase = "idle" | "leaving" | "entering";
+
+function useSoftTransitionState<T>(initialValue: T): [T, (nextValue: T) => void, TransitionPhase] {
+  const [value, setValue] = useState(initialValue);
+  const [phase, setPhase] = useState<TransitionPhase>("idle");
+  const timer = useRef<number | null>(null);
+  const frame = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+    if (frame.current !== null) window.cancelAnimationFrame(frame.current);
+  }, []);
+
+  const transitionTo = (nextValue: T) => {
+    if (Object.is(nextValue, value) || phase === "leaving") return;
+    const transitionDocument = document as ViewTransitionDocument;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setValue(nextValue);
+      return;
+    }
+    if (transitionDocument.startViewTransition) {
+      transitionDocument.startViewTransition(() => setValue(nextValue));
+      return;
+    }
+    setPhase("leaving");
+    timer.current = window.setTimeout(() => {
+      setValue(nextValue);
+      setPhase("entering");
+      frame.current = window.requestAnimationFrame(() => {
+        frame.current = window.requestAnimationFrame(() => setPhase("idle"));
+      });
+    }, 75);
+  };
+
+  return [value, transitionTo, phase];
+}
 
 function renderMarkup(value: string) {
   const markdown = value
@@ -61,6 +101,30 @@ function AudioButton({ url }: { url?: string }) {
     }
   };
   return <button className="audio-button" onClick={play}>{playing ? "停止" : "播放发音"}</button>;
+}
+
+function FittedWordTitle({ word }: { word: string }) {
+  const titleRef = useRef<HTMLHeadingElement>(null);
+
+  useLayoutEffect(() => {
+    const title = titleRef.current;
+    if (!title) return;
+    const fitTitle = () => {
+      title.style.removeProperty("font-size");
+      const availableWidth = title.clientWidth;
+      const naturalWidth = title.scrollWidth;
+      if (!availableWidth || naturalWidth <= availableWidth) return;
+      const naturalSize = Number.parseFloat(window.getComputedStyle(title).fontSize);
+      title.style.fontSize = `${Math.max(28, Math.floor(naturalSize * availableWidth / naturalWidth))}px`;
+    };
+    fitTitle();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(fitTitle);
+    if (title.parentElement) observer.observe(title.parentElement);
+    return () => observer.disconnect();
+  }, [word]);
+
+  return <h1 ref={titleRef}>{word}</h1>;
 }
 
 function BookmarkButton({ active, onClick }: { active: boolean; onClick: () => void }) {
@@ -148,6 +212,38 @@ function SentenceList({ rows, exam = false }: { rows: Record<string, string>[]; 
   );
 }
 
+function SentenceSpotlight({
+  eyebrow,
+  title,
+  rows,
+  index,
+  onNext,
+  exam = false,
+}: {
+  eyebrow: string;
+  title: string;
+  rows: Record<string, string>[];
+  index: number;
+  onNext: () => void;
+  exam?: boolean;
+}) {
+  const item = rows[index];
+  return (
+    <section className="session-section sentence-spotlight">
+      <header>
+        <div><span>{eyebrow}</span><h3>{title}</h3></div>
+        {rows.length > 1 && <button onClick={onNext}>换一句 <b>↻</b></button>}
+      </header>
+      {item ? <div>
+        {exam && <small>{[item.source_year, item.source_paper, item.source_section].filter(Boolean).join(" · ") || "真题语境"}</small>}
+        <p>{item.sentence}</p>
+        <p className="translation">{item.translation}</p>
+        {(item.context_explanation || item.target_word_analysis) && <em>{item.context_explanation || item.target_word_analysis}</em>}
+      </div> : <p className="empty-copy">暂无{title}数据。</p>}
+    </section>
+  );
+}
+
 function WordDetailPanel({
   detail,
   bookmarked,
@@ -228,51 +324,34 @@ function LiquidDay({ day, fraction }: { day: number; fraction: number }) {
 }
 
 function HomeView({
-  catalog,
   progress,
-  plan,
   current,
   goToday,
 }: {
-  catalog: Catalog;
+  catalog?: Catalog;
   progress: AppProgress;
-  plan: PlanDay[];
+  plan?: PlanDay[];
   current: PlanDay;
   goToday: () => void;
 }) {
   const fraction = planDayFraction(progress, current);
-  const counts = proficiencyCounts(progress);
   const dayState = progress.planDays[String(current.day)];
   const done = Boolean(dayState?.completedAt);
-  const reviewed = dayState?.reviewedWordIds.length ?? 0;
-  const rated = dayState?.ratedExposureKeys.length ?? 0;
-  const target = current.kind === "study" ? current.appearanceCount : dayState?.reviewWordIds.length || Object.keys(progress.words).length;
+  const completed = current.kind === "study" ? (dayState?.ratedExposureKeys.length ?? 0) : (dayState?.reviewedWordIds.length ?? 0);
+  const target = current.kind === "study" ? current.appearanceCount : (dayState?.reviewWordIds.length || Object.keys(progress.words).length);
+
   return (
     <div className="page home-page">
-      <PageHeader eyebrow="CYWORD · ROOTED MEMORY" title="今天，从想起一个词开始" description="把词根当作线索，把熟练度交给你自己判断。" aside={<div className="home-date">{todayKey().replaceAll("-", " / ")}</div>} />
       <div className="home-stage">
         <section className="day-vessel">
           <LiquidDay day={current.day} fraction={fraction} />
+          <div className="day-progress-count">
+            <b>{completed}</b> <span>/</span> {target}
+          </div>
           <div className="day-action">
-            <span>{current.kind === "study" ? `第 ${current.studyDay} 个学习日` : "集中复习日"}</span>
-            <h2>{done ? "今天已经完成" : current.kind === "study" ? "继续今天的词根学习" : "判断此前学过的单词"}</h2>
-            <p>{done ? "进度已经保存，明天会进入下一计划日。" : `已完成 ${current.kind === "study" ? rated : reviewed} / ${target || 0}`}</p>
             <button onClick={goToday}>{done ? "查看今日记录" : current.kind === "study" ? "继续今日学习" : "进入复习判断"} <b>→</b></button>
           </div>
         </section>
-        <aside className="home-summary">
-          <div className="book-summary"><span>当前词书</span><h3>大学英语六级</h3><p><b>{Object.keys(progress.words).length}</b> / {catalog.stats.wordCount} 个唯一单词已学习</p><i><em style={{ width: `${Object.keys(progress.words).length / catalog.stats.wordCount * 100}%` }} /></i></div>
-          <div className="mastery-summary">
-            <span>熟练度分布</span>
-            <div><i className="unmastered" /><b>{counts.unmastered}</b><small>未掌握</small></div>
-            <div><i className="unclear" /><b>{counts.unclear}</b><small>不清楚</small></div>
-            <div><i className="mastered" /><b>{counts.mastered}</b><small>已掌握</small></div>
-          </div>
-          <div className="next-review"><span>计划节奏</span><b>学习 3 天</b><i>→</i><b>集中复习 1 天</b><p>复习范围包含此前所有已学单词，默认跳过“已掌握”。</p></div>
-        </aside>
-      </div>
-      <div className="home-plan-strip">
-        {plan.slice(Math.max(0, current.day - 2), Math.min(plan.length, current.day + 4)).map((item) => <div className={`${item.day === current.day ? "active" : ""} ${item.kind}`} key={item.day}><span>DAY {item.day}</span><b>{item.kind === "study" ? `${item.appearanceCount} 词` : "复习日"}</b><i style={{ width: `${planDayFraction(progress, item) * 100}%` }} /></div>)}
       </div>
     </div>
   );
@@ -318,39 +397,206 @@ function StudyToday({
   const groups = plan.groupIds.map((id) => groupsById.get(id)).filter(Boolean) as StudyGroup[];
   const dayState = progress.planDays[String(plan.day)];
   const completedGroups = new Set(dayState?.completedGroupIds ?? []);
-  const firstIncomplete = groups.find((group) => !completedGroups.has(group.id)) ?? groups[0];
-  const [groupId, setGroupId] = useState(firstIncomplete?.id ?? "");
-  const group = groupsById.get(groupId) ?? firstIncomplete;
+  const exposures = useMemo(() => groups.flatMap((group) => group.wordIds.map((wordId) => ({
+    groupId: group.id,
+    wordId,
+    key: `${group.id}:${wordId}`,
+  }))), [groups]);
+  const completedCount = dayState?.ratedExposureKeys.length ?? 0;
+  const finished = isPlanDayComplete(progress, plan.day);
+  const [sessionActive, transitionSession, sessionTransitionPhase] = useSoftTransitionState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [simpleExampleIndex, setSimpleExampleIndex] = useState(0);
+  const [examExampleIndex, setExamExampleIndex] = useState(0);
+  const [longSentenceIndex, setLongSentenceIndex] = useState(0);
+  const [ratingBusy, setRatingBusy] = useState(false);
+  const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(() => new Set());
+  const exposure = exposures[activeIndex];
+  const group = exposure ? groupsById.get(exposure.groupId) : undefined;
+  const activeDetail = detail?.id === exposure?.wordId ? detail : null;
 
-  useEffect(() => {
-    if (!group) return;
-    const nextWord = group.wordIds.find((id) => !dayState?.ratedExposureKeys.includes(`${group.id}:${id}`)) ?? group.wordIds[0];
-    if (nextWord) loadWord(nextWord);
-  }, [group?.id]);
-
-  const rate = async (level: Proficiency) => {
-    if (!group || !detail || isPlanDayComplete(progress, plan.day)) return;
-    const next = rateStudyWord(progress, plan, group, detail.id, level);
-    await saveProgress(next);
-    const nextDayState = next.planDays[String(plan.day)];
-    const nextWord = group.wordIds.find((id) => !nextDayState.ratedExposureKeys.includes(`${group.id}:${id}`));
-    if (nextWord) loadWord(nextWord);
-    else {
-      const nextGroup = groups.find((item) => !nextDayState.completedGroupIds.includes(item.id));
-      if (nextGroup) setGroupId(nextGroup.id);
-    }
+  const startSession = () => {
+    const nextIndex = exposures.findIndex((item) => !dayState?.ratedExposureKeys.includes(item.key));
+    setActiveIndex(nextIndex >= 0 ? nextIndex : 0);
+    transitionSession(true);
   };
 
+  const move = (direction: -1 | 1) => {
+    setActiveIndex((current) => Math.max(0, Math.min(exposures.length - 1, current + direction)));
+  };
+
+  const toggleGroup = (groupId: string) => {
+    setCollapsedGroupIds((current) => {
+      const next = new Set(current);
+      if (next.has(groupId)) next.delete(groupId);
+      else next.add(groupId);
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (sessionActive && exposure?.wordId) loadWord(exposure.wordId);
+  }, [sessionActive, activeIndex, exposure?.wordId]);
+
+  useEffect(() => {
+    setSimpleExampleIndex(0);
+    setExamExampleIndex(0);
+    setLongSentenceIndex(0);
+  }, [exposure?.key]);
+
+  const rate = async (level: Proficiency) => {
+    if (!group || !activeDetail || !exposure || ratingBusy) return;
+    setRatingBusy(true);
+    const next = rateStudyWord(progress, plan, group, exposure.wordId, level);
+    await saveProgress(next);
+    const ratedKeys = next.planDays[String(plan.day)]?.ratedExposureKeys ?? [];
+    const nextUnrated = exposures.findIndex((item, index) => index > activeIndex && !ratedKeys.includes(item.key));
+    const anyUnrated = nextUnrated >= 0 ? nextUnrated : exposures.findIndex((item) => !ratedKeys.includes(item.key));
+    setActiveIndex(anyUnrated >= 0 ? anyUnrated : Math.min(activeIndex + 1, exposures.length - 1));
+    setRatingBusy(false);
+  };
+
+  useEffect(() => {
+    if (!sessionActive) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const editing = target?.matches("input, textarea, select, [contenteditable='true']");
+      if (event.key === "Escape") {
+        event.preventDefault();
+        transitionSession(false);
+        return;
+      }
+      if (editing) return;
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        event.preventDefault();
+        move(event.key === "ArrowLeft" ? -1 : 1);
+        return;
+      }
+      if (event.code === "Space") {
+        event.preventDefault();
+        if (!event.repeat && activeDetail?.audioUrl) void new Audio(activeDetail.audioUrl).play().catch(() => undefined);
+        return;
+      }
+      const shortcut: Record<string, Proficiency> = { "1": "unmastered", "2": "unclear", "3": "mastered" };
+      const level = shortcut[event.key];
+      if (level && !event.repeat) {
+        event.preventDefault();
+        void rate(level);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [sessionActive, activeIndex, activeDetail?.id, activeDetail?.audioUrl, ratingBusy, progress]);
+
+  const rootPriority = { root: 0, prefix: 1, suffix: 2, base: 3 };
+  const rootLabels = { root: "词根", prefix: "前缀", suffix: "后缀", base: "词基" };
+  const orderedParts = [...(activeDetail?.roots ?? [])].sort((a, b) => rootPriority[a.type] - rootPriority[b.type] || a.order - b.order);
+  const longSentences = activeDetail?.longSentences ?? [];
+  const longSentence = longSentences[longSentenceIndex];
+  const rated = exposure ? dayState?.ratedExposureKeys.includes(exposure.key) : false;
+  const activeProficiency = rated && exposure ? progress.words[exposure.wordId]?.proficiency : undefined;
+
   return (
-    <div className="page today-page">
-      <PageHeader eyebrow={`DAY ${plan.day} · STUDY`} title={isPlanDayComplete(progress, plan.day) ? "今天的新词已经学完" : "按词根，一组一组学完"} description={`今日 ${plan.appearanceCount} 次学习曝光；每个单词学完后必须判断熟练度。`} aside={<div className="today-progress"><b>{dayState?.ratedExposureKeys.length ?? 0}</b><span>/ {plan.appearanceCount}</span></div>} />
-      <div className="study-workbench">
-        <aside className="group-lane"><header><span>今日词根</span><b>{completedGroups.size}/{groups.length}</b></header><div>{groups.map((item, index) => <button className={`${item.id === group?.id ? "active" : ""} ${completedGroups.has(item.id) ? "done" : ""}`} key={item.id} onClick={() => setGroupId(item.id)}><i>{String(index + 1).padStart(2, "0")}</i><span><b>{item.spelling}</b><small>{item.kind === "solo" ? "单词自成词根" : item.meaning}</small></span><em>{completedGroups.has(item.id) ? "✓" : item.wordCount}</em></button>)}</div></aside>
-        <section className="group-focus">
-          {group && <><header><span>{group.kind === "root" ? "ROOT FAMILY" : "SOLO ROOT"}</span><div><h2>{group.spelling}</h2><b>{group.wordCount} 个单词</b></div><p>{group.meaning}</p><details><summary>先记住这个词根</summary><MarkdownBlock value={group.memoryMethod} /></details></header><div className="word-strip">{group.wordIds.map((wordId) => { const rated = dayState?.ratedExposureKeys.includes(`${group.id}:${wordId}`); return <button className={`${detail?.id === wordId ? "active" : ""} ${rated ? "rated" : ""}`} key={wordId} onClick={() => loadWord(wordId)}><b>{catalog.words[wordId].spelling}</b><span>{catalog.words[wordId].pronunciation}</span><i>{rated ? "●" : ""}</i></button>; })}</div><footer>{group.wordIds.filter((id) => dayState?.ratedExposureKeys.includes(`${group.id}:${id}`)).length} / {group.wordCount} 已判断</footer></>}
-        </section>
-        <WordDetailPanel detail={detail} compact bookmarked={Boolean(detail && progress.bookmarks[detail.id])} onToggleBookmark={() => detail && onToggleBookmark(detail.id)} footer={detail && !isPlanDayComplete(progress, plan.day) ? <ProficiencyPicker value={progress.words[detail.id]?.proficiency} onChange={rate} /> : undefined} />
+    <div className={`today-view soft-transition transition-${sessionTransitionPhase}`}>
+      <div className="page today-overview-page">
+        <div className="today-overview-progress" role="progressbar" aria-label="今日学习总进度" aria-valuemin={0} aria-valuemax={plan.appearanceCount} aria-valuenow={completedCount}><i style={{ width: `${completedCount / Math.max(1, plan.appearanceCount) * 100}%` }} /></div>
+        <header className="today-plan-header">
+          <h1>今日计划</h1>
+          <p>已完成 <b>{completedCount}</b> / {plan.appearanceCount}</p>
+        </header>
+        <div className="today-root-ledger">
+          {groups.map((item, groupIndex) => {
+            const collapsed = collapsedGroupIds.has(item.id);
+            return <article className={`${completedGroups.has(item.id) ? "completed" : ""} ${collapsed ? "collapsed" : ""}`} key={item.id}>
+            <button className="today-group-toggle" aria-expanded={!collapsed} aria-label={`${collapsed ? "展开" : "收起"}${item.spelling}词根组`} onClick={() => toggleGroup(item.id)}>
+              <i>{String(groupIndex + 1).padStart(2, "0")}</i>
+              <div><span>{item.kind === "root" ? "词根" : "独立成组"}</span><h2>{item.spelling}</h2></div>
+              <p>{item.kind === "solo" ? "无独立词根，按单词自身学习" : item.meaning}</p>
+              <em>{item.wordCount} 词</em>
+            </button>
+            {!collapsed && <div className="today-word-table">
+              <div className="today-word-table-head"><span>单词</span><span>音标</span><span>中文含义</span><span>状态</span></div>
+              {item.wordIds.map((wordId) => {
+                const word = catalog.words[wordId];
+                const exposureRated = dayState?.ratedExposureKeys.includes(`${item.id}:${wordId}`);
+                const proficiency = exposureRated ? progress.words[wordId]?.proficiency : undefined;
+                return <div className="today-word-row" key={wordId}>
+                  <b>{word.spelling}</b><span>{word.pronunciation || "—"}</span><p>{word.definitionCn}</p>
+                  <i className={proficiency}>{proficiency ? proficiencyCopy[proficiency].label : "待学习"}</i>
+                </div>;
+              })}
+            </div>}
+          </article>;})}
+        </div>
+        <button className="floating-study-start" aria-label={!exposures.length ? "今日无学习内容" : finished ? "回顾今日内容" : completedCount ? "继续学习" : "开始学习"} title={!exposures.length ? "今日无学习内容" : finished ? "回顾今日内容" : completedCount ? "继续学习" : "开始学习"} onClick={startSession} disabled={!exposures.length}><i /></button>
       </div>
+
+      {sessionActive && exposure && <div className="study-session-overlay" role="dialog" aria-modal="true" aria-label="今日单词学习">
+        <header className="study-session-topbar">
+          <div><span>大学英语六级</span><b>Day {plan.day} · {group?.kind === "root" ? group.spelling : "独立词"}</b></div>
+          <div className="session-progress"><i style={{ width: `${Math.max(completedCount / Math.max(1, plan.appearanceCount), 1 / Math.max(1, plan.appearanceCount)) * 100}%` }} /></div>
+          <strong>{activeIndex + 1} / {exposures.length}</strong>
+          <button onClick={() => transitionSession(false)}><kbd>Esc</kbd> 退出学习</button>
+        </header>
+
+        <div className="study-session-grid">
+          <aside className="study-morpheme-column">
+            <header><span>MORPHEME NOTES</span><h2>词根词缀</h2><p>词根优先，先抓住最稳定的含义线索。</p></header>
+            <div className="study-column-scroll">
+              {activeDetail ? orderedParts.length ? orderedParts.map((part, index) => <section className={`study-part-card ${part.type}`} key={`${part.id}-${part.order}`}>
+                <header><span>{rootLabels[part.type]} · {String(index + 1).padStart(2, "0")}</span><b>{part.spelling}</b></header>
+                <p>{part.meaning}</p>
+                <div><span>巧记</span><MarkdownBlock value={part.memoryMethod} empty="暂无独立巧记。" /></div>
+              </section>) : <div className="session-empty"><b>{activeDetail.spelling}</b><p>这个单词没有独立词根，按单词整体记忆。</p></div> : <div className="session-loading">正在准备词根词缀…</div>}
+            </div>
+          </aside>
+
+          <main className="study-word-column">
+            <div className="study-center-scroll">
+              {activeDetail ? <>
+                <header className="study-word-hero">
+                  <div><span>{group?.kind === "root" ? `${group.spelling} 词根家族` : "独立单词"}</span><FittedWordTitle word={activeDetail.spelling} /><div><strong>{activeDetail.pronunciation || "音标未提供"}</strong><AudioButton url={activeDetail.audioUrl} /></div></div>
+                  <div><p>{activeDetail.definitionCn}</p><BookmarkButton active={Boolean(progress.bookmarks[activeDetail.id])} onClick={() => onToggleBookmark(activeDetail.id)} /></div>
+                </header>
+                <section className="session-section"><header><div><span>MEMORY</span><h3>巧记</h3></div></header><MarkdownBlock value={activeDetail.memoryMarkup} /></section>
+                <section className="session-section etymology-study"><header><div><span>WORD BUILDING</span><h3>词根词缀分析</h3></div></header>
+                  {orderedParts.length > 0 && <div className="study-word-equation">{orderedParts.map((part, index) => <div className="study-word-equation-piece" key={`${part.id}-${part.order}`}>{index > 0 && <i aria-hidden="true">＋</i>}<span><b>{part.spelling}</b><small>{part.meaning}</small></span></div>)}</div>}
+                  <MarkdownBlock value={activeDetail.etymologyMarkup} empty="暂无独立构词分析，请结合左栏词根词缀巧记整体记忆。" />
+                </section>
+                <SentenceSpotlight eyebrow="EXAMPLE" title="简单例句" rows={activeDetail.examples} index={simpleExampleIndex} onNext={() => setSimpleExampleIndex((simpleExampleIndex + 1) % activeDetail.examples.length)} />
+                <SentenceSpotlight eyebrow="EXAM" title="真题例句" rows={activeDetail.examExamples} index={examExampleIndex} onNext={() => setExamExampleIndex((examExampleIndex + 1) % activeDetail.examExamples.length)} exam />
+              </> : <div className="session-loading center">正在展开 {catalog.words[exposure.wordId]?.spelling}…</div>}
+            </div>
+            <footer className="study-session-controls">
+              <div className="session-rating">
+                {(["unmastered", "unclear", "mastered"] as Proficiency[]).map((level, index) => <button className={`${level} ${activeProficiency === level ? "active" : ""}`} disabled={!activeDetail || ratingBusy} onClick={() => void rate(level)} key={level}><kbd>{index + 1}</kbd><b>{proficiencyCopy[level].label}</b></button>)}
+              </div>
+              <div className="session-navigation">
+                <button disabled={activeIndex === 0} onClick={() => move(-1)}><kbd>←</kbd> 上一个</button>
+                <span><kbd>空格</kbd> 发音</span>
+                <button disabled={activeIndex === exposures.length - 1} onClick={() => move(1)}>下一个 <kbd>→</kbd></button>
+              </div>
+            </footer>
+          </main>
+
+          <aside className="study-sentence-column">
+            <header><span>LONG SENTENCE</span><h2>长难句</h2><p>{longSentences.length ? `第 ${longSentenceIndex + 1} 句，共 ${longSentences.length} 句` : "跟随当前单词显示"}</p></header>
+            <div className="study-column-scroll long-sentence-scroll">
+              {activeDetail ? longSentence ? <article>
+                <p className="long-sentence-copy">{String(longSentence.sentence || "")}</p>
+                <p className="long-sentence-translation">{String(longSentence.translation || "")}</p>
+                {longSentence.segments?.length > 0 && <section><h3>结构拆分</h3>{longSentence.segments.map((segment, index) => <div className="session-segment" key={index}><span>{segment.role_label || segment.role}</span><b>{segment.text}</b><small>{segment.gloss}</small></div>)}</section>}
+                {longSentence.analyses?.length > 0 && <section><h3>难点分析</h3>{longSentence.analyses.map((analysis, index) => <div className="session-analysis" key={index}><span>{analysis.dimension || "解析"}</span><p>{analysis.analysis_text}</p></div>)}</section>}
+              </article> : <div className="session-empty"><b>暂无长难句</b><p>当前单词没有匹配的长难句分析。</p></div> : <div className="session-loading">正在准备长难句…</div>}
+            </div>
+            {longSentences.length > 1 && <footer className="long-sentence-pagination">
+              <button disabled={longSentenceIndex === 0} onClick={() => setLongSentenceIndex((current) => Math.max(0, current - 1))}>‹</button>
+              <div>{longSentences.map((item, index) => <button className={index === longSentenceIndex ? "active" : ""} aria-label={`查看第 ${index + 1} 条长难句`} onClick={() => setLongSentenceIndex(index)} key={String(item.long_sentence_id ?? index)} />)}</div>
+              <button disabled={longSentenceIndex === longSentences.length - 1} onClick={() => setLongSentenceIndex((current) => Math.min(longSentences.length - 1, current + 1))}>›</button>
+            </footer>}
+          </aside>
+        </div>
+      </div>}
     </div>
   );
 }
@@ -480,10 +726,11 @@ function UpdateControl() {
 function App() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [progress, setProgress] = useState<AppProgress | null>(null);
-  const [view, setView] = useState<ViewName>("home");
+  const [view, transitionView, viewTransitionPhase] = useSoftTransitionState<ViewName>("home");
   const [detail, setDetail] = useState<WordDetail | null>(null);
   const [loadingWord, setLoadingWord] = useState("");
   const [error, setError] = useState("");
+  const wordRequest = useRef(0);
 
   useEffect(() => {
     document.querySelector(".app-shell > main")?.scrollTo({ top: 0, behavior: "auto" });
@@ -500,10 +747,18 @@ function App() {
 
   const loadWord = async (id: string) => {
     if (detail?.id === id || loadingWord === id) return;
+    const request = ++wordRequest.current;
     setLoadingWord(id);
-    try { setDetail(await window.cyword.readWord(id)); }
-    catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); }
-    finally { setLoadingWord(""); }
+    try {
+      const nextDetail = await window.cyword.readWord(id);
+      if (request === wordRequest.current) setDetail(nextDetail);
+    }
+    catch (reason) {
+      if (request === wordRequest.current) setError(reason instanceof Error ? reason.message : String(reason));
+    }
+    finally {
+      if (request === wordRequest.current) setLoadingWord("");
+    }
   };
 
   const saveProgress = async (next: AppProgress) => {
@@ -519,16 +774,19 @@ function App() {
   const currentDayNumber = currentPlanDayNumber(progress, plan.length);
   const current = plan[currentDayNumber - 1];
   const toggleWordBookmark = (wordId: string) => saveProgress(toggleBookmark(progress, wordId));
+  const navigate = (nextView: ViewName) => {
+    if (nextView !== view) transitionView(nextView);
+  };
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand"><div>Cy</div><span><b>CYword</b></span></div>
-        <nav>{navItems.map((item) => <button className={view === item.id ? "active" : ""} key={item.id} onClick={() => setView(item.id)}><i>{item.glyph}</i><b>{item.label}</b>{item.id === "vocabulary" && Object.keys(progress.bookmarks).length > 0 && <em>{Object.keys(progress.bookmarks).length}</em>}</button>)}</nav>
+        <div className="brand"><div>Cy</div><span><b>词根记忆</b><small>Rooted recall</small></span></div>
+        <nav>{navItems.map((item) => <button className={view === item.id ? "active" : ""} key={item.id} onClick={() => navigate(item.id)}><i>{item.glyph}</i><b>{item.label}</b>{item.id === "vocabulary" && Object.keys(progress.bookmarks).length > 0 && <em>{Object.keys(progress.bookmarks).length}</em>}</button>)}</nav>
         <footer><span>大学英语六级</span><p>Day {current.day} / {plan.length}</p><i><b style={{ width: `${(current.day - 1 + planDayFraction(progress, current)) / plan.length * 100}%` }} /></i><small>数据与进度保存在本机</small></footer>
       </aside>
-      <main>
-        {view === "home" && <HomeView catalog={catalog} progress={progress} plan={plan} current={current} goToday={() => setView("today")} />}
-        {view === "plan" && <PlanView plan={plan} progress={progress} current={current} openToday={() => setView("today")} />}
+      <main className={`app-content soft-transition transition-${viewTransitionPhase}`}>
+        {view === "home" && <HomeView catalog={catalog} progress={progress} plan={plan} current={current} goToday={() => navigate("today")} />}
+        {view === "plan" && <PlanView plan={plan} progress={progress} current={current} openToday={() => navigate("today")} />}
         {view === "today" && (current.kind === "study" ? <StudyToday catalog={catalog} progress={progress} plan={current} detail={detail} loadWord={loadWord} saveProgress={saveProgress} onToggleBookmark={toggleWordBookmark} /> : <ReviewToday catalog={catalog} progress={progress} plan={current} detail={detail} loadWord={loadWord} saveProgress={saveProgress} onToggleBookmark={toggleWordBookmark} />)}
         {view === "vocabulary" && <VocabularyView catalog={catalog} progress={progress} detail={detail} loadWord={loadWord} onToggleBookmark={toggleWordBookmark} />}
       </main>
