@@ -1,8 +1,9 @@
 # CYword 项目约定
 
-- 这是一个 Windows Electron 桌面应用，前端使用 React、TypeScript 与 Vite。
+- 仓库包含 Windows Electron 桌面应用与 `website/` 独立官网，前端使用 React、TypeScript 与 Vite。
 - 正式词书数据放在 `books/<book-code>/`；`data/` 是构建生成物，不得手工修改或提交。
 - 默认词书是 `cet6`。新增四级、考研等词书时使用独立稳定代码，如 `cet4`、`kaoyan`，不要覆盖六级数据。
+- 元数据标称 5169 词，两个可枚举接口一致为 5166 词，差异 3 已在词书清单中保留，禁止擅自补造。
 - 每本词书必须包含 `book.json` 和 `csv/` 下的完整规范表；先运行 `npm run data:verify`，再构建应用。
 - `books/cet6/csv/table_catalog.csv` 记录表及行数，`field_dictionary.csv` 记录字段含义，它们是数据结构的权威索引。
 - 第一版只按 `root_type=root` 排课；前缀、后缀、词基只展示在单词详情中。无真正词根的单词作为独立组。
@@ -11,13 +12,14 @@
 - 熟练度只有 `unmastered`、`unclear`、`mastered` 三档；复习日默认跳过 `mastered`。
 - 桌面端学习进度写入 Electron `userData/progress.json`；浏览器预览使用 localStorage。
 
-## 六级原始数据获取记录
+## 官网与发布边界
 
-- 2026-08-30 从“单词突围”1.0.3 的已授权桌面会话获取；经本机 Chromium 调试端口调用应用自带请求桥。
-- 用词书权限、学习计划、每日预览和候选词全集交叉确认 5166 个唯一单词，再通过词详情预载接口按每批 10 词读取。
-- 请求间隔 1000 ms，遇到 429/5xx 指数退避，401 由应用刷新会话；最终校验详情状态和所有 CSV 外键。
-- 元数据标称 5169 词，两个可枚举接口一致为 5166 词，差异 3 已在词书清单中保留，禁止擅自补造。
-- 原始 JSON、断点缓存、调试/抓取脚本、Excel 与截图检查件已在规范化完成后删除；详细端点、表结构及扩充步骤见 `docs/DATASETS.md`。
+- 官网不打包完整词书、不读取学习进度，不把助记拆词宣传成词源分析；官网输出 `dist-site/`，与桌面端 `dist/` 分离。
+- 部署使用 `website/wrangler.jsonc` 和 Wrangler；禁止用纯静态 ZIP 代替含函数的部署。Pages 生产项目为 `cyword`、分支为 `main`；Git 推送不自动部署官网。
+- 只用 `/downloads/CYword-Setup-x.y.z.exe` 提供只读安装包，`DOWNLOADS` 绑定专用私有桶 `cyword-downloads`。保持流式传输和断点续传，不引入任意 URL 代理。
+- 下载信息维护于 `website/src/release.ts`，无脚本入口同步更新。发布前校验文件名、长度和 SHA-256，先上传再公开链接，不覆盖已发布版本内容。
+- 官网 R2 下载不等于桌面自动更新；后者仍使用 GitHub Releases。阿里云 DNS 只维护 `cyword` CNAME，不修改根域或其他项目记录。
+- R2 已获用户授权开通和超额计费；不要自行升级 Workers 付费套餐。凭据、`.dev.vars*`、`.wrangler/`、生成类型及 `.work/` 过程文件不得提交。
 
 ## 常用命令
 
@@ -25,3 +27,13 @@
 - 数据校验：`npm run data:verify`
 - 自动测试：`npm test`
 - 生成安装包：`npm run dist`
+- 官网预览：`npm run dev:site`（`http://127.0.0.1:5174/`）
+- 官网下载测试：`npm run test:site:download`（仅本地 R2）
+- 官网发布：`npm run deploy:site`
+
+## 深入文档
+
+- [架构与数据流](docs/ARCHITECTURE.md)
+- [运行、发布与排障](docs/RUNBOOK.md)
+- [词书来源、表结构与扩充](docs/DATASETS.md)
+- [官网交互、下载协议与验证](docs/WEBSITE.md)

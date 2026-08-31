@@ -1,5 +1,6 @@
 node_modules/
 dist/
+dist-site/
 release/
 data/
 .work/
@@ -7,3 +8,6 @@ data/
 outputs/
 *.log
 .vite/
+.wrangler/
+website/worker-configuration.d.ts
+.dev.vars*

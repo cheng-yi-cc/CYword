@@ -8,7 +8,7 @@ Windows 安装程序首次安装时可选择目录；运行新版安装包会默
 
 ## 本地预览
 
-建议使用 Node.js 22。首次运行：
+建议使用 Node.js 24 LTS，与发布工作流一致。首次运行：
 
 ```powershell
 npm ci
@@ -23,6 +23,32 @@ npm run dist
 
 安装程序输出到 `release/CYword-Setup-<version>.exe`。同目录的 `latest.yml` 和 `.exe.blockmap` 是应用内更新所需文件，发布时必须一起上传。Windows 可能因安装包未签名而显示 SmartScreen 提示。
 
+## 官网本地预览
+
+官网位于 `website/`，与桌面应用分开运行，面向普通用户提供功能体验、下载和安装指南。已部署到 Cloudflare Pages，正式域名为 <https://cyword.chengyi.me/>。主下载通过同域 `/downloads/` 路径读取 R2 安装包，支持断点续传，GitHub 保留为备用入口。本地预览：
+
+```powershell
+npm run dev:site
+```
+
+浏览器访问 `http://127.0.0.1:5174/`。不需要启动 Electron，也不需要生成词书数据。页面里的学习体验使用少量独立示例，不会修改桌面端或浏览器版软件的学习进度。
+
+```powershell
+npm run build:site
+npm run preview:site
+```
+
+官网独立构建到 `dist-site/`，构建预览地址为 `http://127.0.0.1:4174/`。下载按钮连接已经发布的 Windows 安装包；下载信息维护在 `website/src/release.ts`。结构、版本维护与检查方式见 [官网说明](docs/WEBSITE.md)。
+
+下载接口测试和官网发布：
+
+```powershell
+npm run test:site:download
+npm run deploy:site
+```
+
+测试只使用本地模拟 R2，不上传测试文件；部署需要已登录 Cloudflare，更新 Pages 的 `main` 生产环境。不要再用纯静态 ZIP 上传，以免漏掉下载函数和 R2 绑定。网站代码提交不会自动部署；桌面应用内更新仍使用 GitHub Releases。
+
 ## 校验与测试
 
 ```powershell
@@ -36,10 +62,11 @@ npm run build:web
 ## 目录
 
 - `books/cet6/`：六级词书清单和 19 张规范 CSV，是源数据。
-- `scripts/`：词书校验与应用运行时数据编译脚本。
+- `scripts/`：词书校验与编译、官网下载测试和安装包校验上传脚本。
 - `src/`：React 界面、排课与进度逻辑。
+- `website/`：独立官网，含交互示例、软件下载、安装指南和常见问题。
 - `electron/`：Windows 桌面外壳和本地文件读写。
 - `tests/`：自动化测试。
-- `data/`、`dist/`、`release/`：构建生成物，不提交到 Git。
+- `data/`、`dist/`、`dist-site/`、`release/`：构建生成物，不提交到 Git。
 
 更多说明见 [词书数据](docs/DATASETS.md)、[架构](docs/ARCHITECTURE.md) 和 [运行手册](docs/RUNBOOK.md)。
