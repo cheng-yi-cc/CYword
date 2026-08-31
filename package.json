@@ -11,6 +11,14 @@
     "data:build": "npm run data:verify && node scripts/build-app-data.mjs",
     "dev": "npm run data:build && concurrently -k \"vite\" \"wait-on http-get://127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\"",
     "dev:web": "vite",
+    "dev:site": "vite --config website/vite.config.ts",
+    "types:site": "wrangler types --cwd website",
+    "check:site": "npm run types:site && tsc --project website/tsconfig.functions.json",
+    "build:site": "npm run check:site && tsc --project website/tsconfig.json && vite build --config website/vite.config.ts",
+    "preview:site": "vite preview --config website/vite.config.ts",
+    "test:site:download": "npm run build:site && node scripts/test-site-download.mjs",
+    "upload:site:installer": "node scripts/upload-site-installer.mjs",
+    "deploy:site": "npm run build:site && wrangler pages deploy --cwd website --project-name cyword --branch main --commit-dirty=true",
     "build:web": "tsc --noEmit && vite build",
     "build": "npm run data:build && npm run build:web",
     "dist": "npm run build && electron-builder --win nsis --publish never",
@@ -82,6 +90,7 @@
     "electron-builder": "^26.15.3",
     "typescript": "^7.0.2",
     "vite": "^8.2.2",
-    "wait-on": "^9.1.0"
+    "wait-on": "^9.1.0",
+    "wrangler": "^4.127.1"
   }
 }
