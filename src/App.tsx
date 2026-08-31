@@ -314,11 +314,16 @@ function PageHeader({ eyebrow, title, description, aside }: { eyebrow: string; t
 }
 
 function LiquidDay({ day, fraction }: { day: number; fraction: number }) {
-  const percent = Math.round(fraction * 100);
+  const percent = Math.min(100, Math.max(0, Math.round(fraction * 100)));
   return (
     <div className="liquid-day" aria-label={`Day ${day}，完成 ${percent}%`}>
-      <div className="day-outline">Day {day}</div>
-      <div className="liquid-clip" style={{ height: `${Math.max(2, percent)}%` }}><div className="liquid-text">Day {day}</div><i /><b /></div>
+      <div className="day-base-text">Day {day}</div>
+      <div
+        className="day-fill-text"
+        style={{ clipPath: `inset(${100 - percent}% 0 0 0)` }}
+      >
+        Day {day}
+      </div>
     </div>
   );
 }
