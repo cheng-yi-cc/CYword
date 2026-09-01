@@ -1,6 +1,6 @@
 # 架构
 
-仓库包含桌面应用和独立官网。桌面端读取完整词书与本机进度；官网只展示少量交互示例并提供公开安装包，不接入桌面用户数据。
+仓库包含桌面应用和独立官网。桌面安装包只携带软件，启动时联网读取词书目录，进入学习或复习时一次请求当天需要的单词；学习进度仍只保存在本机。官网页面只展示少量交互示例，不接入桌面用户进度，但 Pages Functions 同时承载只读词书接口和安装包下载。
 
 ## 数据流
 
@@ -14,16 +14,25 @@ books/<code>/book.json + csv/*.csv
                                   ├─ data/catalog.json
                                   └─ data/words/<word-id>.json
                                              │
-                        Electron IPC ────────┤
+                      scripts/build-book-api-data.mjs
+                                             │
+                  .work/book-api/<code>/<version>/
+                    ├─ catalog.json + manifest.json
+                    └─ shard-01.json ... shard-30.json
+                                             │ 上传
+                                      私有 R2 词书桶
+                                             │ Pages Functions
                                              ▼
-                                      React / Vite 界面
+                          Electron IPC → React / Vite 界面
 ```
 
-`books/` 是唯一应手工维护和提交的词书源数据。`data/` 是为快速启动生成的运行时目录：目录表只放单词摘要、词根组和日程，单词详情按 ID 拆分并在需要时读取，避免一次把全部详情加载进渲染进程。
+`books/` 是唯一应手工维护和提交的词书源数据。`data/` 仅供校验、测试和本地开发，不进入安装包。服务端发布物按内容哈希生成不可变版本：目录包含单词摘要、词根组和日程；每个单词只进入首次出现的学习日分片，清单记录单词到分片的映射。所有版本文件上传完成后才更新 `current.json`，避免客户端读到半成品。
 
 ## 桌面边界
 
-Electron 主进程提供词书目录读取、单词详情按需读取、进度原子读写，以及基于 electron-updater 的版本更新管理（检查、下载与重启安装）IPC。渲染进程启用上下文隔离、关闭 Node 集成并开启沙箱；外部 HTTP 链接交给系统浏览器。生产进度原子写入 Electron `userData/progress.json`，网页预览环境降级使用 localStorage。
+Electron 主进程通过固定 HTTPS 地址读取词书目录和每日批量词汇，并提供进度原子读写及基于 electron-updater 的版本更新管理 IPC。渲染进程启用上下文隔离、关闭 Node 集成并开启沙箱；词书只保存在当前运行内存，切换页面会释放已加载详情。生产进度原子写入 Electron `userData/progress.json`，网页预览环境降级使用 localStorage。
+
+学习日先从目录算出当天唯一单词 ID，再以一个 POST 请求批量获取。复习日由本机进度生成动态 ID 列表，同样只发一个请求。服务端根据清单按学习日分片读取 R2，并流式拼接 JSON，避免累计复习在 Worker 内同时展开整本词书。
 
 ## 排课与复习
 
@@ -48,17 +57,23 @@ Electron 主进程提供词书目录读取、单词详情按需读取、进度�
                               │
                     Cloudflare Pages 项目 cyword
                               ├─ /、/assets/* → dist-site/ 静态页面
-                              └─ /downloads/CYword-Setup-x.y.z.exe
+                              ├─ /downloads/latest{,.json,.yml}
+                              ├─ /downloads/releases/<version>/<sha256>/*
                                            │ GET / HEAD
                                   Pages Function（流式响应）
                                            │ DOWNLOADS 绑定
                                   R2 私有桶 cyword-downloads
+                              └─ /api/books/<code>/{catalog,words}
+                                           │ GET / POST
+                                  Pages Function（批量流式响应）
+                                           │ BOOKS 绑定
+                                  R2 私有桶 cyword-book-data
 ```
 
-`website/vite.config.ts` 把 `website/` 构建到 `dist-site/`；`website/wrangler.jsonc` 定义 Pages 项目、输出目录和 R2 绑定。`website/public/_routes.json` 只让 `/downloads` 和 `/downloads/*` 调用函数，首页与静态资源不占用函数请求额度。域名服务器仍在阿里云，只设置子域 CNAME，不接管根域或其他项目。
+`website/vite.config.ts` 把 `website/` 构建到 `dist-site/`；`website/wrangler.jsonc` 定义 Pages 项目、输出目录和两个独立 R2 绑定。`website/public/_routes.json` 只让 `/downloads/*` 和 `/api/books/*` 调用函数，首页与静态资源不占用函数请求额度。域名服务器仍在阿里云，只设置子域 CNAME，不接管根域或其他项目。
 
-下载处理器 `website/functions/downloads/[[path]].ts` 仅接受稳定版安装包文件名。HEAD 读取元数据；GET 先取元数据，再按 ETag 条件读取 R2 流，支持单段 Range 和 If-Range，不把完整安装包装入内存。对外没有上传、目录列表或任意 URL 代理。响应允许浏览器缓存一天，但没有额外的边缘 Cache API 层。
+下载处理器 `website/functions/downloads/[[path]].ts` 只接受稳定最新版入口、受约束的内容寻址资产和迁移前安装包路径。`releases/current.json` 同时决定官网展示、`/downloads/latest` 跳转和 electron-updater 读取的 `/downloads/latest.yml`；版本资产全部成功上传后才更新这一指针。HEAD 读取元数据；GET 按 ETag 流式读取 R2，支持单段 Range 和 If-Range，不把完整安装包装入内存。内容寻址资产可长期缓存，最新版指针和更新清单不缓存；对外没有上传、目录列表或任意 URL 代理。
 
-R2 桶使用 APAC 位置、Standard 存储，`r2.dev` 公开入口关闭。官网下载主地址和 GitHub 备用地址指向相同发布文件，版本信息集中在 `website/src/release.ts`。桌面应用内更新仍由 electron-updater 访问 GitHub Releases，官网部署不会切换该通道。
+两个 R2 桶均使用 APAC 位置和 Standard 存储，不开放 `r2.dev` 入口。词书接口当前没有登录鉴权，只限制固定书码、版本格式、单词 UUID、请求类型、计划日和最多 5166 个 ID；登录和授权防复制属于后续工作。electron-updater 使用官网 generic provider，GitHub Release 只保留公开发布记录和迁移前客户端的过渡入口，不再是新版客户端的更新源。
 
 下载 HTTP 协议及内容边界见 [官网说明](WEBSITE.md)；账号权限、上线步骤、费用和排障见 [运行手册](RUNBOOK.md)。

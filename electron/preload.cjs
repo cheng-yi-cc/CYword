@@ -2,7 +2,7 @@ const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("cyword", {
   readCatalog: () => ipcRenderer.invoke("catalog:read"),
-  readWord: (wordId) => ipcRenderer.invoke("word:read", wordId),
+  readWords: (request) => ipcRenderer.invoke("words:read", request),
   readProgress: () => ipcRenderer.invoke("progress:read"),
   writeProgress: (progress) => ipcRenderer.invoke("progress:write", progress),
   getUpdateStatus: () => ipcRenderer.invoke("update:get-state"),

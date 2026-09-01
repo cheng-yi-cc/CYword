@@ -18,20 +18,55 @@ const fixturePath = path.join(work, fixtureName);
 const fixture = Buffer.alloc(256 * 1024);
 for (let i = 0; i < fixture.length; i++) fixture[i] = i % 251;
 const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
+const fixtureDigest = digest(fixture);
+const baseKey = `releases/0.0.0/${fixtureDigest}`;
+const assetKey = `${baseKey}/${fixtureName}`;
+const blockmapKey = `${assetKey}.blockmap`;
+const updaterKey = `${baseKey}/latest.yml`;
+const blockmap = Buffer.from("deterministic blockmap fixture\n");
+const updaterMetadata = `version: 0.0.0\nfiles:\n  - url: ${assetKey}\n    sha512: fixture\n    size: ${fixture.length}\nreleaseDate: '2026-09-01T00:00:00.000Z'\n`;
+const pointer = {
+  schemaVersion: 1,
+  version: "0.0.0",
+  publishedAt: "2026-09-01T00:00:00.000Z",
+  filename: fixtureName,
+  sizeBytes: fixture.length,
+  sha256: fixtureDigest,
+  assetPath: assetKey,
+  blockmapPath: blockmapKey,
+  updaterMetadataPath: updaterKey,
+  githubDownloadUrl: `https://github.com/cheng-yi-cc/CYword/releases/download/v0.0.0/${fixtureName}`,
+  notesUrl: "https://github.com/cheng-yi-cc/CYword/releases/tag/v0.0.0",
+  repositoryUrl: "https://github.com/cheng-yi-cc/CYword",
+};
 const run = promisify(execFile);
 await mkdir(work, { recursive: true });
 await writeFile(fixturePath, fixture);
+const blockmapPath = path.join(work, `${fixtureName}.blockmap`);
+const updaterPath = path.join(work, "latest.yml");
+const pointerPath = path.join(work, "current.json");
+await Promise.all([
+  writeFile(blockmapPath, blockmap),
+  writeFile(updaterPath, updaterMetadata),
+  writeFile(pointerPath, `${JSON.stringify(pointer)}\n`),
+]);
 
 // 测试数据只写入本地 R2 模拟器，绝不使用 --remote。
-await run(process.execPath, [cli, "r2", "object", "put", `${bucket}/${fixtureName}`,
-  "--local", "--persist-to", state, "--file", fixturePath], { cwd: root, windowsHide: true });
+const put = (key, file) => run(process.execPath, [cli, "r2", "object", "put", `${bucket}/${key}`,
+  "--local", "--persist-to", state, "--file", file], { cwd: root, windowsHide: true });
+// 多个 Wrangler 进程不能并发写同一个本地状态目录。
+await put(fixtureName, fixturePath);
+await put(assetKey, fixturePath);
+await put(blockmapKey, blockmapPath);
+await put(updaterKey, updaterPath);
+await put("releases/current.json", pointerPath);
 
 const listener = createServer();
 await new Promise((resolve) => listener.listen(0, "127.0.0.1", resolve));
 const port = listener.address().port;
 await new Promise((resolve) => listener.close(resolve));
 const origin = `http://127.0.0.1:${port}`;
-const url = `${origin}/downloads/${fixtureName}`;
+const url = `${origin}/downloads/${assetKey}`;
 const server = spawn(process.execPath, [cli, "pages", "dev", "--cwd", path.join(root, "website"),
   // Wrangler 4.127.1 本地 Pages 未自动注入此绑定，显式读取同一配置传给模拟器。
   "--r2", `DOWNLOADS=${bucket}`,
@@ -79,6 +114,44 @@ try {
     assert.equal(response.status, 200);
     assert.equal(digest(await bytes(response)), digest(fixture));
   });
+  await check("latest release JSON and redirect use the same atomic pointer", async () => {
+    const latest = await request({}, "GET", `${origin}/downloads/latest.json`);
+    assert.equal(latest.status, 200);
+    assert.equal(latest.headers.get("cache-control"), "no-store");
+    assert.deepEqual(await latest.json(), {
+      version: pointer.version,
+      publishedAt: pointer.publishedAt,
+      filename: pointer.filename,
+      sizeBytes: pointer.sizeBytes,
+      sha256: pointer.sha256,
+      downloadPath: `/downloads/${assetKey}`,
+      githubDownloadUrl: pointer.githubDownloadUrl,
+      notesUrl: pointer.notesUrl,
+      repositoryUrl: pointer.repositoryUrl,
+    });
+    const redirect = await fetch(`${origin}/downloads/latest`, { redirect: "manual" });
+    assert.equal(redirect.status, 302);
+    assert.equal(redirect.headers.get("location"), `${origin}/downloads/${assetKey}`);
+    assert.equal(redirect.headers.get("cache-control"), "no-store");
+  });
+  await check("electron-updater receives the versioned manifest through latest.yml", async () => {
+    const response = await request({}, "GET", `${origin}/downloads/latest.yml`);
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("content-type"), /^application\/x-yaml/);
+    assert.equal(response.headers.get("cache-control"), "no-store");
+    assert.equal(await response.text(), updaterMetadata);
+  });
+  await check("blockmap is available from the content-addressed release path", async () => {
+    const response = await request({}, "GET", `${origin}/downloads/${blockmapKey}`);
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("content-disposition"), null);
+    assert.deepEqual(await bytes(response), blockmap);
+  });
+  await check("legacy versioned installer URLs remain available during migration", async () => {
+    const response = await request({}, "GET", `${origin}/downloads/${fixtureName}`);
+    assert.equal(response.status, 200);
+    assert.equal(digest(await bytes(response)), fixtureDigest);
+  });
   for (const [range, start, end] of [["bytes=0-1023", 0, 1024], ["bytes=260000-", 260000, fixture.length],
     ["bytes=-100", fixture.length - 100, fixture.length], ["bytes=262140-999999", 262140, fixture.length]]) {
     await check(`resume ${range}`, async () => {
@@ -125,7 +198,8 @@ try {
     await stale.arrayBuffer();
   });
   await check("missing files and arbitrary paths return 404", async () => {
-    for (const name of ["CYword-Setup-99.99.99.exe", "secret.txt", "folder/CYword-Setup-0.0.0.exe"]) {
+    for (const name of ["CYword-Setup-99.99.99.exe", "secret.txt", "folder/CYword-Setup-0.0.0.exe",
+      `releases/0.0.0/${"0".repeat(64)}/${fixtureName}`, `${updaterKey}/extra`]) {
       const response = await request({}, "GET", `${origin}/downloads/${name}`);
       assert.equal(response.status, 404);
       assert.equal(response.headers.get("cache-control"), "no-store");

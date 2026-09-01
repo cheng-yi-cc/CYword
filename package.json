@@ -1,6 +1,6 @@
 {
   "name": "cyword",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "词根驱动的本地英语记忆桌面应用",
@@ -9,6 +9,7 @@
   "scripts": {
     "data:verify": "node scripts/verify-book-data.mjs",
     "data:build": "npm run data:verify && node scripts/build-app-data.mjs",
+    "data:api": "npm run data:build && node scripts/build-book-api-data.mjs",
     "dev": "npm run data:build && concurrently -k \"vite\" \"wait-on http-get://127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\"",
     "dev:web": "vite",
     "dev:site": "vite --config website/vite.config.ts",
@@ -17,13 +18,14 @@
     "build:site": "npm run check:site && tsc --project website/tsconfig.json && vite build --config website/vite.config.ts",
     "preview:site": "vite preview --config website/vite.config.ts",
     "test:site:download": "npm run build:site && node scripts/test-site-download.mjs",
-    "upload:site:installer": "node scripts/upload-site-installer.mjs",
+    "publish:site:release": "node scripts/publish-site-release.mjs",
+    "upload:book-data": "npm run data:api && node scripts/upload-book-data.mjs",
     "deploy:site": "npm run build:site && wrangler pages deploy --cwd website --project-name cyword --branch main --commit-dirty=true",
     "build:web": "tsc --noEmit && vite build",
     "build": "npm run data:build && npm run build:web",
     "dist": "npm run build && electron-builder --win nsis --publish never",
     "dist:unpacked": "npm run build && electron-builder --win dir",
-    "test": "npm run data:build && node --test tests/*.test.mjs tests/*.test.ts"
+    "test": "npm run data:api && node --test tests/*.test.mjs tests/*.test.ts"
   },
   "build": {
     "appId": "com.cyword.desktop",
@@ -36,15 +38,6 @@
       "dist/**/*",
       "electron/**/*",
       "package.json"
-    ],
-    "extraResources": [
-      {
-        "from": "data",
-        "to": "data",
-        "filter": [
-          "**/*"
-        ]
-      }
     ],
     "win": {
       "icon": "electron/assets/icon.ico",
@@ -66,9 +59,10 @@
     },
     "publish": [
       {
-        "provider": "github",
-        "owner": "cheng-yi-cc",
-        "repo": "CYword"
+        "provider": "generic",
+        "url": "https://cyword.chengyi.me/downloads/",
+        "channel": "latest",
+        "useMultipleRangeRequest": false
       }
     ]
   },

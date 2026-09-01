@@ -38,7 +38,14 @@ export interface PlanDay {
 }
 
 export interface Catalog {
-  generatedAt: string;
+  generatedAt?: string;
+  dataVersion: string;
+  book: {
+    code: string;
+    name: string;
+    targetExam: string;
+    schemaVersion: number;
+  };
   stats: {
     wordCount: number;
     trueRootCount: number;
@@ -86,6 +93,19 @@ export interface WordDetail extends WordSummary {
   sentenceZones: Record<string, string>[];
 }
 
+export interface WordsRequest {
+  dataVersion: string;
+  planDay: number;
+  kind: "study" | "review" | "bookmarks";
+  wordIds: string[];
+}
+
+export interface WordsResponse {
+  dataVersion: string;
+  wordCount: number;
+  words: Record<string, WordDetail>;
+}
+
 export interface WordProgress {
   learnedAt: string;
   lastSeenAt: string;
@@ -130,7 +150,7 @@ declare global {
   interface Window {
     cyword: {
       readCatalog: () => Promise<Catalog>;
-      readWord: (wordId: string) => Promise<WordDetail>;
+      readWords: (request: WordsRequest) => Promise<WordsResponse>;
       readProgress: () => Promise<unknown>;
       writeProgress: (progress: AppProgress) => Promise<boolean>;
       getUpdateStatus?: () => Promise<UpdateStatus>;

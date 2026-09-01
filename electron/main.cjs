@@ -4,6 +4,9 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 
 const devUrl = process.env.VITE_DEV_SERVER_URL;
+const bookApiUrl = devUrl
+  ? `${devUrl.replace(/\/$/, "")}/api/books/cet6`
+  : "https://cyword.chengyi.me/api/books/cet6";
 let updateState = {
   status: "idle",
   currentVersion: app.getVersion(),
@@ -72,14 +75,20 @@ function checkForUpdatesOnce() {
   });
 }
 
-function dataDirectory() {
-  return app.isPackaged
-    ? path.join(process.resourcesPath, "data")
-    : path.join(app.getAppPath(), "data");
-}
-
 function progressPath() {
   return path.join(app.getPath("userData"), "progress.json");
+}
+
+async function fetchBookJson(pathname, options = {}) {
+  const response = await fetch(`${bookApiUrl}${pathname}`, {
+    ...options,
+    cache: "no-store",
+    signal: AbortSignal.timeout(120_000),
+  });
+  if (!response.ok) {
+    throw new Error(`词库服务暂时不可用（${response.status}），请检查网络后重试`);
+  }
+  return response.json();
 }
 
 async function readJson(filePath, fallback = null) {
@@ -92,15 +101,15 @@ async function readJson(filePath, fallback = null) {
 }
 
 function registerIpc() {
-  ipcMain.handle("catalog:read", () =>
-    readJson(path.join(dataDirectory(), "catalog.json")),
-  );
+  ipcMain.handle("catalog:read", () => fetchBookJson("/catalog"));
 
-  ipcMain.handle("word:read", (_event, wordId) => {
-    if (!/^[a-f0-9-]{36}$/i.test(String(wordId))) {
-      throw new Error("无效的单词标识");
-    }
-    return readJson(path.join(dataDirectory(), "words", `${wordId}.json`));
+  ipcMain.handle("words:read", (_event, request) => {
+    if (!request || !Array.isArray(request.wordIds)) throw new Error("每日词汇请求格式无效");
+    return fetchBookJson("/words", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    });
   });
 
   ipcMain.handle("progress:read", async () => {

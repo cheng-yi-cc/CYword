@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from "react";
-import { release } from "./release";
+import { useEffect, useState, type ReactNode } from "react";
+import { fetchLatestRelease, release, type ReleaseInfo } from "./release";
 
 function Icon({ name, className = "" }: { name: string; className?: string }) {
   const shapes: Record<string, ReactNode> = {
@@ -128,38 +128,44 @@ const faqs = [
   { question: "下载没有开始，或者下载速度很慢？", answer: "主下载由本站通过 Cloudflare R2 提供，无需访问 GitHub，支持断点续传。跨境线路仍可能较慢，部分地区也可能无法连接。请先查看浏览器下载列表，尝试继续下载或稍后重试；也可以使用下载区的 GitHub 备用地址。两个地址提供的是同一份安装包，可核对下方 SHA-256。" },
 ];
 
-function Download() {
+function Download({ currentRelease }: { currentRelease: ReleaseInfo }) {
   const [downloadStarted, setDownloadStarted] = useState(false);
   const [copyState, setCopyState] = useState<"idle" | "done" | "failed">("idle");
   const copyLink = async () => {
-    try { await navigator.clipboard.writeText(release.downloadUrl); setCopyState("done"); }
+    try { await navigator.clipboard.writeText(currentRelease.downloadUrl); setCopyState("done"); }
     catch { setCopyState("failed"); }
   };
   return <section className="download-section section-wrap" id="download" aria-labelledby="download-title"><div className="download-intro"><span className="brand-mark download-logo" aria-hidden="true">Cy</span><span className="eyebrow">MAKE ROOM FOR A LITTLE PROGRESS</span><h2 id="download-title">下一组单词，<br className="mobile-break" />从这里开始。</h2><p>巧记、构词、分组与复习，都已经准备好。</p></div>
-    <div className="download-card"><div className="download-card-heading"><span className="windows-tile"><Icon name="windows" /></span><div><h3>CYword for Windows</h3><p>Windows 10 / 11 · 64 位</p></div><span className="version-label">v{release.version}</span></div><div className="download-meta"><span>内置大学英语六级词书</span><span>{release.size} <i>·</i> {release.date}</span></div>
-      <a className="button button-primary download-main" href={release.downloadUrl} onClick={() => setDownloadStarted(true)}><Icon name="download" />下载 Windows 安装包<Icon name="arrow" /></a><p className="download-reassurance">无需注册 · 下载后双击安装 · 可选择安装目录</p><p className="mobile-download-note">手机上先了解，安装请在 Windows 电脑上完成。</p>
-      <div className="download-links"><button onClick={copyLink}>{copyState === "done" ? "下载地址已复制" : "复制下载地址"}</button><span>·</span><a href="#guide">查看安装步骤</a><span>·</span><a href={release.githubDownloadUrl}>GitHub 备用下载 ↗</a><span>·</span><a href={release.notesUrl} target="_blank" rel="noreferrer">版本记录 ↗</a></div>
-      <div className="download-feedback" role="status">{downloadStarted && <p>已向浏览器发起下载，请查看下载列表。如果没有开始，可复制地址后重试。<a href="#faq">查看下载帮助</a></p>}{copyState === "done" && <p>下载地址已复制，可粘贴到 Windows 电脑的浏览器中打开。</p>}{copyState === "failed" && <label>浏览器未允许复制，请手动选择下面的地址：<input readOnly aria-label="Windows 安装包下载地址" value={release.downloadUrl} onFocus={(event) => event.currentTarget.select()} /></label>}</div>
-      <details className="checksum"><summary>安装包来源与文件校验<Icon name="plus" /></summary><div><p>本站主下载和 GitHub 备用下载提供同一份官方发布文件，无需登录。当前安装包未签名，安装前请确认来源并核对校验值。</p><p className="filename">{release.filename}</p><span>SHA-256</span><code>{release.sha256}</code></div></details>
+    <div className="download-card"><div className="download-card-heading"><span className="windows-tile"><Icon name="windows" /></span><div><h3>CYword for Windows</h3><p>Windows 10 / 11 · 64 位</p></div><span className="version-label">v{currentRelease.version}</span></div><div className="download-meta"><span>内置大学英语六级词书</span><span>{currentRelease.size} <i>·</i> {currentRelease.date}</span></div>
+      <a className="button button-primary download-main" href={currentRelease.downloadUrl} onClick={() => setDownloadStarted(true)}><Icon name="download" />下载 Windows 安装包<Icon name="arrow" /></a><p className="download-reassurance">无需注册 · 下载后双击安装 · 可选择安装目录</p><p className="mobile-download-note">手机上先了解，安装请在 Windows 电脑上完成。</p>
+      <div className="download-links"><button onClick={copyLink}>{copyState === "done" ? "下载地址已复制" : "复制下载地址"}</button><span>·</span><a href="#guide">查看安装步骤</a><span>·</span><a href={currentRelease.githubDownloadUrl}>GitHub 备用下载 ↗</a><span>·</span><a href={currentRelease.notesUrl} target="_blank" rel="noreferrer">版本记录 ↗</a></div>
+      <div className="download-feedback" role="status">{downloadStarted && <p>已向浏览器发起下载，请查看下载列表。如果没有开始，可复制地址后重试。<a href="#faq">查看下载帮助</a></p>}{copyState === "done" && <p>下载地址已复制，可粘贴到 Windows 电脑的浏览器中打开。</p>}{copyState === "failed" && <label>浏览器未允许复制，请手动选择下面的地址：<input readOnly aria-label="Windows 安装包下载地址" value={currentRelease.downloadUrl} onFocus={(event) => event.currentTarget.select()} /></label>}</div>
+      <details className="checksum"><summary>安装包来源与文件校验<Icon name="plus" /></summary><div><p>本站主下载和 GitHub 备用下载提供同一份官方发布文件，无需登录。当前安装包未签名，安装前请确认来源并核对校验值。</p><p className="filename">{currentRelease.filename}</p><span>SHA-256</span><code>{currentRelease.sha256}</code></div></details>
     </div>
   </section>;
 }
 
 export default function Website() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [currentRelease, setCurrentRelease] = useState(release);
+  useEffect(() => {
+    let active = true;
+    fetchLatestRelease().then((latest) => { if (active) setCurrentRelease(latest); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
   return <>
     <div id="top" aria-hidden="true" />
     <a className="skip-link" href="#main">跳到正文</a>
     <header className="site-header"><div className="header-inner"><Brand /><nav id="main-navigation" aria-label="主导航" className={menuOpen ? "menu-open" : ""}><a href="#method" onClick={() => setMenuOpen(false)}>学习方式</a><a href="#plan" onClick={() => setMenuOpen(false)}>分级复习</a><a href="#guide" onClick={() => setMenuOpen(false)}>上手指南</a><a href="#faq" onClick={() => setMenuOpen(false)}>常见问题</a></nav><div className="header-actions"><a className="header-download" href="#download" onClick={() => setMenuOpen(false)}>下载软件<Icon name="download" /></a><button className="menu-toggle" aria-expanded={menuOpen} aria-controls="main-navigation" aria-label={menuOpen ? "收起导航" : "展开导航"} onClick={() => setMenuOpen(!menuOpen)}><Icon name={menuOpen ? "close" : "menu"} /></button></div></div></header>
     <main id="main">
-      <section className="hero section-wrap" aria-labelledby="hero-title"><div className="hero-copy"><span className="hero-kicker"><i /> 巧记 · 词根分组 · 分级复习</span><h1 id="hero-title">巧记带着学，<br /><em>单词成串记。</em></h1><p className="hero-description">5,166 个六级单词，逐词备好巧记思路。<br />拆开词根词缀，一组一组带着你记，<br />再按熟练度复习，把时间留给还不熟的词。</p><div className="hero-actions"><a className="button button-primary" href="#download"><Icon name="windows" />下载 Windows 版<Icon name="arrow" /></a><a className="text-link" href="#experience">先体验一下 <span aria-hidden="true">↗</span></a></div><div className="hero-availability"><span className="availability-dot" />v{release.version}<i>·</i>Windows 10 / 11<i>·</i>无需注册</div><div className="hero-note"><span aria-hidden="true">↳</span> 省下自己找词根、编巧记、排复习的准备时间。</div></div><WordDemo /></section>
+      <section className="hero section-wrap" aria-labelledby="hero-title"><div className="hero-copy"><span className="hero-kicker"><i /> 巧记 · 词根分组 · 分级复习</span><h1 id="hero-title">巧记带着学，<br /><em>单词成串记。</em></h1><p className="hero-description">5,166 个六级单词，逐词备好巧记思路。<br />拆开词根词缀，一组一组带着你记，<br />再按熟练度复习，把时间留给还不熟的词。</p><div className="hero-actions"><a className="button button-primary" href="#download"><Icon name="windows" />下载 Windows 版<Icon name="arrow" /></a><a className="text-link" href="#experience">先体验一下 <span aria-hidden="true">↗</span></a></div><div className="hero-availability"><span className="availability-dot" />v{currentRelease.version}<i>·</i>Windows 10 / 11<i>·</i>无需注册</div><div className="hero-note"><span aria-hidden="true">↳</span> 省下自己找词根、编巧记、排复习的准备时间。</div></div><WordDemo /></section>
       <div className="facts-strip section-wrap"><div><span className="fact-number">5,166</span><span>每词都有巧记<span>从怎么记，就给你思路</span></span></div><div><Icon name="branch" /><span>词根成组学习<span>同根单词，在同一天串起来</span></span></div><div><span className="fact-number">3 <i>档</i></span><span>熟练度分级<span>让复习分清轻重</span></span></div></div>
       <MnemonicMethod />
       <Rhythm />
       <section className="guide-section section-wrap" id="guide" aria-labelledby="guide-title"><div className="section-heading"><div><span className="eyebrow">A SMALL START IS STILL A START</span><h2 id="guide-title">装好，打开，<br className="mobile-break" />开始今天。</h2></div><p>不需要懂代码，也不用研究项目页面。<br />三个小步骤，就能开始学习。</p></div><ol className="guide-steps"><li><span className="step-number">01</span><div className="step-art installer-art"><Icon name="download" /><span>CYword-Setup<small>.exe</small></span><Icon name="check" /></div><h3>下载安装包</h3><p>在 Windows 电脑上点击下载，保存安装文件。无需下载源码，也不用注册账号。</p><a href="#download">前往下载 <Icon name="arrow" /></a></li><li><span className="step-number">02</span><div className="step-art install-art"><span className="mini-cy">Cy</span><div><span>选择安装位置</span><small>D:\CYword</small></div><span className="mini-install-label">安装</span></div><h3>双击，完成安装</h3><p>打开下载好的 .exe 文件，按提示选择安装位置。安装完成后，从桌面打开 CYword。</p><a href="#faq">遇到安全提示？ <Icon name="arrow" /></a></li><li><span className="step-number">03</span><div className="step-art first-day-art"><span>Day 1</span><span className="mini-start-label">开始学习 <Icon name="arrow" /></span></div><h3>从第一组词根开始</h3><p>点击首页的「继续今日学习」，进入今日计划后点击开始按钮，跟着巧记按组学习，标记熟练度。进度会自动保存。</p><a href="#experience">先试试学习体验 <Icon name="arrow" /></a></li></ol></section>
-      <Download />
+      <Download currentRelease={currentRelease} />
       <section className="faq-section section-wrap" id="faq" aria-labelledby="faq-title"><div><span className="eyebrow">A FEW THINGS TO KNOW</span><h2 id="faq-title">你可能还想知道</h2><p>开始之前，把这些小问题说清楚。</p></div><div className="faq-list">{faqs.map((faq, i) => <details name="faq" key={faq.question} open={i === 0 ? true : undefined}><summary>{faq.question}<Icon name="plus" /></summary><p>{faq.answer}</p></details>)}</div></section>
     </main>
-    <footer className="site-footer section-wrap"><div className="footer-top"><Brand footer /><p>每个词有巧记，每一组有联系，学过之后有复习。</p><a href="#top">回到顶部 ↑</a></div><div className="footer-bottom"><span>© {new Date().getFullYear()} CYword · 词根记忆</span><span>巧记带着学，单词成串记。<a href={release.repositoryUrl} target="_blank" rel="noreferrer">开源项目 ↗</a></span></div></footer>
+    <footer className="site-footer section-wrap"><div className="footer-top"><Brand footer /><p>每个词有巧记，每一组有联系，学过之后有复习。</p><a href="#top">回到顶部 ↑</a></div><div className="footer-bottom"><span>© {new Date().getFullYear()} CYword · 词根记忆</span><span>巧记带着学，单词成串记。<a href={currentRelease.repositoryUrl} target="_blank" rel="noreferrer">开源项目 ↗</a></span></div></footer>
   </>;
 }

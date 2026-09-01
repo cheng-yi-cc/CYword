@@ -6,6 +6,7 @@
   "compatibility_flags": ["nodejs_compat"],
   "send_metrics": false,
   "r2_buckets": [
-    { "binding": "DOWNLOADS", "bucket_name": "cyword-downloads" }
+    { "binding": "DOWNLOADS", "bucket_name": "cyword-downloads" },
+    { "binding": "BOOKS", "bucket_name": "cyword-book-data" }
   ]
 }

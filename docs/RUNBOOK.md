@@ -27,20 +27,24 @@ npm run build:web
 npm run dist
 ```
 
-主要安装文件是 `release/CYword-Setup-<version>.exe`。`latest.yml` 和 `CYword-Setup-<version>.exe.blockmap` 是应用内更新元数据，三者必须发布在同一个 GitHub Release。0.2.1 版未配置代码签名，首次下载或安装时 Windows 可能显示 SmartScreen；发布前如有证书，应在构建环境配置签名，不要把证书或密码写入仓库。
+主要安装文件是 `release/CYword-Setup-<version>.exe`。`data/` 会在构建前生成用于检查，但不在 electron-builder 的 `files` 中，也不得通过 `extraResources` 打进安装包。`latest.yml` 和 `CYword-Setup-<version>.exe.blockmap` 是应用内更新元数据；三者来自同一次构建，必须一起发布到 GitHub Release 和官网 R2。当前版本未配置代码签名，首次下载或安装时 Windows 可能显示 SmartScreen；发布前如有证书，应在构建环境配置签名，不要把证书或密码写入仓库。
 
 安装器为交互式 NSIS：首次安装可选择目录；手动运行新版安装包时会从注册表读取旧目录作为默认值，用户仍可修改。应用内更新使用同一个安装器静默覆盖旧版本，并保留 Electron `userData` 中的学习进度。
 
 ## 标签自动构建
 
-推送形如 `v0.2.1` 的标签会触发 `.github/workflows/build-tag.yml`。Windows runner 会检查标签与 `package.json` 版本一致，执行 `npm ci`、自动测试和 NSIS 打包，然后创建同名 GitHub Release，并上传安装器、`latest.yml` 与 `.exe.blockmap`。
+推送形如 `v0.3.0` 的标签会触发 `.github/workflows/build-tag.yml`。Windows runner 会检查标签与 `package.json` 版本一致，执行 `npm ci`、自动测试和 NSIS 打包，创建同名 GitHub Release，然后自动把同一构建的安装器、`.exe.blockmap` 和版本化 `latest.yml` 上传官网 R2。全部对象校验上传成功后，工作流最后更新 `releases/current.json`，官网和桌面更新源同时切换。
 
 ```powershell
-git tag -a v0.2.1 -m "CYword v0.2.1"
-git push origin v0.2.1
+git tag -a v0.3.0 -m "CYword v0.3.0"
+git push origin v0.3.0
 ```
 
-工作流不额外上传 GitHub Actions artifact。相同标签的任务重新运行会覆盖 Release 中的同名资产；官网 R2 不会跟随更新，会导致两处文件与公开校验值不一致。已对外发布的版本不要用重跑构建替换内容，应发布新版本号。标签示例中的 `v0.2.1` 已存在，新发布须替换成未使用且与 `package.json` 一致的版本。
+工作流不额外上传 GitHub Actions artifact。R2 资产使用 `releases/<version>/<sha256>/` 内容寻址路径，旧版本不会被覆盖；但相同标签重跑仍会覆盖 GitHub Release 的同名资产，并可能让同一版本号对应不同二进制，因此已对外发布的版本不得重跑替换，应发布新版本号。标签示例中的版本发布后即不可重复使用；新发布须替换成未使用且与 `package.json` 一致的版本。
+
+首次启用前，在 Cloudflare R2 创建 `Object Read & Write` S3 API Token，并把范围限制为 `cyword-downloads` 单桶；在 GitHub Actions Secrets 配置 `CLOUDFLARE_ACCOUNT_ID`、`CLOUDFLARE_R2_ACCESS_KEY_ID` 和 `CLOUDFLARE_R2_SECRET_ACCESS_KEY`。不要使用能管理其他桶、Workers 或账号设置的宽权限 Token。
+
+已经安装的 0.2.1 内嵌 GitHub provider，无法远程改写。迁移后的第一个新版本必须同时保留 GitHub Release，使 0.2.1 用户完成一次过渡更新；从该新版本开始，检查和下载安装包都只访问官网。若要求连这一次 GitHub 请求也没有，用户只能手动从官网安装迁移后的版本。
 
 ## 选择另一本词书做数据验证
 
@@ -51,21 +55,35 @@ npm run data:build
 Remove-Item Env:CYWORD_BOOK
 ```
 
-默认值始终是 `cet6`。0.2.1 版安装包只携带构建时选中的一本词书。
+默认值始终是 `cet6`。选择词书只影响本地校验和服务端数据生成，安装包不携带任何完整词书。
+
+## 发布服务端词书
+
+词书使用独立私有 R2 桶 `cyword-book-data`。首次环境中先创建 APAC、Standard 桶；常规数据发布不要重复创建：
+
+```powershell
+npx wrangler r2 bucket create cyword-book-data --location apac --storage-class Standard
+npm run upload:book-data
+```
+
+`upload:book-data` 会重新校验并编译数据，在 `.work/book-api/cet6/` 生成基于内容哈希的版本、目录、清单和 30 个学习日分片。上传脚本先上传全部不可变版本对象，最后更新 `books/cet6/current.json`。上传成功后还必须执行 `npm run deploy:site`，使生产 Pages Functions 使用 `BOOKS` 绑定；只上传数据不会发布新接口代码。
+
+桌面端启动时 GET `/api/books/cet6/catalog`；学习日、累计复习日和生词本都向 `/api/books/cet6/words` 发一次 POST，提交当前数据版本、计划日、请求类型和唯一单词 ID。接口当前公开可读且不含账号鉴权。旧版本对象应至少保留到使用该数据版本的桌面会话自然结束，不要只删分片而留下目录或清单。
 
 ## 启动故障
 
 - 双击无窗口：优先使用 NSIS 安装包，不再发布旧 portable 版本；查看任务管理器中是否已有单实例正在运行。
 - 开发模式不启动：先单独运行 `npm run data:verify`，再检查 Node.js 版本和 `npm ci` 是否成功。
-- 界面加载失败：桌面端会弹出错误框；重新运行 `npm run build` 可同时检查 TypeScript、Vite 和数据生成。
+- 界面加载失败：先确认网络和 `/api/books/cet6/catalog` 返回 200；开发模式再运行 `npm run build` 检查 TypeScript、Vite 和本地数据生成。
 - 进度异常：先备份 Electron 用户数据目录中的 `progress.json`，再检查其 `version` 是否为 2。除非用户明确要求，不要删除进度文件。
 
 ## 发布前清单
 
 1. `npm ci` 能在干净依赖环境完成。
 2. `npm run data:verify`、`npm test`、`npm run build:web` 全部通过。
-3. 安装包能安装、启动并读取 5166 词目录。
-4. `release/` 中存在安装器、`latest.yml` 和对应 `.exe.blockmap`；`data/`、`dist/`、`release/` 和检查截图不提交。
+3. 解包目录不存在 `resources/data`，安装后联网启动并读取 5166 词目录；断网时明确提示词书加载失败，且不损坏本机进度。
+4. 学习日以一次请求返回当天全部唯一词；累计复习以一次请求返回本机提交的动态词表。
+5. `release/` 中存在安装器、`latest.yml` 和对应 `.exe.blockmap`；`data/`、`dist/`、`release/` 和检查截图不提交。
 
 ## 官网运行与部署
 
@@ -78,7 +96,7 @@ Remove-Item Env:CYWORD_BOOK
 | 权威 DNS | 阿里云 `dns27.hichina.com`、`dns28.hichina.com` |
 | 子域记录 | `cyword` CNAME `cyword.pages.dev`，默认线路，TTL 600 秒 |
 | 配置文件 | `website/wrangler.jsonc`，作为部署配置的唯一来源 |
-| 函数绑定 | `DOWNLOADS` → 私有 R2 桶 `cyword-downloads`，Standard、APAC |
+| 函数绑定 | `DOWNLOADS` → `cyword-downloads`；`BOOKS` → `cyword-book-data`；均为私有 R2 Standard、APAC |
 | 业务密钥 | 无；函数通过 R2 绑定访问，不使用前端 API 密钥 |
 
 仅向维护者的 Wrangler 提供登录授权；本机凭据保存在用户配置及 Windows 凭据管理器，不进入仓库。首次使用执行 `npx wrangler login`，之后：
@@ -89,29 +107,34 @@ npm run test:site:download
 npm run deploy:site
 ```
 
-部署脚本显式指定 Pages 生产分支 `main`，与当前 Git 分支无关；会上传静态页面、函数和路由配置。Git 提交或推送不会自动更新官网。不要上传纯静态 ZIP，以免遗漏函数和 R2 绑定；不要将词书、安装包、依赖目录或凭据上传到 Pages。
+部署脚本显式指定 Pages 生产分支 `main`，与当前 Git 分支无关；会上传静态页面、下载函数、词书函数和路由配置。普通提交推送不会自动更新官网代码；版本标签工作流只更新 R2 发布资产和最新版指针。不要上传纯静态 ZIP，以免遗漏函数和 R2 绑定；词书只能上传到 `BOOKS` 对应的私有 R2 桶，不得放进 Pages 静态产物。
 
 需要线上预览时，先构建，再执行 `npx wrangler pages deploy --cwd website --project-name cyword --branch preview --commit-dirty=true`。`--branch` 是 Pages 环境标签，不会创建 Git 分支；预览函数只读同一发布桶。确认主下载可用后才更新生产。
 
 ## 发布官网新安装包
 
-1. 先完成 GitHub Release，下载其正式安装器作为镜像源，不在本机重新打包同版本来冒充相同文件。
-2. 更新 `website/src/release.ts` 的版本、日期、文件名、精确字节数、SHA-256、主地址与备用地址，并同步 `website/index.html` 的无脚本下载入口。
-3. 执行下列命令，路径替换为实际待发布文件。上传脚本会检查文件名、字节数及哈希，失败则不上传。
+正常发布只需推送与 `package.json` 一致的新标签；标签工作流自动完成 GitHub Release 和 R2 发布，不需要修改 `website/src/release.ts`、重新部署官网或手工复制校验值。发布顺序固定为：GitHub Release → 内容寻址安装器 → blockmap → 版本化 `latest.yml` → `releases/current.json`。最后一步之前的任何失败都不会切换官网最新版。
+
+本地应急发布要求已安装 AWS CLI，并通过环境变量提供同一组桶级 R2 S3 凭据：
 
 ```powershell
-npm run upload:site:installer -- 'release\CYword-Setup-0.2.1.exe'
+$env:CLOUDFLARE_ACCOUNT_ID = '<account-id>'
+$env:AWS_ACCESS_KEY_ID = '<r2-access-key-id>'
+$env:AWS_SECRET_ACCESS_KEY = '<r2-secret-access-key>'
+$env:AWS_DEFAULT_REGION = 'auto'
+npm run publish:site:release -- release
 ```
 
-4. 按 [下载冒烟检查](#下载冒烟检查) 验证新路径及文件，再执行 `npm run test:site:download` 和 `npm run deploy:site`。保持先上传、后公开链接的顺序。
-5. R2 只镜像安装器，不镜像 `latest.yml` 和 `.exe.blockmap`；桌面应用内更新仍走 GitHub。新版本使用新文件名，不覆盖已发布内容；旧版本保留数量计入总存储。
+脚本先检查版本、安装包长度、SHA-256、`latest.yml` 的 SHA-512 与文件长度，再执行同样的原子发布顺序。旧内容寻址资产保留；不要删除仍可能被旧客户端引用的版本。
 
 ## 下载冒烟检查
 
-从项目根目录执行，版本路径应与 `website/src/release.ts` 一致：
+从项目根目录执行；`latest.json` 是官网当前公开版本的权威入口：
 
 ```powershell
-$cyUrl = 'https://cyword.chengyi.me/downloads/CYword-Setup-0.2.1.exe'
+$cyRelease = Invoke-RestMethod 'https://cyword.chengyi.me/downloads/latest.json'
+$cyUrl = 'https://cyword.chengyi.me' + $cyRelease.downloadPath
+curl.exe --fail 'https://cyword.chengyi.me/downloads/latest.yml'
 curl.exe --fail --head $cyUrl
 New-Item -ItemType Directory -Force .work | Out-Null
 curl.exe --fail --range 0-1048575 --output '.work\download-check.exe' $cyUrl
@@ -119,20 +142,23 @@ curl.exe --fail --continue-at - --output '.work\download-check.exe' $cyUrl
 Get-FileHash -Algorithm SHA256 -LiteralPath '.work\download-check.exe'
 ```
 
-预期 HEAD 为 200，文件长度与版本配置相符；Range 返回 206，续传后完整哈希等于 `release.sha256`。另查首页、JS/CSS、主下载、备用地址、FAQ 和 HTTPS 跳转。测试文件放 `.work/`，收尾时删除；安装包哈希一致不代表已经完成安装运行测试。
+预期 `latest.yml` 为 200 且引用 `latest.json.downloadPath` 对应的内容寻址安装包；HEAD 文件长度等于 `latest.json.sizeBytes`，Range 返回 206，续传后完整哈希等于 `latest.json.sha256`。另查首页版本、主下载、GitHub 备用地址、FAQ 和 HTTPS 跳转。测试文件放 `.work/`，用户确认任务结束时再清理；安装包哈希一致不代表已经完成安装运行测试。
 
 ## 下载费用与限制
 
 2026-08-31 核对：R2 Standard 每月免费包含 10 GB-month、100 万次 A 类操作、1000 万次 B 类操作，出口流量免费。超额存储为 $0.015/GB-month、A 类 $4.50/百万次、B 类 $0.36/百万次，按计费单位向上取整；免费额度在账号内共享，见 [R2 定价](https://developers.cloudflare.com/r2/pricing/)。134 MiB 安装包持续保存约 70 份就接近 10 GB；用户下载不会重复增加存储副本。
 
-用户已授权 R2 激活及超额计费；Workers 保持免费套餐，未配置自动升级。Pages Functions 与账号内其他 Workers 每日共享 10 万次请求，UTC 0 点（北京时间 8 点）重置；静态资源请求免费且不限量，见 [Functions 定价](https://developers.cloudflare.com/pages/functions/pricing/)。一次 GET 通常消耗一次函数调用和两次 R2 B 类操作；HEAD、分段、续传、重试会增加请求，因此不能按人数估算额度。公开下载可能被大量访问，应检查 R2 用量和 Workers 请求面板的账号总用量。
+用户已授权 R2 激活及超额计费；Workers 保持免费套餐，未配置自动升级。Pages Functions 与账号内其他 Workers 每日共享 10 万次请求，UTC 0 点（北京时间 8 点）重置；静态资源请求免费且不限量，见 [Functions 定价](https://developers.cloudflare.com/pages/functions/pricing/)。安装包 GET 通常产生一次函数调用和两次 R2 B 类操作；一次学习请求产生一次函数调用、一次清单读取和若干分片读取，累计复习最多读取 30 个分片。HEAD、分段、续传、重试也会增加用量，因此不能只按人数估算额度。应同时检查 R2 用量和 Workers 请求面板的账号总用量。
 
 ## 官网故障处理
 
 | 现象 | 检查与处理 |
 | --- | --- |
-| 首页正常，下载 404 | 文件名须符合 `CYword-Setup-x.y.z.exe`，核对 R2 对象键和 `release.ts`；无文件则先校验、上传，不把错误页当安装包 |
-| 下载 503 | 查看 Pages Functions 日志的 `installer_download_failed`；核对 `DOWNLOADS` 绑定和桶名；按 `Retry-After` 稍后重试 |
+| 首页正常，下载或更新 404 | 检查 `releases/current.json`、其中三个内容寻址对象及 `/downloads/latest.yml`；指针只能在全部资产上传后写入 |
+| 应用启动时词书 404/503 | 核对 `BOOKS` 绑定、`books/cet6/current.json` 及其 `catalogKey`；重新上传时必须让版本指针最后写入 |
+| 每日词汇返回 409 | 客户端目录版本对应的清单已被删除；恢复该不可变版本，或重启应用重新获取当前目录 |
+| 每日词汇流中断 | 查找 `book_words_stream_failed` 日志，核对清单里的分片是否完整；不要在上传中途更新版本指针 |
+| 下载 503 | 查看 Pages Functions 日志的 `release_download_failed`；核对 `DOWNLOADS` 绑定、指针格式和桶内对象；按 `Retry-After` 稍后重试 |
 | 下载 416 | Range 超过文件边界，核对长度及 ETag，删除失效断点或重新下载 |
 | 达到免费函数额度 | 当日下载可能不可用，等额度重置或由用户明确决定是否升级；不要自动开付费套餐 |
 | 本地测试缺少 R2 绑定 | 使用 `npm run test:site:download`；脚本从配置显式传入本地 `--r2`，只使用模拟存储，不加 `--remote` |

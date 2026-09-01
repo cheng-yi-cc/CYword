@@ -15,10 +15,11 @@
 ## 官网与发布边界
 
 - 官网不打包完整词书、不读取学习进度，不把助记拆词宣传成词源分析；官网输出 `dist-site/`，与桌面端 `dist/` 分离。
-- 部署使用 `website/wrangler.jsonc` 和 Wrangler；禁止用纯静态 ZIP 代替含函数的部署。Pages 生产项目为 `cyword`、分支为 `main`；Git 推送不自动部署官网。
-- 只用 `/downloads/CYword-Setup-x.y.z.exe` 提供只读安装包，`DOWNLOADS` 绑定专用私有桶 `cyword-downloads`。保持流式传输和断点续传，不引入任意 URL 代理。
-- 下载信息维护于 `website/src/release.ts`，无脚本入口同步更新。发布前校验文件名、长度和 SHA-256，先上传再公开链接，不覆盖已发布版本内容。
-- 官网 R2 下载不等于桌面自动更新；后者仍使用 GitHub Releases。阿里云 DNS 只维护 `cyword` CNAME，不修改根域或其他项目记录。
+- 部署使用 `website/wrangler.jsonc` 和 Wrangler；禁止用纯静态 ZIP 代替含函数的部署。Pages 生产项目为 `cyword`、分支为 `main`；普通 Git 推送不自动部署官网函数和静态页面。
+- `DOWNLOADS` 绑定专用私有桶 `cyword-downloads`。只公开 `/downloads/latest{,.json,.yml}`、内容寻址的版本资产和迁移前的安装包路径；保持流式传输和断点续传，不引入目录列表或任意 URL 代理。
+- 新标签工作流先创建 GitHub Release，再把安装器、blockmap 和版本化 `latest.yml` 上传到 R2，最后原子更新 `releases/current.json`。不得覆盖旧版本内容或提前写入指针。
+- 桌面自动更新使用官网 generic 源 `/downloads/`，不得恢复为 GitHub provider。`website/src/release.ts` 只保留动态指针不可用时的已核验回退版本。
+- GitHub Actions 只使用限定到 `cyword-downloads` 的 R2 Object Read & Write S3 凭据。阿里云 DNS 只维护 `cyword` CNAME，不修改根域或其他项目记录。
 - R2 已获用户授权开通和超额计费；不要自行升级 Workers 付费套餐。凭据、`.dev.vars*`、`.wrangler/`、生成类型及 `.work/` 过程文件不得提交。
 
 ## 常用命令
@@ -37,3 +38,12 @@
 - [运行、发布与排障](docs/RUNBOOK.md)
 - [词书来源、表结构与扩充](docs/DATASETS.md)
 - [官网交互、下载协议与验证](docs/WEBSITE.md)
+
+
+<claude-mem-context>
+# Memory Context
+
+# [CYword/CYword-xiazai] recent context, 2026-09-01 7:47pm GMT+8
+
+No previous sessions found.
+</claude-mem-context>
