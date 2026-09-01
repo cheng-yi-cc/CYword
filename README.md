@@ -69,4 +69,4 @@ npm run build:web
 - `tests/`：自动化测试。
 - `data/`、`dist/`、`dist-site/`、`release/`：构建生成物，不提交到 Git。
 
-更多说明见 [词书数据](docs/DATASETS.md)、[架构](docs/ARCHITECTURE.md) 和 [运行手册](docs/RUNBOOK.md)。
+更多说明见 [变更记录](docs/CHANGES.md)、[词书数据](docs/DATASETS.md)、[架构](docs/ARCHITECTURE.md) 和 [运行手册](docs/RUNBOOK.md)。

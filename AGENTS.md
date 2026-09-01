@@ -34,16 +34,8 @@
 
 ## 深入文档
 
+- [变更记录](docs/CHANGES.md)
 - [架构与数据流](docs/ARCHITECTURE.md)
 - [运行、发布与排障](docs/RUNBOOK.md)
 - [词书来源、表结构与扩充](docs/DATASETS.md)
 - [官网交互、下载协议与验证](docs/WEBSITE.md)
-
-
-<claude-mem-context>
-# Memory Context
-
-# [CYword/CYword-xiazai] recent context, 2026-09-01 7:47pm GMT+8
-
-No previous sessions found.
-</claude-mem-context>
