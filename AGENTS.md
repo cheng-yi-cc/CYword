@@ -10,13 +10,13 @@
 - 同一真正词根组必须在同一天学完；多词根单词在各相关组重复学习，复习日按唯一单词去重。
 - 计划节奏固定为学习 3 天、累计复习 1 天；六级编译为 30 个学习日和 10 个复习日。
 - 熟练度只有 `unmastered`、`unclear`、`mastered` 三档；复习日默认跳过 `mastered`。
-- 桌面端学习进度写入 Electron `userData/progress.json`；浏览器预览使用 localStorage。
+- 桌面端学习进度写入 Electron `userData/progress.json`，用户会话写入 `userData/session.json`；浏览器预览使用 localStorage。
 
 ## 官网与发布边界
 
 - 官网不打包完整词书、不读取学习进度，不把助记拆词宣传成词源分析；官网输出 `dist-site/`，与桌面端 `dist/` 分离。
 - 部署使用 `website/wrangler.jsonc` 和 Wrangler；禁止用纯静态 ZIP 代替含函数的部署。Pages 生产项目为 `cyword`、分支为 `main`；普通 Git 推送不自动部署官网函数和静态页面。
-- `DOWNLOADS` 绑定专用私有桶 `cyword-downloads`。只公开 `/downloads/latest{,.json,.yml}`、内容寻址的版本资产和迁移前的安装包路径；保持流式传输和断点续传，不引入目录列表或任意 URL 代理。
+- `DOWNLOADS` 与 `BOOKS` 绑定专用私有 R2 桶，`DB` 绑定 D1 数据库 `cyword-db`；认证接口使用 Web Crypto JWT 与 Resend。只公开受控下载入口、词书分片与认证路由。
 - 新标签工作流先创建 GitHub Release，再把安装器、blockmap 和版本化 `latest.yml` 上传到 R2，最后原子更新 `releases/current.json`。不得覆盖旧版本内容或提前写入指针。
 - 桌面自动更新使用官网 generic 源 `/downloads/`，不得恢复为 GitHub provider。`website/src/release.ts` 只保留动态指针不可用时的已核验回退版本。
 - GitHub Actions 只使用限定到 `cyword-downloads` 的 R2 Object Read & Write S3 凭据。阿里云 DNS 只维护 `cyword` CNAME，不修改根域或其他项目记录。

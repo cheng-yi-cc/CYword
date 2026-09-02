@@ -58,22 +58,27 @@ Electron 主进程通过固定 HTTPS 地址读取词书目录和每日批量词�
                     Cloudflare Pages 项目 cyword
                               ├─ /、/assets/* → dist-site/ 静态页面
                               ├─ /downloads/latest{,.json,.yml}
-                              ├─ /downloads/releases/<version>/<sha256>/*
-                                           │ GET / HEAD
-                                  Pages Function（流式响应）
-                                           │ DOWNLOADS 绑定
-                                  R2 私有桶 cyword-downloads
-                              └─ /api/books/<code>/{catalog,words}
-                                           │ GET / POST
-                                  Pages Function（批量流式响应）
-                                           │ BOOKS 绑定
-                                  R2 私有桶 cyword-book-data
+                               ├─ /downloads/releases/<version>/<sha256>/*
+                                            │ GET / HEAD
+                                   Pages Function（流式响应）
+                                            │ DOWNLOADS 绑定
+                                   R2 私有桶 cyword-downloads
+                               ├─ /api/books/<code>/{catalog,words}
+                                            │ GET / POST
+                                   Pages Function（批量流式响应）
+                                            │ BOOKS 绑定
+                                   R2 私有桶 cyword-book-data
+                               └─ /api/auth/{send-code,verify-code,me}
+                                            │ POST / GET
+                                   Pages Function（用户认证与 JWT 签发）
+                                            │ DB 绑定
+                                   D1 数据库 cyword-db
 ```
 
-`website/vite.config.ts` 把 `website/` 构建到 `dist-site/`；`website/wrangler.jsonc` 定义 Pages 项目、输出目录和两个独立 R2 绑定。`website/public/_routes.json` 只让 `/downloads/*` 和 `/api/books/*` 调用函数，首页与静态资源不占用函数请求额度。域名服务器仍在阿里云，只设置子域 CNAME，不接管根域或其他项目。
+`website/vite.config.ts` 把 `website/` 构建到 `dist-site/`；`website/wrangler.jsonc` 定义 Pages 项目、输出目录、两个 R2 绑定和 D1 数据库绑定。`website/public/_routes.json` 让 `/downloads/*`、`/api/books/*` 和 `/api/auth/*` 调用函数，首页与静态资源不占用函数请求额度。
 
-下载处理器 `website/functions/downloads/[[path]].ts` 只接受稳定最新版入口、受约束的内容寻址资产和迁移前安装包路径。`releases/current.json` 同时决定官网展示、`/downloads/latest` 跳转和 electron-updater 读取的 `/downloads/latest.yml`；版本资产全部成功上传后才更新这一指针。HEAD 读取元数据；GET 按 ETag 流式读取 R2，支持单段 Range 和 If-Range，不把完整安装包装入内存。内容寻址资产可长期缓存，最新版指针和更新清单不缓存；对外没有上传、目录列表或任意 URL 代理。
+下载处理器 `website/functions/downloads/[[path]].ts` 只接受稳定最新版入口、受约束的内容寻址资产和迁移前安装包路径。认证处理器 `website/functions/api/auth/*.ts` 基于 Cloudflare D1 存储用户数据与验证码，通过 Resend 发送邮件，并使用 Web Crypto 签发/校验 HMAC-SHA256 JWT。客户端会话持久化保存在 Electron `userData/session.json`。
 
-两个 R2 桶均使用 APAC 位置和 Standard 存储，不开放 `r2.dev` 入口。词书接口当前没有登录鉴权，只限制固定书码、版本格式、单词 UUID、请求类型、计划日和最多 5166 个 ID；登录和授权防复制属于后续工作。electron-updater 使用官网 generic provider，GitHub Release 只保留公开发布记录和迁移前客户端的过渡入口，不再是新版客户端的更新源。
+两个 R2 桶与 D1 数据库均使用 APAC 位置，不开放 `r2.dev` 入口。electron-updater 使用官网 generic provider，GitHub Release 只保留公开发布记录和迁移前客户端的过渡入口。
 
-下载 HTTP 协议及内容边界见 [官网说明](WEBSITE.md)；账号权限、上线步骤、费用和排障见 [运行手册](RUNBOOK.md)。
+下载与认证 HTTP 协议见 [官网说明](WEBSITE.md)；账号权限、上线步骤、费用和排障见 [运行手册](RUNBOOK.md)。

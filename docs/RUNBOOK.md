@@ -96,8 +96,8 @@ npm run upload:book-data
 | 权威 DNS | 阿里云 `dns27.hichina.com`、`dns28.hichina.com` |
 | 子域记录 | `cyword` CNAME `cyword.pages.dev`，默认线路，TTL 600 秒 |
 | 配置文件 | `website/wrangler.jsonc`，作为部署配置的唯一来源 |
-| 函数绑定 | `DOWNLOADS` → `cyword-downloads`；`BOOKS` → `cyword-book-data`；均为私有 R2 Standard、APAC |
-| 业务密钥 | 无；函数通过 R2 绑定访问，不使用前端 API 密钥 |
+| 函数绑定 | `DOWNLOADS` → `cyword-downloads`；`BOOKS` → `cyword-book-data`；`DB` → `cyword-db`（D1 APAC） |
+| 业务密钥 | `RESEND_API_KEY`（可选，邮件验证码发信）；`JWT_SECRET`（可选，会话签名私钥） |
 
 仅向维护者的 Wrangler 提供登录授权；本机凭据保存在用户配置及 Windows 凭据管理器，不进入仓库。首次使用执行 `npx wrangler login`，之后：
 

@@ -15,6 +15,7 @@ import {
   startReviewDay,
   toggleBookmark,
 } from "./progress";
+import { AuthModal } from "./components/AuthModal";
 import type {
   AppProgress,
   Catalog,
@@ -22,6 +23,7 @@ import type {
   Proficiency,
   StudyGroup,
   UpdateStatus,
+  UserSession,
   ViewName,
   WordDetail,
 } from "./types";
@@ -742,6 +744,8 @@ function UpdateControl() {
 function App() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [progress, setProgress] = useState<AppProgress | null>(null);
+  const [session, setSession] = useState<UserSession | null>(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [view, transitionView, viewTransitionPhase] = useSoftTransitionState<ViewName>("home");
   const [details, setDetails] = useState<Record<string, WordDetail>>({});
   const detailsRef = useRef<Record<string, WordDetail>>({});
@@ -753,6 +757,28 @@ function App() {
   useEffect(() => {
     document.querySelector(".app-shell > main")?.scrollTo({ top: 0, behavior: "auto" });
   }, [view]);
+
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        let loadedSession: UserSession | null = null;
+        if (window.cyword?.readSession) {
+          loadedSession = await window.cyword.readSession();
+        } else {
+          const raw = localStorage.getItem("cyword_session");
+          if (raw) loadedSession = JSON.parse(raw);
+        }
+        if (loadedSession?.token) {
+          setSession(loadedSession);
+        }
+      } catch (err) {
+        console.warn("Failed to restore session:", err);
+      } finally {
+        setSessionChecked(true);
+      }
+    };
+    initAuth();
+  }, []);
 
   useEffect(() => {
     Promise.all([window.cyword.readCatalog(), window.cyword.readProgress()]).then(async ([nextCatalog, rawProgress]) => {
@@ -806,8 +832,21 @@ function App() {
     catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); }
   };
 
+  const handleLogout = async () => {
+    try {
+      if (window.cyword?.clearSession) {
+        await window.cyword.clearSession();
+      } else {
+        localStorage.removeItem("cyword_session");
+      }
+    } catch (err) {
+      console.warn("Logout error:", err);
+    }
+    setSession(null);
+  };
+
   if (error) return <div className="fatal-error"><span>CYWORD</span><h1>应用未能加载词书</h1><p>{error}</p></div>;
-  if (!catalog || !progress) return <div className="loading-screen"><div>Cy</div><p>正在铺开今天的词书计划…</p></div>;
+  if (!catalog || !progress || !sessionChecked) return <div className="loading-screen"><div>Cy</div><p>正在铺开今天的词书计划…</p></div>;
 
   const plan = buildPlan(catalog);
   const currentDayNumber = currentPlanDayNumber(progress, plan.length);
@@ -826,7 +865,19 @@ function App() {
       <aside className="sidebar">
         <div className="brand"><div>Cy</div><span><b>词根记忆</b><small>Rooted recall</small></span></div>
         <nav>{navItems.map((item) => <button className={view === item.id ? "active" : ""} key={item.id} onClick={() => navigate(item.id)}><i>{item.glyph}</i><b>{item.label}</b>{item.id === "vocabulary" && Object.keys(progress.bookmarks).length > 0 && <em>{Object.keys(progress.bookmarks).length}</em>}</button>)}</nav>
-        <footer><span>大学英语六级</span><p>Day {current.day} / {plan.length}</p><i><b style={{ width: `${(current.day - 1 + planDayFraction(progress, current)) / plan.length * 100}%` }} /></i><small>词库联网加载，进度保存在本机</small></footer>
+        {session && (
+          <footer className="sidebar-user-footer">
+            <div className="sidebar-user-info">
+              <div className="sidebar-user-avatar">
+                {session.user.email.charAt(0).toUpperCase()}
+              </div>
+              <span className="sidebar-user-email" title={session.user.email}>
+                {session.user.email}
+              </span>
+            </div>
+            <button className="btn-logout" onClick={handleLogout}>退出登录</button>
+          </footer>
+        )}
       </aside>
       <main className={`app-content soft-transition transition-${viewTransitionPhase}`}>
         {view === "home" && <HomeView catalog={catalog} progress={progress} plan={plan} current={current} goToday={() => navigate("today")} />}
@@ -834,6 +885,7 @@ function App() {
         {view === "today" && (current.kind === "study" ? <StudyToday catalog={catalog} progress={progress} plan={current} details={details} loadWords={loadWords} saveProgress={saveProgress} onToggleBookmark={toggleWordBookmark} /> : <ReviewToday catalog={catalog} progress={progress} plan={current} details={details} loadWords={loadWords} saveProgress={saveProgress} onToggleBookmark={toggleWordBookmark} />)}
         {view === "vocabulary" && <VocabularyView catalog={catalog} progress={progress} details={details} loadWords={loadWords} planDay={current.day} onToggleBookmark={toggleWordBookmark} />}
       </main>
+      {!session && <AuthModal onSuccess={(s) => setSession(s)} />}
       <UpdateControl />
       {loadingWords && <div className="word-loading">正在获取今天需要的词汇…</div>}
     </div>

@@ -8,5 +8,12 @@
   "r2_buckets": [
     { "binding": "DOWNLOADS", "bucket_name": "cyword-downloads" },
     { "binding": "BOOKS", "bucket_name": "cyword-book-data" }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cyword-db",
+      "database_id": "6e6511c5-f46a-423d-90f8-689202578603"
+    }
   ]
 }

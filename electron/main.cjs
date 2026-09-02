@@ -7,6 +7,9 @@ const devUrl = process.env.VITE_DEV_SERVER_URL;
 const bookApiUrl = devUrl
   ? `${devUrl.replace(/\/$/, "")}/api/books/cet6`
   : "https://cyword.chengyi.me/api/books/cet6";
+const authApiUrl = devUrl
+  ? `${devUrl.replace(/\/$/, "")}/api/auth`
+  : "https://cyword.chengyi.me/api/auth";
 let updateState = {
   status: "idle",
   currentVersion: app.getVersion(),
@@ -79,6 +82,10 @@ function progressPath() {
   return path.join(app.getPath("userData"), "progress.json");
 }
 
+function sessionPath() {
+  return path.join(app.getPath("userData"), "session.json");
+}
+
 async function fetchBookJson(pathname, options = {}) {
   const response = await fetch(`${bookApiUrl}${pathname}`, {
     ...options,
@@ -89,6 +96,25 @@ async function fetchBookJson(pathname, options = {}) {
     throw new Error(`词库服务暂时不可用（${response.status}），请检查网络后重试`);
   }
   return response.json();
+}
+
+async function fetchAuthJson(pathname, options = {}) {
+  const response = await fetch(`${authApiUrl}${pathname}`, {
+    ...options,
+    cache: "no-store",
+    signal: AbortSignal.timeout(30_000),
+  });
+  const text = await response.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    throw new Error(`认证服务响应格式异常（HTTP ${response.status}）`);
+  }
+  if (!response.ok) {
+    throw new Error(data?.error || `认证服务异常（${response.status}）`);
+  }
+  return data;
 }
 
 async function readJson(filePath, fallback = null) {
@@ -110,6 +136,57 @@ function registerIpc() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
     });
+  });
+
+  ipcMain.handle("auth:send-code", (_event, email) => {
+    return fetchAuthJson("/send-code", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+  });
+
+  ipcMain.handle("auth:verify-code", (_event, email, code) => {
+    return fetchAuthJson("/verify-code", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, code }),
+    });
+  });
+
+  ipcMain.handle("auth:me", (_event, token) => {
+    return fetchAuthJson("/me", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+  });
+
+  ipcMain.handle("session:read", async () => {
+    return (await readJson(sessionPath(), null));
+  });
+
+  ipcMain.handle("session:write", async (_event, session) => {
+    if (!session || typeof session !== "object" || !session.token) {
+      throw new Error("用户会话格式无效");
+    }
+    const target = sessionPath();
+    const temporary = `${target}.tmp`;
+    await fs.mkdir(path.dirname(target), { recursive: true });
+    await fs.writeFile(temporary, JSON.stringify(session, null, 2), "utf8");
+    await fs.rename(temporary, target);
+    return true;
+  });
+
+  ipcMain.handle("session:clear", async () => {
+    try {
+      await fs.unlink(sessionPath());
+    } catch (error) {
+      if (error && error.code !== "ENOENT") throw error;
+    }
+    return true;
   });
 
   ipcMain.handle("progress:read", async () => {

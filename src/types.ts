@@ -138,6 +138,34 @@ export interface AppProgress {
   }>;
 }
 
+export interface AuthUser {
+  id: string;
+  email: string;
+  createdAt: number;
+  lastLoginAt: number;
+  loginCount: number;
+}
+
+export interface UserSession {
+  token: string;
+  user: AuthUser;
+}
+
+export interface SendCodeResponse {
+  success: boolean;
+  message?: string;
+  simulated?: boolean;
+  debugCode?: string;
+  error?: string;
+}
+
+export interface VerifyCodeResponse {
+  success: boolean;
+  token?: string;
+  user?: AuthUser;
+  error?: string;
+}
+
 export interface UpdateStatus {
   status: "idle" | "available" | "downloading" | "downloaded";
   currentVersion: string;
@@ -153,6 +181,12 @@ declare global {
       readWords: (request: WordsRequest) => Promise<WordsResponse>;
       readProgress: () => Promise<unknown>;
       writeProgress: (progress: AppProgress) => Promise<boolean>;
+      sendAuthCode?: (email: string) => Promise<SendCodeResponse>;
+      verifyAuthCode?: (email: string, code: string) => Promise<VerifyCodeResponse>;
+      getAuthUser?: (token: string) => Promise<{ success: boolean; user: AuthUser }>;
+      readSession?: () => Promise<UserSession | null>;
+      writeSession?: (session: UserSession) => Promise<boolean>;
+      clearSession?: () => Promise<boolean>;
       getUpdateStatus?: () => Promise<UpdateStatus>;
       downloadUpdate?: () => Promise<UpdateStatus>;
       installUpdate?: () => Promise<boolean>;
@@ -160,3 +194,4 @@ declare global {
     };
   }
 }
+

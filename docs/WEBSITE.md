@@ -43,8 +43,12 @@ npm run preview:site
 | `website/functions/downloads/[[path]].ts` | 只读 R2 下载接口 |
 | `website/functions/api/books/[book]/catalog.ts` | 当前词书目录接口 |
 | `website/functions/api/books/[book]/words.ts` | 每日词汇批量流式接口 |
+| `website/functions/api/auth/send-code.ts` | 发送邮箱 6 位 OTP 验证码接口 |
+| `website/functions/api/auth/verify-code.ts` | 校验验证码、自动建号并签发 JWT 接口 |
+| `website/functions/api/auth/me.ts` | 校验 Bearer Token 并返回当前用户数据接口 |
 | `website/server/book-api.ts` | 词书 R2 结构、参数校验和错误响应共用逻辑 |
-| `website/wrangler.jsonc` | Pages 项目、构建目录和 R2 绑定配置 |
+| `website/server/auth.ts` | JWT 签发/验签、OTP 生成与 D1/Resend 交互逻辑 |
+| `website/wrangler.jsonc` | Pages 项目、构建目录、R2 绑定与 D1 数据库配置 |
 | `website/vite.config.ts` | 页面开发服务与构建输出 |
 | `scripts/test-site-download.mjs` | 本地 R2 集成测试，显式传入同一配置中的绑定 |
 | `scripts/publish-site-release.mjs` | 校验构建资产，按内容寻址上传并最后切换最新版指针 |
@@ -84,6 +88,12 @@ npm run preview:site
 - `wordIds`：去重前不超过 5166 个规范 UUID。
 
 接口先读取版本清单，把 ID 按学习日分片分组，再顺序读取 R2 并流式返回一个 `words` 对象。学习日请求当天全部唯一单词；复习日由本机进度决定 ID。响应和错误都不缓存。请求不存在的版本返回 409，参数或非本词书 ID 返回 400，R2 故障返回 503。当前阶段接口公开可读，没有账号登录或授权防复制。
+
+## 用户认证 HTTP 协议
+
+- `POST /api/auth/send-code`：提交 `{ email }`。服务端校验邮箱格式，生成 6 位数字 OTP 存入 D1（有效期 5 分钟），执行 60 秒重发冷却，并调用 Resend 发送邮件（无 Key 时日志回显）。
+- `POST /api/auth/verify-code`：提交 `{ email, code }`。核对 D1 验证码，输错累计 5 次作废，匹配成功后核销验证码，自动建号或更新登录时间，并签发 HMAC-SHA256 JWT Token。
+- `GET /api/auth/me`：携带 `Authorization: Bearer <token>` 请求头。服务端校验 JWT 有效性并返回用户 ID、邮箱与活跃信息。
 
 HEAD 示例：
 

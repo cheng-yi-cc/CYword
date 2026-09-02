@@ -1,5 +1,11 @@
 # 变更记录
 
+## 0.4.0 · 2026-09-02
+
+- 新增邮箱验证码（OTP）免密注册与登录系统：接入 Cloudflare D1 存储用户基础信息与临时验证码，通过 Resend 发送验证码邮件，使用 Web Crypto HMAC-SHA256 签发 JWT 会话。
+- 桌面客户端会话持久化存储在 `userData/session.json`，未登录时自动唤起登录弹窗，登录后在侧边栏底部展示用户邮箱并提供注销入口；背单词学习进度继续保存在本地 `userData/progress.json`。
+- 后端新增 `/api/auth/send-code`、`/api/auth/verify-code` 和 `/api/auth/me` Pages Functions 路由，具备 60 秒重发冷却与 5 次错误尝试防暴力破解机制；本地开发环境内置自动回显模拟发信。
+
 ## 0.3.0 · 2026-09-01
 
 - 桌面端更新源改为官网 generic provider：应用启动时读取 `https://cyword.chengyi.me/downloads/latest.yml`，安装器、blockmap 和更新清单都从官网 R2 流式下载；GitHub Release 保留为公开记录和旧版迁移备用入口。
