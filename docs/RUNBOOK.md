@@ -33,11 +33,12 @@ npm run dist
 
 ## 标签自动构建
 
-推送形如 `v0.3.0` 的标签会触发 `.github/workflows/build-tag.yml`。Windows runner 会检查标签与 `package.json` 版本一致，执行 `npm ci`、自动测试和 NSIS 打包，创建同名 GitHub Release，然后自动把同一构建的安装器、`.exe.blockmap` 和版本化 `latest.yml` 上传官网 R2。全部对象校验上传成功后，工作流最后更新 `releases/current.json`，官网和桌面更新源同时切换。
+推送形如 `v<package version>` 的标签会触发 `.github/workflows/build-tag.yml`。Windows runner 会检查标签与 `package.json` 版本一致，执行 `npm ci`、自动测试和 NSIS 打包，创建同名 GitHub Release，然后自动把同一构建的安装器、`.exe.blockmap` 和版本化 `latest.yml` 上传官网 R2。全部对象校验上传成功后，工作流最后更新 `releases/current.json`，官网和桌面更新源同时切换。
 
 ```powershell
-git tag -a v0.3.0 -m "CYword v0.3.0"
-git push origin v0.3.0
+$cyVersion = node -p "require('./package.json').version"
+git tag -a "v$cyVersion" -m "CYword v$cyVersion"
+git push origin "v$cyVersion"
 ```
 
 工作流不额外上传 GitHub Actions artifact。R2 资产使用 `releases/<version>/<sha256>/` 内容寻址路径，旧版本不会被覆盖；但相同标签重跑仍会覆盖 GitHub Release 的同名资产，并可能让同一版本号对应不同二进制，因此已对外发布的版本不得重跑替换，应发布新版本号。标签示例中的版本发布后即不可重复使用；新发布须替换成未使用且与 `package.json` 一致的版本。
@@ -93,11 +94,13 @@ npm run upload:book-data
 | --- | --- |
 | Pages 项目 / 生产分支 | `cyword` / `main` |
 | 正式域名 / 备用域名 | `cyword.chengyi.me` / `cyword.pages.dev` |
-| 权威 DNS | 阿里云 `dns27.hichina.com`、`dns28.hichina.com` |
-| 子域记录 | `cyword` CNAME `cyword.pages.dev`，默认线路，TTL 600 秒 |
+| 权威 DNS | Cloudflare `aaden.ns.cloudflare.com`、`daniella.ns.cloudflare.com` |
+| 子域记录 | `cyword` CNAME `cyword.pages.dev` 并启用代理；Resend 验证记录仅用于 `auth.cyword` |
 | 配置文件 | `website/wrangler.jsonc`，作为部署配置的唯一来源 |
 | 函数绑定 | `DOWNLOADS` → `cyword-downloads`；`BOOKS` → `cyword-book-data`；`DB` → `cyword-db`（D1 APAC） |
-| 业务密钥 | `RESEND_API_KEY`（可选，邮件验证码发信）；`JWT_SECRET`（可选，会话签名私钥） |
+| 业务密钥 | `RESEND_API_KEY`（必需，仅限 `auth.cyword.chengyi.me` 发信）；`JWT_SECRET`（必需，至少 32 字符的强随机会话签名私钥） |
+
+Resend 使用专用发信域 `auth.cyword.chengyi.me`，发件人为 `login@auth.cyword.chengyi.me`。`chengyi.me` 的权威 DNS 当前由 Cloudflare 管理；发信记录 `resend._domainkey.auth.cyword`、`rsend.auth.cyword` 和 `send.auth.cyword` 必须添加到 Cloudflare DNS，其中两个 CNAME 保持“仅 DNS”。官网 `cyword` CNAME 指向 `cyword.pages.dev` 并启用代理，不修改根域和 `www`。两个业务密钥必须存入 Pages Production 加密 Secret；不得写入 `wrangler.jsonc`、`.dev.vars*`、源码、构建目录或安装包。生产环境缺少任一密钥时认证接口返回 503，不允许回退到模拟发信或固定 JWT 密钥。
 
 仅向维护者的 Wrangler 提供登录授权；本机凭据保存在用户配置及 Windows 凭据管理器，不进入仓库。首次使用执行 `npx wrangler login`，之后：
 
@@ -108,6 +111,8 @@ npm run deploy:site
 ```
 
 部署脚本显式指定 Pages 生产分支 `main`，与当前 Git 分支无关；会上传静态页面、下载函数、词书函数和路由配置。普通提交推送不会自动更新官网代码；版本标签工作流只更新 R2 发布资产和最新版指针。不要上传纯静态 ZIP，以免遗漏函数和 R2 绑定；词书只能上传到 `BOOKS` 对应的私有 R2 桶，不得放进 Pages 静态产物。
+
+NSIS 安装包只收录 `dist/`、`electron/` 和发布用 `package.json`。邮箱和登录态位于已安装应用自己的 Electron `userData/session.json`，学习进度位于 `userData/progress.json`，两者都不参与打包。覆盖安装会继续使用同一台电脑原有的 `userData`；验证“全新用户”体验时应使用临时 `--user-data-dir`，不要误把本机既有会话当成安装包内容。
 
 需要线上预览时，先构建，再执行 `npx wrangler pages deploy --cwd website --project-name cyword --branch preview --commit-dirty=true`。`--branch` 是 Pages 环境标签，不会创建 Git 分支；预览函数只读同一发布桶。确认主下载可用后才更新生产。
 
@@ -164,5 +169,7 @@ Get-FileHash -Algorithm SHA256 -LiteralPath '.work\download-check.exe'
 | 本地测试缺少 R2 绑定 | 使用 `npm run test:site:download`；脚本从配置显式传入本地 `--r2`，只使用模拟存储，不加 `--remote` |
 | 仅部分国内线路不可达 | 跨境连通性因地区和运营商而异，可尝试续传、稍后重试或 GitHub 备用地址；不承诺全网稳定 |
 | 部署后页面或函数异常 | 在 Pages 项目回滚先前成功的生产部署；不要修改根域 DNS，不要删除安装包或重置用户进度 |
+| 收不到验证码 | 先确认 Pages Production 同时存在 `RESEND_API_KEY` 与 `JWT_SECRET` 加密 Secret，再检查 Resend 日志及 `auth.cyword.chengyi.me` 的 DKIM、Return-Path 和发送 CNAME；生产响应不得包含 `debugCode` 或 `simulated` |
+| 邮件验证码正确但校验失败 | 确认发送与校验请求命中同一 Production 环境和 D1 `cyword-db`，再核对验证码是否超过 5 分钟、是否因重发被新验证码替换；未登录访问 `/api/auth/me` 应返回 401 |
 
 当前生产不使用 `r2.dev` 公开地址，也不依赖第三方 GitHub 代理。部署详情和已完成验证见 [官网说明](WEBSITE.md)。

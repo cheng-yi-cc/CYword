@@ -4,11 +4,15 @@ import {
   signJWT,
   verifyJWT,
   generateOTP,
+  buildOTPEmail,
   requestOTP,
+  sendOTPEmail,
   verifyAndAuthenticate,
   EMAIL_PATTERN,
   OTP_PATTERN,
 } from "../website/server/auth.ts";
+
+const TEST_JWT_SECRET = "test-secret-key-with-at-least-32-characters";
 
 // 创建轻量级内存 SQLite 模拟 D1
 function createMockD1(): D1Database {
@@ -54,7 +58,10 @@ function createMockD1(): D1Database {
             otpCodes.set(email, { email, code, expires_at: expiresAt, attempts: 0, created_at: createdAt });
           } else if (query.includes("DELETE FROM otp_codes")) {
             const email = bound[0] as string;
-            otpCodes.delete(email);
+            const code = bound[1] as string | undefined;
+            if (code === undefined || otpCodes.get(email)?.code === code) {
+              otpCodes.delete(email);
+            }
           } else if (query.includes("UPDATE otp_codes SET attempts = attempts + 1")) {
             const email = bound[0] as string;
             const item = otpCodes.get(email);
@@ -105,7 +112,7 @@ test("email & otp regex patterns validate correctly", () => {
 });
 
 test("JWT signing and verification works with standard Web Crypto HMAC", async () => {
-  const secret = "test-secret-key-123456";
+  const secret = TEST_JWT_SECRET;
   const payload = { sub: "user-123", email: "learner@cyword.test" };
   const token = await signJWT(payload, secret, 3600);
 
@@ -131,33 +138,62 @@ test("JWT signing and verification works with standard Web Crypto HMAC", async (
 test("OTP flow: request code, cooldown limit, failure limit, and auto-registration", async () => {
   const db = createMockD1();
   const email = "student@university.edu";
+  let otpCode = "";
+  const fakeSendEmail = async (_email: string, code: string, apiKey: string) => {
+    assert.equal(apiKey, "test-resend-key");
+    otpCode = code;
+    return { success: true };
+  };
 
   // 1. 发送验证码
-  const req1 = await requestOTP(db, email);
+  const req1 = await requestOTP(db, email, "test-resend-key", fakeSendEmail);
   assert.equal(req1.success, true);
-  assert.equal(req1.simulated, true);
-  assert.ok(typeof req1.debugCode === "string" && req1.debugCode.length === 6);
-
-  const otpCode = req1.debugCode!;
+  assert.match(otpCode, /^\d{6}$/u);
 
   // 2. 立即重发应被 60s 频控拦截
-  const req2 = await requestOTP(db, email);
+  const req2 = await requestOTP(db, email, "test-resend-key", fakeSendEmail);
   assert.equal(req2.success, false);
   assert.ok(req2.error?.includes("请求过于频繁"));
 
   // 3. 错误验证码重试扣减次数
-  const fail1 = await verifyAndAuthenticate(db, email, "000000");
+  const fail1 = await verifyAndAuthenticate(db, email, "000000", TEST_JWT_SECRET);
   assert.equal(fail1.success, false);
   assert.ok(fail1.error?.includes("验证码错误"));
 
   // 4. 正确验证码登录：首次登录自动创建账号
-  const loginSuccess = await verifyAndAuthenticate(db, email, otpCode);
+  const loginSuccess = await verifyAndAuthenticate(db, email, otpCode, TEST_JWT_SECRET);
   assert.equal(loginSuccess.success, true);
   assert.ok(loginSuccess.token);
   assert.equal(loginSuccess.user?.email, email);
   assert.equal(loginSuccess.user?.loginCount, 1);
 
   // 5. 验证码已被核销，不可重复使用
-  const reuseAttempt = await verifyAndAuthenticate(db, email, otpCode);
+  const reuseAttempt = await verifyAndAuthenticate(db, email, otpCode, TEST_JWT_SECRET);
   assert.equal(reuseAttempt.success, false);
+});
+
+test("production email sender fails closed when RESEND_API_KEY is missing", async () => {
+  const result = await sendOTPEmail("user@example.com", "123456", "");
+  assert.equal(result.success, false);
+  assert.equal("simulated" in result, false);
+});
+
+test("OTP email uses the CYword terracotta palette without the old tagline", () => {
+  const email = buildOTPEmail("user@example.com", "123456");
+  assert.match(email.html, />CYword<\/div>/u);
+  assert.doesNotMatch(email.html, /词根记忆|#0d9488|#0f766e|#f0fdfa|#ccfbf1/iu);
+  assert.match(email.html, /#d97757|#b85f43|#fff6f1|#f1d7ca/iu);
+});
+
+test("failed email delivery removes the unusable OTP and permits a retry", async () => {
+  const db = createMockD1();
+  const email = "retry@example.com";
+  const failed = await requestOTP(db, email, "test-resend-key", async () => ({
+    success: false,
+    message: "邮件服务发送失败，请稍后重试",
+  }));
+  assert.equal(failed.success, false);
+
+  const retried = await requestOTP(db, email, "test-resend-key", async () => ({ success: true }));
+  assert.equal(retried.success, true);
 });

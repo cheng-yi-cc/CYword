@@ -2,15 +2,14 @@ import { jsonError, readRequestJson } from "./book-api.ts";
 
 declare global {
   interface Env {
-    RESEND_API_KEY?: string;
-    JWT_SECRET?: string;
+    RESEND_API_KEY: string;
+    JWT_SECRET: string;
   }
 }
 
 export const EMAIL_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/u;
 export const OTP_PATTERN = /^\d{6}$/u;
 
-const DEFAULT_JWT_SECRET = "cyword-jwt-secret-key-2026-fallback";
 const OTP_EXPIRY_SECONDS = 5 * 60; // 5 分钟
 const OTP_RESEND_COOLDOWN_SECONDS = 60; // 60 秒重发冷却
 const MAX_OTP_ATTEMPTS = 5; // 最多输错 5 次
@@ -69,7 +68,7 @@ async function getHmacKey(secret: string): Promise<CryptoKey> {
   );
 }
 
-export async function signJWT(payload: Omit<JWTPayload, "iat" | "exp">, secret = DEFAULT_JWT_SECRET, expiresInSeconds = 30 * 24 * 3600): Promise<string> {
+export async function signJWT(payload: Omit<JWTPayload, "iat" | "exp">, secret: string, expiresInSeconds = 30 * 24 * 3600): Promise<string> {
   const header = { alg: "HS256", typ: "JWT" };
   const now = Math.floor(Date.now() / 1000);
   const fullPayload: JWTPayload = {
@@ -90,7 +89,7 @@ export async function signJWT(payload: Omit<JWTPayload, "iat" | "exp">, secret =
   return `${dataToSign}.${encodedSignature}`;
 }
 
-export async function verifyJWT(token: string, secret = DEFAULT_JWT_SECRET): Promise<JWTPayload | null> {
+export async function verifyJWT(token: string, secret: string): Promise<JWTPayload | null> {
   try {
     const parts = token.split(".");
     if (parts.length !== 3) return null;
@@ -127,14 +126,32 @@ export function generateOTP(): string {
   return num.toString().padStart(6, "0");
 }
 
+export function buildOTPEmail(email: string, code: string) {
+  return {
+    from: "CYword <login@auth.cyword.chengyi.me>",
+    to: email,
+    subject: `【CYword】你的登录验证码是 ${code}`,
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; color: #3d3929;">
+        <div style="font-size: 24px; font-weight: 700; color: #d97757; margin-bottom: 24px;">CYword</div>
+        <p style="font-size: 16px; line-height: 1.5; margin-bottom: 16px;">您正在登录或注册 CYword，验证码如下：</p>
+        <div style="background-color: #fff6f1; border: 1px solid #f1d7ca; border-radius: 8px; padding: 18px; text-align: center; margin: 24px 0;">
+          <span style="font-size: 32px; font-weight: 800; letter-spacing: 6px; color: #b85f43;">${code}</span>
+        </div>
+        <p style="font-size: 13px; color: #7a7668; line-height: 1.5;">验证码有效期为 5 分钟。如非本人操作，请忽略此邮件。</p>
+      </div>
+    `,
+  };
+}
+
 export async function sendOTPEmail(
   email: string,
   code: string,
-  resendApiKey?: string,
-): Promise<{ success: boolean; simulated?: boolean; message?: string }> {
+  resendApiKey: string,
+): Promise<{ success: boolean; message?: string }> {
   if (!resendApiKey) {
-    console.log(`[CYWORD AUTH DEV/MOCK] OTP for ${email}: ${code}`);
-    return { success: true, simulated: true, message: "本地模拟发信模式（未配置 RESEND_API_KEY）" };
+    console.error("[CYWORD AUTH] Missing RESEND_API_KEY");
+    return { success: false, message: "邮件服务暂时不可用，请稍后重试" };
   }
 
   try {
@@ -144,21 +161,7 @@ export async function sendOTPEmail(
         "Authorization": `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        from: "CYword <auth@chengyi.me>",
-        to: email,
-        subject: `【CYword】你的登录验证码是 ${code}`,
-        html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; color: #1f2937;">
-            <div style="font-size: 24px; font-weight: 700; color: #0d9488; margin-bottom: 24px;">CYword 词根记忆</div>
-            <p style="font-size: 16px; line-height: 1.5; margin-bottom: 16px;">您正在登录或注册 CYword，验证码如下：</p>
-            <div style="background-color: #f0fdfa; border: 1px solid #ccfbf1; border-radius: 8px; padding: 18px; text-align: center; margin: 24px 0;">
-              <span style="font-size: 32px; font-weight: 800; letter-spacing: 6px; color: #0f766e;">${code}</span>
-            </div>
-            <p style="font-size: 13px; color: #6b7280; line-height: 1.5;">验证码有效期为 5 分钟。如非本人操作，请忽略此邮件。</p>
-          </div>
-        `,
-      }),
+      body: JSON.stringify(buildOTPEmail(email, code)),
     });
 
     if (!response.ok) {
@@ -177,8 +180,9 @@ export async function sendOTPEmail(
 export async function requestOTP(
   db: D1Database,
   email: string,
-  resendApiKey?: string,
-): Promise<{ success: boolean; error?: string; simulated?: boolean; debugCode?: string }> {
+  resendApiKey: string,
+  sendEmail = sendOTPEmail,
+): Promise<{ success: boolean; error?: string; rateLimited?: boolean }> {
   await ensureAuthTables(db);
   const now = Math.floor(Date.now() / 1000);
 
@@ -190,7 +194,7 @@ export async function requestOTP(
 
   if (existing && now - existing.created_at < OTP_RESEND_COOLDOWN_SECONDS) {
     const waitSeconds = OTP_RESEND_COOLDOWN_SECONDS - (now - existing.created_at);
-    return { success: false, error: `请求过于频繁，请等待 ${waitSeconds} 秒后重试` };
+    return { success: false, error: `请求过于频繁，请等待 ${waitSeconds} 秒后重试`, rateLimited: true };
   }
 
   // 2. 生成新验证码
@@ -212,23 +216,21 @@ export async function requestOTP(
     .run();
 
   // 4. 发送邮件
-  const sendResult = await sendOTPEmail(email, code, resendApiKey);
+  const sendResult = await sendEmail(email, code, resendApiKey);
   if (!sendResult.success) {
+    // 只撤销本次发送失败的验证码，避免并发请求误删后来生成的验证码。
+    await db.prepare("DELETE FROM otp_codes WHERE email = ? AND code = ?").bind(email, code).run();
     return { success: false, error: sendResult.message };
   }
 
-  return {
-    success: true,
-    simulated: sendResult.simulated,
-    debugCode: sendResult.simulated ? code : undefined,
-  };
+  return { success: true };
 }
 
 export async function verifyAndAuthenticate(
   db: D1Database,
   email: string,
   code: string,
-  jwtSecret?: string,
+  jwtSecret: string,
 ): Promise<{ success: boolean; token?: string; user?: AuthUser; error?: string }> {
   await ensureAuthTables(db);
   const now = Math.floor(Date.now() / 1000);
@@ -305,7 +307,7 @@ export async function verifyAndAuthenticate(
   }
 
   // 5. 签发 JWT
-  const token = await signJWT({ sub: user.id, email: user.email }, jwtSecret || DEFAULT_JWT_SECRET);
+  const token = await signJWT({ sub: user.id, email: user.email }, jwtSecret);
 
   return { success: true, token, user };
 }
@@ -313,14 +315,14 @@ export async function verifyAndAuthenticate(
 export async function getUserFromRequest(
   request: Request,
   db: D1Database,
-  jwtSecret?: string,
+  jwtSecret: string,
 ): Promise<AuthUser | null> {
   const authHeader = request.headers.get("Authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
   const token = authHeader.slice(7).trim();
   if (!token) return null;
 
-  const payload = await verifyJWT(token, jwtSecret || DEFAULT_JWT_SECRET);
+  const payload = await verifyJWT(token, jwtSecret);
   if (!payload) return null;
 
   await ensureAuthTables(db);

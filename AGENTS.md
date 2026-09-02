@@ -16,10 +16,10 @@
 
 - 官网不打包完整词书、不读取学习进度，不把助记拆词宣传成词源分析；官网输出 `dist-site/`，与桌面端 `dist/` 分离。
 - 部署使用 `website/wrangler.jsonc` 和 Wrangler；禁止用纯静态 ZIP 代替含函数的部署。Pages 生产项目为 `cyword`、分支为 `main`；普通 Git 推送不自动部署官网函数和静态页面。
-- `DOWNLOADS` 与 `BOOKS` 绑定专用私有 R2 桶，`DB` 绑定 D1 数据库 `cyword-db`；认证接口使用 Web Crypto JWT 与 Resend。只公开受控下载入口、词书分片与认证路由。
+- `DOWNLOADS` 与 `BOOKS` 绑定专用私有 R2 桶，`DB` 绑定 D1 数据库 `cyword-db`；认证接口使用 Web Crypto JWT 与 Resend。`RESEND_API_KEY` 与至少 32 字符的 `JWT_SECRET` 必须作为 Pages Production 加密 Secret 配置，缺失时认证接口关闭，禁止生产回显验证码或降级模拟发信。只公开受控下载入口、词书分片与认证路由。
 - 新标签工作流先创建 GitHub Release，再把安装器、blockmap 和版本化 `latest.yml` 上传到 R2，最后原子更新 `releases/current.json`。不得覆盖旧版本内容或提前写入指针。
 - 桌面自动更新使用官网 generic 源 `/downloads/`，不得恢复为 GitHub provider。`website/src/release.ts` 只保留动态指针不可用时的已核验回退版本。
-- GitHub Actions 只使用限定到 `cyword-downloads` 的 R2 Object Read & Write S3 凭据。阿里云 DNS 只维护 `cyword` CNAME，不修改根域或其他项目记录。
+- GitHub Actions 只使用限定到 `cyword-downloads` 的 R2 Object Read & Write S3 凭据。`chengyi.me` 的权威 DNS 为 Cloudflare；只维护 `cyword` Pages CNAME 与 `auth.cyword` 的 Resend 验证记录，不修改根域、`www` 或其他项目记录。
 - R2 已获用户授权开通和超额计费；不要自行升级 Workers 付费套餐。凭据、`.dev.vars*`、`.wrangler/`、生成类型及 `.work/` 过程文件不得提交。
 
 ## 常用命令

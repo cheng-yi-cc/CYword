@@ -21,7 +21,6 @@ export function AuthModal({ onSuccess }: AuthModalProps) {
   const [sendingCode, setSendingCode] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [message, setMessage] = useState<{ type: "info" | "error" | "success"; text: string } | null>(null);
-  const [debugCode, setDebugCode] = useState<string | null>(null);
   const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -53,7 +52,6 @@ export function AuthModal({ onSuccess }: AuthModalProps) {
 
     setSendingCode(true);
     setMessage(null);
-    setDebugCode(null);
 
     try {
       let result: { success: boolean; message?: string; simulated?: boolean; debugCode?: string; error?: string };
@@ -73,9 +71,10 @@ export function AuthModal({ onSuccess }: AuthModalProps) {
         throw new Error(result.error || "发送验证码失败");
       }
 
-      startCountdown(60);
-      if (result.simulated && result.debugCode) {
-        setDebugCode(result.debugCode);
+      if (result.simulated || result.debugCode) {
+        if (!import.meta.env.DEV || !result.debugCode) {
+          throw new Error("认证服务配置异常，请稍后再试");
+        }
         setCode(result.debugCode);
         setMessage({
           type: "info",
@@ -87,6 +86,7 @@ export function AuthModal({ onSuccess }: AuthModalProps) {
           text: "验证码已发送，请检查收件箱（若未收到请查看垃圾箱）",
         });
       }
+      startCountdown(60);
     } catch (err) {
       setMessage({
         type: "error",

@@ -27,16 +27,19 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       return jsonError(500, "数据库服务未配置（缺少 DB 绑定）");
     }
 
+    if (!context.env.RESEND_API_KEY) {
+      console.error("[CYWORD AUTH] Missing RESEND_API_KEY");
+      return jsonError(503, "邮件服务暂时不可用，请稍后重试");
+    }
+
     const result = await requestOTP(context.env.DB, email, context.env.RESEND_API_KEY);
     if (!result.success) {
-      return jsonError(429, result.error || "发送验证码失败");
+      return jsonError(result.rateLimited ? 429 : 502, result.error || "发送验证码失败");
     }
 
     return Response.json({
       success: true,
       message: "验证码已发送至您的邮箱",
-      simulated: result.simulated,
-      debugCode: result.debugCode,
     }, {
       headers: {
         "Content-Type": "application/json; charset=utf-8",

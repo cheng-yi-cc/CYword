@@ -8,6 +8,11 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       return jsonError(500, "数据库服务未配置（缺少 DB 绑定）");
     }
 
+    if (!context.env.JWT_SECRET || context.env.JWT_SECRET.length < 32) {
+      console.error("[CYWORD AUTH] Missing or weak JWT_SECRET");
+      return jsonError(503, "认证服务暂时不可用，请稍后重试");
+    }
+
     const user = await getUserFromRequest(
       context.request,
       context.env.DB,

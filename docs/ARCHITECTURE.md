@@ -53,7 +53,7 @@ Electron 主进程通过固定 HTTPS 地址读取词书目录和每日批量词�
 ## 官网与下载
 
 ```text
-阿里云 DNS：cyword.chengyi.me → cyword.pages.dev
+Cloudflare DNS：cyword.chengyi.me → cyword.pages.dev
                               │
                     Cloudflare Pages 项目 cyword
                               ├─ /、/assets/* → dist-site/ 静态页面
@@ -75,9 +75,9 @@ Electron 主进程通过固定 HTTPS 地址读取词书目录和每日批量词�
                                    D1 数据库 cyword-db
 ```
 
-`website/vite.config.ts` 把 `website/` 构建到 `dist-site/`；`website/wrangler.jsonc` 定义 Pages 项目、输出目录、两个 R2 绑定和 D1 数据库绑定。`website/public/_routes.json` 让 `/downloads/*`、`/api/books/*` 和 `/api/auth/*` 调用函数，首页与静态资源不占用函数请求额度。
+`website/vite.config.ts` 把 `website/` 构建到 `dist-site/`；`website/wrangler.jsonc` 定义 Pages 项目、输出目录、两个 R2 绑定和 D1 数据库绑定。必需的 `RESEND_API_KEY`、`JWT_SECRET` 通过 Pages Production 加密 Secret 单独管理，不写入配置文件。`website/public/_routes.json` 让 `/downloads/*`、`/api/books/*` 和 `/api/auth/*` 调用函数，首页与静态资源不占用函数请求额度。
 
-下载处理器 `website/functions/downloads/[[path]].ts` 只接受稳定最新版入口、受约束的内容寻址资产和迁移前安装包路径。认证处理器 `website/functions/api/auth/*.ts` 基于 Cloudflare D1 存储用户数据与验证码，通过 Resend 发送邮件，并使用 Web Crypto 签发/校验 HMAC-SHA256 JWT。客户端会话持久化保存在 Electron `userData/session.json`。
+下载处理器 `website/functions/downloads/[[path]].ts` 只接受稳定最新版入口、受约束的内容寻址资产和迁移前安装包路径。认证处理器 `website/functions/api/auth/*.ts` 基于 Cloudflare D1 存储用户数据与验证码，通过专用发信域 `auth.cyword.chengyi.me` 的 Resend Key 发送邮件，并使用强随机 Secret 和 Web Crypto 签发/校验 HMAC-SHA256 JWT；任一密钥缺失时生产接口关闭，不降级为模拟模式。客户端会话持久化保存在 Electron `userData/session.json`，该目录不进入安装包。
 
 两个 R2 桶与 D1 数据库均使用 APAC 位置，不开放 `r2.dev` 入口。electron-updater 使用官网 generic provider，GitHub Release 只保留公开发布记录和迁移前客户端的过渡入口。
 
