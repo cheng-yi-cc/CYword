@@ -1,21 +1,69 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import fs from "node:fs/promises";
-import path from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 
-const localDataVersion = "0000000000000000";
-
-async function readRequestJson(request: IncomingMessage) {
-  const chunks: Buffer[] = [];
-  let size = 0;
-  for await (const chunk of request) {
-    const buffer = Buffer.from(chunk);
-    size += buffer.length;
-    if (size > 400_000) throw new Error("Request is too large");
-    chunks.push(buffer);
+async function readRequestJson(request: IncomingMessage, timeoutMs = 5_000): Promise<unknown> {
+  if ((request as unknown as { body?: unknown }).body) {
+    return (request as unknown as { body?: unknown }).body;
   }
-  return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    let size = 0;
+    let finished = false;
+
+    const cleanup = () => {
+      finished = true;
+      clearTimeout(timer);
+      request.removeListener("data", onData);
+      request.removeListener("end", onEnd);
+      request.removeListener("error", onError);
+    };
+
+    const timer = setTimeout(() => {
+      if (!finished) {
+        cleanup();
+        reject(new Error("Request read timed out"));
+      }
+    }, timeoutMs);
+
+    const onData = (chunk: Buffer) => {
+      if (finished) return;
+      size += chunk.length;
+      if (size > 400_000) {
+        cleanup();
+        reject(new Error("Request is too large"));
+        return;
+      }
+      chunks.push(chunk);
+    };
+
+    const onEnd = () => {
+      if (finished) return;
+      cleanup();
+      try {
+        const text = Buffer.concat(chunks).toString("utf8");
+        resolve(text ? JSON.parse(text) : {});
+      } catch (err) {
+        reject(err);
+      }
+    };
+
+    const onError = (err: Error) => {
+      if (finished) return;
+      cleanup();
+      reject(err);
+    };
+
+    request.on("data", onData);
+    request.on("end", onEnd);
+    request.on("error", onError);
+
+    if (request.complete) {
+      onEnd();
+    } else {
+      request.resume();
+    }
+  });
 }
 
 const devOtpCodes = new Map<string, { code: string; createdAt: number }>();
@@ -29,19 +77,7 @@ function localDataPreview() {
         const url = request.url ?? "";
         try {
           let payload: unknown;
-          if (request.method === "GET" && url === "/api/books/cet6/catalog") {
-            const catalog = JSON.parse(await fs.readFile(path.resolve("data/catalog.json"), "utf8"));
-            payload = { ...catalog, dataVersion: localDataVersion };
-          } else if (request.method === "POST" && url === "/api/books/cet6/words") {
-            const input = await readRequestJson(request) as { wordIds?: unknown };
-            if (!Array.isArray(input.wordIds)) throw new Error("Invalid word list");
-            const words: Record<string, unknown> = {};
-            for (const id of [...new Set(input.wordIds)]) {
-              if (typeof id !== "string" || !/^[a-f0-9-]{36}$/i.test(id)) throw new Error("Invalid word id");
-              words[id] = JSON.parse(await fs.readFile(path.resolve("data/words", `${id}.json`), "utf8"));
-            }
-            payload = { dataVersion: localDataVersion, wordCount: Object.keys(words).length, words };
-          } else if (request.method === "POST" && url === "/api/auth/send-code") {
+          if (request.method === "POST" && url === "/api/auth/send-code") {
             const input = await readRequestJson(request) as { email?: string };
             const email = (input.email || "").trim().toLowerCase();
             if (!email || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
@@ -127,5 +163,11 @@ export default defineConfig({
     host: "127.0.0.1",
     port: 5173,
     strictPort: true,
+    proxy: {
+      "/api/books": {
+        target: "https://cyword.chengyi.me",
+        changeOrigin: true,
+      },
+    },
   },
 });

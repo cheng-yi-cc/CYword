@@ -11,12 +11,13 @@ async function readResponse(response: Response) {
 
 if (!window.cyword) {
   window.cyword = {
-    readCatalog: () => fetch("/api/books/cet6/catalog", { cache: "no-store" }).then(readResponse),
+    readCatalog: () => fetch("/api/books/cet6/catalog", { cache: "no-store", signal: AbortSignal.timeout(10_000) }).then(readResponse),
     readWords: (request: WordsRequest) => fetch("/api/books/cet6/words", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
       body: JSON.stringify(request),
+      signal: AbortSignal.timeout(15_000),
     }).then(readResponse),
     readProgress: async () => {
       const stored = localStorage.getItem("cyword-preview-progress");
