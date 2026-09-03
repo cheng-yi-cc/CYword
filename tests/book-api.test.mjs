@@ -103,3 +103,25 @@ test("daily endpoint returns words from multiple shards in one streamed response
   assert.equal(body.wordCount, 2);
   assert.deepEqual(Object.keys(body.words).sort(), [...wordIds].sort());
 });
+
+test("long sentence segments merge trailing punctuation and contain no lone punctuation rows", () => {
+  for (const shard of Object.keys(manifest.shards)) {
+    const pack = JSON.parse(fs.readFileSync(path.join(versionRoot, `shard-${shard}.json`), "utf8"));
+    for (const word of Object.values(pack.words)) {
+      for (const item of word.longSentences ?? []) {
+        for (const seg of item.segments ?? []) {
+          const isLonePunctuation =
+            !seg.role &&
+            !seg.role_label &&
+            !seg.gloss &&
+            /^[.,!?;:…“”‘’—\s]+$/.test(seg.text);
+          assert.equal(
+            isLonePunctuation,
+            false,
+            `Word ${word.spelling} contains a lone punctuation segment: ${JSON.stringify(seg)}`,
+          );
+        }
+      }
+    }
+  }
+});
