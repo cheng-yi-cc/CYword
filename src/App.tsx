@@ -346,15 +346,92 @@ function PageHeader({ eyebrow, title, description, aside }: { eyebrow: string; t
 
 function LiquidDay({ day, fraction }: { day: number; fraction: number }) {
   const percent = Math.min(100, Math.max(0, Math.round(fraction * 100)));
+  const emptyY = 320;
+  const fullY = 50;
+  const currentY = emptyY - (percent / 100) * (emptyY - fullY);
+  const clipId = `liquid-day-clip-${day}`;
+
   return (
     <div className="liquid-day" aria-label={`Day ${day}，完成 ${percent}%`}>
-      <div className="day-base-text">Day {day}</div>
-      <div
-        className="day-fill-text"
-        style={{ clipPath: `inset(${100 - percent}% 0 0 0)` }}
+      <svg
+        className="liquid-day-svg"
+        viewBox="0 0 1000 340"
+        preserveAspectRatio="xMidYMid meet"
+        role="img"
       >
-        Day {day}
-      </div>
+        <defs>
+          <clipPath id={clipId}>
+            <text
+              x="500"
+              y="245"
+              textAnchor="middle"
+              dominantBaseline="alphabetic"
+              className="liquid-day-text"
+            >
+              Day {day}
+            </text>
+          </clipPath>
+        </defs>
+
+        <text
+          x="500"
+          y="245"
+          textAnchor="middle"
+          dominantBaseline="alphabetic"
+          className="liquid-day-text liquid-day-base"
+        >
+          Day {day}
+        </text>
+
+        <g clipPath={`url(#${clipId})`}>
+          <g
+            className="liquid-wave-group"
+            style={{ transform: `translateY(${currentY}px)` }}
+          >
+            <path
+              className="liquid-wave liquid-wave-back"
+              d="
+                M -1200,0
+                c 200,-18 200,18 400,0
+                c 200,-18 200,18 400,0
+                c 200,-18 200,18 400,0
+                c 200,-18 200,18 400,0
+                c 200,-18 200,18 400,0
+                c 200,-18 200,18 400,0
+                c 200,-18 200,18 400,0
+                c 200,-18 200,18 400,0
+                c 200,-18 200,18 400,0
+                L 2400,500 L -1200,500 Z
+              "
+            />
+            <path
+              className="liquid-wave liquid-wave-front"
+              d="
+                M -400,0
+                c 200,14 200,-14 400,0
+                c 200,14 200,-14 400,0
+                c 200,14 200,-14 400,0
+                c 200,14 200,-14 400,0
+                c 200,14 200,-14 400,0
+                c 200,14 200,-14 400,0
+                c 200,14 200,-14 400,0
+                L 2400,500 L -400,500 Z
+              "
+            />
+          </g>
+        </g>
+
+        <text
+          x="500"
+          y="245"
+          textAnchor="middle"
+          dominantBaseline="alphabetic"
+          className="liquid-day-text liquid-day-outline"
+          aria-hidden="true"
+        >
+          Day {day}
+        </text>
+      </svg>
     </div>
   );
 }
@@ -468,6 +545,13 @@ function StudyToday({
   useEffect(() => {
     if (hover && activeDetail?.id) hover.setCurrentWordId(activeDetail.id);
   }, [activeDetail?.id, hover]);
+
+  useEffect(() => {
+    document.body.classList.toggle("study-mode-active", sessionActive);
+    return () => {
+      document.body.classList.remove("study-mode-active");
+    };
+  }, [sessionActive]);
 
   const openWordSession = async (targetGroupId: string, targetWordId: string) => {
     const targetIndex = exposures.findIndex((item) => item.groupId === targetGroupId && item.wordId === targetWordId);
@@ -960,6 +1044,7 @@ function App() {
       loadWords={loadWords}
       planDay={current?.day}
     >
+      <div className="app-wallpaper" aria-hidden="true" />
       <div className="app-shell">
         <aside className="sidebar">
           <div className="brand"><div>Cy</div><span><b>词根记忆</b><small>Rooted recall</small></span></div>
