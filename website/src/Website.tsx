@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, useRef, type ReactNode } from "react";
 import { fetchLatestRelease, release, type ReleaseInfo } from "./release";
 
 function Icon({ name, className = "" }: { name: string; className?: string }) {
@@ -17,6 +17,9 @@ function Icon({ name, className = "" }: { name: string; className?: string }) {
     repeat: <><path d="M4 9a8 8 0 0 1 14-3l2 3M20 3v6h-6M20 15a8 8 0 0 1-14 3l-2-3M4 21v-6h6" /></>,
     monitor: <><rect x="3" y="3" width="18" height="13" rx="2" /><path d="M12 16v5m-5 0h10" /></>,
     chevron: <path d="m8 5 7 7-7 7" />,
+    volume: <><path d="M11 5L6 9H2v6h4l5 4V5z" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" /></>,
+    play: <polygon points="6 4 18 12 6 20 6 4" fill="currentColor" stroke="none" />,
+    pause: <><rect x="6" y="4" width="3.5" height="16" fill="currentColor" stroke="none" /><rect x="14.5" y="4" width="3.5" height="16" fill="currentColor" stroke="none" /></>,
   };
   return <svg className={`icon ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{shapes[name]}</svg>;
 }
@@ -32,46 +35,386 @@ const demoWords = [
 ];
 const levels = ["未掌握", "不清楚", "已掌握"];
 
-function WordDemo() {
-  const [selected, setSelected] = useState(0);
-  const [ratings, setRatings] = useState<Record<string, number>>({});
-  const [saved, setSaved] = useState<string[]>([]);
-  const [message, setMessage] = useState("先读巧记，再切换同组的单词试试看。");
-  const word = demoWords[selected];
-  const isSaved = saved.includes(word.word);
-  const selectWord = (index: number) => {
-    setSelected(index);
-    setMessage(`正在体验 ${demoWords[index].word}，所有操作只在这个演示中生效。`);
+const immersivePortable = {
+  word: "portable",
+  group: "port 词根家族",
+  bookName: "大学英语六级",
+  pronunciation: "/ˈpɔːtəbl/",
+  audioUrl: "https://cdn.aimwords.com/audio/1c2ef59fe4c50c37771b9fdac52db1e6edf47bea24ab80d495625d680fb8db87.mp3",
+  definition: "adj. 轻便的，便携的；手提的",
+  memoryMethod: "把 por 联想成「婆婆」，table 想成桌子。连婆婆都能轻松扛着走的桌子，一定很轻便。",
+  roots: [
+    {
+      type: "root",
+      typeLabel: "词根 · 01",
+      spelling: "port",
+      meaning: "运、运输、携带、搬运",
+      memoryMethod: "把 port 联想成「坡」。一辆装满货物的小车，正往坡上运。记住这个画面，再带出「搬运、携带」的含义。",
+    },
+    {
+      type: "suffix",
+      typeLabel: "后缀 · 02",
+      spelling: "-able",
+      meaning: "形容词后缀，能…的",
+      memoryMethod: "熟词 able（能够），作为后缀表示“有能力…的、可以…的”。",
+    },
+  ],
+  equation: [
+    { text: "port", meaning: "运、运输", root: true },
+    { text: "-able", meaning: "能…的", root: false },
+  ],
+  etymologyAnalysis: "能够轻松运送移动的 → adj.轻便的，便携的；手提的",
+  example: {
+    sentence: "As remote learning becomes more common, portable devices have become essential tools for students.",
+    translation: "随着远程学习变得越来越普遍，便携式设备已成为学生的必备工具。",
+    note: "portable 在这里指“便携的”，描述这些设备可以随身携带、随时使用的特点。",
+  },
+  examExample: {
+    source: "2016年12月六级真题(第3套) · 仔细阅读",
+    sentence: "Those simultaneous challenges appear less overwhelming with increasingly better answers to a centuries-old question: how to make power portable.",
+    translation: "那些同时出现的挑战似乎不那么令人难以招架了，因为一个古老的问题有了越来越好的答案：如何让电力变得便携。",
+    note: "在句中作宾语补足语，修饰 power，与 make 构成“make + 宾语 + 形容词”结构，表示“使电力变得便携”。",
+  },
+  longSentence: {
+    sentence: "Public economic institutions, which have long relied on fixed infrastructure to deliver services in remote regions, are now adopting portable digital terminals that can be transported by a single officer, because this shift significantly reduces operational costs while maintaining service quality, a balance that was previously difficult to achieve.",
+    translation: "长期以来依赖固定基础设施在偏远地区提供服务的公共经济机构，如今正在采用可由一名官员携带的便携式数字终端，因为这一转变在保持服务质量的同时大幅降低了运营成本，而这种平衡以前很难实现。",
+    segments: [
+      { role: "主语", text: "Public economic institutions", gloss: "公共经济机构" },
+      { role: "定语从句", text: ", which have long relied on fixed infrastructure to deliver services in remote regions,", gloss: "长期依赖固定基础设施在偏远地区提供服务" },
+      { role: "谓语", text: "are now adopting", gloss: "如今正在采用" },
+      { role: "宾语", text: "portable digital terminals", gloss: "便携式数字终端" },
+      { role: "定语从句", text: "that can be transported by a single officer,", gloss: "可由一名官员携带" },
+      { role: "原因状语", text: "because this shift significantly reduces operational costs while maintaining service quality,", gloss: "因为这一转变在保持服务质量的同时大幅降低了运营成本" },
+      { role: "同位语", text: "a balance that was previously difficult to achieve.", gloss: "而这种平衡以前很难实现" },
+    ],
+    analyses: [
+      {
+        dimension: "目标词",
+        text: "portable 最常见的意思是「便携的」，句中通过从句 that can be transported by a single officer 钉死了具体标准：轻到一人就能带着去偏远地区。对比前文 fixed infrastructure，强化了轻巧随人移动的产品特性。",
+      },
+      {
+        dimension: "成分归属",
+        text: "while maintaining service quality 紧跟在 reduces operational costs 后面，说明降低成本的同时保持了服务质量，是 this shift 带来的双重优势。",
+      },
+      {
+        dimension: "指代",
+        text: "this shift（这一转变）指从长期依赖固定设施到采用便携终端的整体战略转变。",
+      },
+    ],
+  },
+};
+
+function WebAudioButton({ url }: { url: string }) {
+  const [playing, setPlaying] = useState(false);
+  const play = () => {
+    try {
+      setPlaying(true);
+      const audio = new Audio(url);
+      audio.addEventListener("ended", () => setPlaying(false), { once: true });
+      audio.addEventListener("error", () => setPlaying(false), { once: true });
+      audio.play().catch(() => setPlaying(false));
+    } catch {
+      setPlaying(false);
+    }
   };
-  return <div className="hero-demo" id="experience">
-    <div className="demo-caption"><span><i /> 巧记 → 拆词 → 标记熟练度</span><span>跟着记一个试试 <span aria-hidden="true">↘</span></span></div>
-    <div className="demo-window">
-      <div className="window-bar"><span className="window-brand">Cy <span>词根记忆</span></span><span>大学英语六级</span><span className="window-controls" aria-hidden="true">— &nbsp; □ &nbsp; ×</span></div>
-      <div className="demo-layout">
-        <aside className="demo-sidebar">
-          <span className="micro">WORD FAMILY</span><p className="root-name">port<span>搬运</span></p>
-          <span className="family-label">同一个词根，连着记</span>
-          <div className="word-list" aria-label="示例单词">
-            {demoWords.map((item, i) => <button key={item.word} aria-pressed={selected === i} onClick={() => selectWord(i)} className={selected === i ? "selected" : ""}><span>{item.word}</span>{ratings[item.word] !== undefined ? <Icon name="check" /> : <Icon name="chevron" />}</button>)}
+  return (
+    <button
+      className={`study-audio-btn ${playing ? "playing" : ""}`}
+      onClick={play}
+      aria-label="播放真人发音"
+      title="播放真人发音"
+    >
+      <Icon name="volume" />
+      <span className="audio-label">{playing ? "正在朗读" : "真人发音"}</span>
+      <span className={`audio-wave ${playing ? "active" : ""}`} aria-hidden="true">
+        <i /><i /><i />
+      </span>
+    </button>
+  );
+}
+
+function WordDemo() {
+  const [activeRating, setActiveRating] = useState<number | null>(null);
+  const [isSaved, setIsSaved] = useState(false);
+  const [activeLane, setActiveLane] = useState<"word" | "morpheme" | "sentence">("word");
+  const [hoveredRole, setHoveredRole] = useState<string | null>(null);
+  const [statusMsg, setStatusMsg] = useState("桌面端沉浸式学习体验：左栏探寻词根线索，中栏掌握音形巧记与真题，右栏深度拆解长难句语法结构");
+  const word = immersivePortable;
+
+  const handleRate = (idx: number) => {
+    setActiveRating(idx);
+    setStatusMsg(`已标记为「${levels[idx]}」。真实客户端中，系统将据此在复习日精准分流。`);
+  };
+
+  const handleToggleSave = () => {
+    setIsSaved(!isSaved);
+    setStatusMsg(!isSaved ? `${word.word} 已加入生词本，可在生词本单独集中回看。` : `已将 ${word.word} 从生词本移出。`);
+  };
+
+  return (
+    <div className="hero-demo" id="experience">
+      <div className="demo-caption">
+        <span><i /> 桌面端沉浸式学习视窗 · 1:1 真实交互</span>
+        <span>词根巧记 ＋ 真题例句 ＋ 长难句拆解 <span aria-hidden="true">↘</span></span>
+      </div>
+
+      <div className="immersive-window">
+        {/* 顶部标题栏与窗口控制 */}
+        <div className="immersive-topbar">
+          <div className="topbar-brand">
+            <span className="brand-dot" />
+            <span className="brand-text">Cy 词根记忆</span>
+            <span className="topbar-book">大学英语六级</span>
+            <span className="topbar-group">Day 05 · port 词根家族</span>
           </div>
-          <div className="demo-sidebar-note"><Icon name="branch" /><span>词根也有巧记<br />把 port 联想成「坡」，货车正往坡上搬运。</span></div>
-        </aside>
-        <div className="demo-word">
-          <div className="demo-word-top"><span className="micro">PORT · 词根家族</span><button className={`save-word ${isSaved ? "is-saved" : ""}`} aria-label={`${isSaved ? "取消收藏" : "收藏"} ${word.word}`} aria-pressed={isSaved} onClick={() => { setSaved(isSaved ? saved.filter((item) => item !== word.word) : [...saved, word.word]); setMessage(isSaved ? `已取消收藏 ${word.word}。` : `${word.word} 已加入演示生词本。`); }}><Icon name="bookmark" /></button></div>
-          <div className="demo-changing-word" key={word.word}><h2>{word.word}</h2><span className="pronunciation">{word.pronunciation}</span><p className="word-definition">{word.type} {word.definition}</p>
-            <div className="demo-mnemonic"><span>巧记思路</span><p>{word.memory}</p></div>
-            <div className="word-equation">{word.parts.map((part, index) => <span className="equation-piece" key={part.text}>{index > 0 && <i>＋</i>}<span className={part.root ? "root-part" : ""}><b>{part.text}</b><small>{part.meaning}</small></span></span>)}<span className="equation-meaning"><Icon name="arrow" />{word.definition.split("；")[0]}</span></div>
-            <div className="example"><span className="micro">放进句子里</span><p>{word.example}</p><small>{word.translation}</small></div>
+
+          <div className="topbar-center">
+            <div className="topbar-progress-track" title="学习进度 33%">
+              <i style={{ width: "33%" }} />
+            </div>
           </div>
-          <div className="demo-rating" aria-label={`${word.word} 的熟练度`}>
-            {levels.map((level, i) => <button className={ratings[word.word] === i ? "rated" : ""} key={level} aria-pressed={ratings[word.word] === i} onClick={() => {setRatings({...ratings, [word.word]: i}); setMessage(`${word.word} 已标记为「${level}」。可以再看看同组的其他单词。`); }}><span className={`level-dot level-${i}`} />{level}{ratings[word.word] === i && <Icon name="check" />}</button>)}
+
+          <div className="topbar-meta">
+            <span className="topbar-badge-scroll">沉浸学习模式</span>
+            <span className="topbar-count">01 / 03</span>
+            <span className="topbar-controls" aria-hidden="true">— &nbsp; □ &nbsp; ×</span>
           </div>
         </div>
+
+        {/* 移动端/窄屏下的栏目切换器 */}
+        <div className="immersive-mobile-tabs" role="tablist" aria-label="沉浸式栏目切换">
+          <button
+            role="tab"
+            aria-selected={activeLane === "morpheme"}
+            className={activeLane === "morpheme" ? "active" : ""}
+            onClick={() => setActiveLane("morpheme")}
+          >
+            词根词缀
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeLane === "word"}
+            className={activeLane === "word" ? "active" : ""}
+            onClick={() => setActiveLane("word")}
+          >
+            核心巧记
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeLane === "sentence"}
+            className={activeLane === "sentence" ? "active" : ""}
+            onClick={() => setActiveLane("sentence")}
+          >
+            长难句精读
+          </button>
+        </div>
+
+        {/* 真实三栏并排独立滑动网格 */}
+        <div className={`study-session-grid show-${activeLane}`}>
+          {/* 左栏：词根词缀（独立分开滑动） */}
+          <aside className="study-morpheme-column">
+            <header className="study-column-header">
+              <span className="column-tag">MORPHEME NOTES</span>
+              <h3>词根词缀</h3>
+              <p>词根优先 · 独立滑动浏览</p>
+            </header>
+            <div className="study-column-scroll">
+              {word.roots.map((part) => (
+                <section className={`study-part-card ${part.type}`} key={part.spelling}>
+                  <header>
+                    <span className="part-label">{part.typeLabel}</span>
+                    <b className="part-spelling">{part.spelling}</b>
+                  </header>
+                  <p className="part-meaning">{part.meaning}</p>
+                  <div className="part-mnemonic">
+                    <span className="section-micro">音形巧记</span>
+                    <p>{part.memoryMethod}</p>
+                  </div>
+                </section>
+              ))}
+            </div>
+          </aside>
+
+          {/* 中栏：单词主体（独立分开滑动） */}
+          <main className="study-word-column">
+            <div className="study-center-scroll">
+              {/* 单词 Hero */}
+              <header className="study-word-hero">
+                <div className="study-hero-main">
+                  <span className="hero-group-label">{word.group}</span>
+                  <h2 className="study-word-title">{word.word}</h2>
+                  <div className="study-phonetic-row">
+                    <strong>{word.pronunciation}</strong>
+                    <WebAudioButton url={word.audioUrl} />
+                  </div>
+                </div>
+                <div className="study-hero-side">
+                  <p className="study-definition">{word.definition}</p>
+                  <button
+                    className={`study-bookmark-btn ${isSaved ? "saved" : ""}`}
+                    onClick={handleToggleSave}
+                    aria-pressed={isSaved}
+                  >
+                    <span>{isSaved ? "◆" : "◇"}</span>
+                    <span>{isSaved ? "已在生词本" : "加入生词本"}</span>
+                  </button>
+                </div>
+              </header>
+
+              {/* 巧记思路 */}
+              <section className="session-section memory-section">
+                <header>
+                  <span className="section-tag">MEMORY METHOD</span>
+                  <h4>巧记思路</h4>
+                </header>
+                <div className="mnemonic-box">
+                  <p>{word.memoryMethod}</p>
+                </div>
+              </section>
+
+              {/* 词根词缀构词分析 */}
+              <section className="session-section etymology-section">
+                <header>
+                  <span className="section-tag">WORD BUILDING</span>
+                  <h4>词根词缀分析</h4>
+                </header>
+                <div className="study-word-equation">
+                  {word.equation.map((piece, i) => (
+                    <span className="study-word-equation-piece" key={piece.text}>
+                      {i > 0 && <i className="equation-plus">＋</i>}
+                      <span className={`equation-chip ${piece.root ? "is-root" : ""}`}>
+                        <b>{piece.text}</b>
+                        <small>{piece.meaning}</small>
+                      </span>
+                    </span>
+                  ))}
+                  <span className="equation-result">
+                    <Icon name="arrow" />
+                    <span>{word.definition.split("；")[0]}</span>
+                  </span>
+                </div>
+                <p className="etymology-desc">{word.etymologyAnalysis}</p>
+              </section>
+
+              {/* 常用例句 */}
+              <section className="session-section sentence-section">
+                <header>
+                  <span className="section-tag">COMMON EXAMPLE</span>
+                  <h4>常用例句</h4>
+                </header>
+                <div className="spotlight-card">
+                  <p className="en-sentence">{word.example.sentence}</p>
+                  <p className="cn-sentence">{word.example.translation}</p>
+                  <small className="sentence-hint">{word.example.note}</small>
+                </div>
+              </section>
+
+              {/* 六级真题例句 */}
+              <section className="session-section exam-section">
+                <header>
+                  <span className="section-tag">EXAM REALITY</span>
+                  <h4>六级真题例句</h4>
+                </header>
+                <div className="spotlight-card exam-card">
+                  <span className="exam-source">{word.examExample.source}</span>
+                  <p className="en-sentence">{word.examExample.sentence}</p>
+                  <p className="cn-sentence">{word.examExample.translation}</p>
+                  <small className="sentence-hint">{word.examExample.note}</small>
+                </div>
+              </section>
+            </div>
+
+            {/* 底部悬浮打分与操作栏 */}
+            <footer className="study-session-controls">
+              <div className="session-rating">
+                {levels.map((lvl, idx) => (
+                  <button
+                    key={lvl}
+                    className={`rate-btn rate-${idx} ${activeRating === idx ? "active" : ""}`}
+                    onClick={() => handleRate(idx)}
+                    aria-pressed={activeRating === idx}
+                  >
+                    <kbd>{idx + 1}</kbd>
+                    <b>{lvl}</b>
+                    {activeRating === idx && <Icon name="check" />}
+                  </button>
+                ))}
+              </div>
+              <div className="session-navigation">
+                <span><kbd>←</kbd> 上一个</span>
+                <span><kbd>空格</kbd> 播放发音</span>
+                <span>下一个 <kbd>→</kbd></span>
+              </div>
+            </footer>
+          </main>
+
+          {/* 右栏：长难句精读（独立分开滑动） */}
+          <aside className="study-sentence-column">
+            <header className="study-column-header">
+              <span className="column-tag">LONG SENTENCE</span>
+              <h3>长难句精读</h3>
+              <p>跟随当前词显示 · 独立滑动深读</p>
+            </header>
+            <div className="long-sentence-scroll">
+              <article className="long-sentence-article">
+                <p className="long-sentence-copy">{word.longSentence.sentence}</p>
+                <p className="long-sentence-translation">{word.longSentence.translation}</p>
+
+                <div className="sentence-subblock">
+                  <h5>语法结构分层拆解 (悬停高亮)</h5>
+                  <div className="segment-list">
+                    {word.longSentence.segments.map((seg, i) => (
+                      <div
+                        className={`session-segment role-${seg.role} ${hoveredRole === seg.role ? "glow-active" : ""}`}
+                        key={i}
+                        onMouseEnter={() => setHoveredRole(seg.role)}
+                        onMouseLeave={() => setHoveredRole(null)}
+                      >
+                        <span className="role-badge">{seg.role}</span>
+                        <div className="segment-content">
+                          <b className="seg-text">{seg.text}</b>
+                          <small className="seg-gloss">{seg.gloss}</small>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="sentence-subblock">
+                  <h5>考点与难点剖析</h5>
+                  <div className="analysis-list">
+                    {word.longSentence.analyses.map((ana, i) => (
+                      <div
+                        className={`session-analysis ${hoveredRole && ana.dimension.includes(hoveredRole) ? "glow-active" : ""}`}
+                        key={i}
+                      >
+                        <span className="analysis-dim">{ana.dimension}</span>
+                        <p>{ana.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            {/* 右栏底部分页器 */}
+            <footer className="long-sentence-pagination">
+              <span className="page-tag">六级真题</span>
+              <span className="page-num">第 1 句 / 共 1 句</span>
+              <span className="page-status">已展开</span>
+            </footer>
+          </aside>
+        </div>
+
+        {/* 视窗底状态栏 */}
+        <div className="immersive-statusbar">
+          <span className="status-msg" role="status">{statusMsg}</span>
+          <span className="status-tip">鼠标滚轮置于各栏即可独立上下滑动</span>
+        </div>
       </div>
-      <div className="demo-status"><span role="status">{message}</span><span>{String(selected + 1).padStart(2, "0")} / 03</span></div>
+      <p className="demo-footnote">CYword 客户端沉浸式记忆视窗真实呈现 · 词书数据与真人发音均来自正式版六级词库</p>
     </div>
-    <p className="demo-footnote">巧记据词书节选整理 · 联想用于助记，构词另行展示 · 官网操作不影响学习进度</p>
-  </div>;
+  );
 }
 
 function MnemonicMethod() {
