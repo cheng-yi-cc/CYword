@@ -8,6 +8,7 @@
 - 主下载：<https://cyword.chengyi.me/downloads/latest>，从私有 R2 桶的原子版本指针跳转到当前内容寻址安装包，支持断点续传，无需访问 GitHub。
 - 备用下载：`latest.json.githubDownloadUrl` 指向当前 GitHub Release 的同一份正式安装包；官网页面不得硬编码历史版本链接。
 - 版本和校验值以 `/downloads/latest.json` 为准；`website/src/release.ts` 只保留动态指针不可用时的 v0.2.1 回退信息。
+- 首屏搭载 1:1 动态还原的沉浸式记忆视窗，呈现词根词缀、核心巧记与真题例句、长难句精读三栏独立分开上下滑动交互，采用 `overscroll-behavior: contain` 阻断外层滚动穿透，并集成发音声波可视化与长难句语法高光流光联动。
 
 网站使用境外 Cloudflare 服务。国内线路受地区、运营商和跨境网络影响，不能承诺全国永久可达；境外托管适用的备案说明见[阿里云文档](https://help.aliyun.com/en/icp-filing/basic-icp-service/support/for-the-record-process-faq)。迁移后的桌面版本通过同域 `/downloads/latest.yml` 检查更新，并从 R2 下载更新资产，不再向 GitHub 查询更新。
 
