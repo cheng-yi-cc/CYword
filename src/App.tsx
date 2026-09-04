@@ -541,6 +541,8 @@ function StudyToday({
   const group = exposure ? groupsById.get(exposure.groupId) : undefined;
   const activeDetail = exposure?.wordId ? details[exposure.wordId] ?? null : null;
   const hover = useWordHover();
+  const rated = exposure ? dayState?.ratedExposureKeys.includes(exposure.key) : false;
+  const activeProficiency = rated && exposure ? progress.words[exposure.wordId]?.proficiency : undefined;
 
   useEffect(() => {
     if (hover && activeDetail?.id) hover.setCurrentWordId(activeDetail.id);
@@ -607,10 +609,15 @@ function StudyToday({
     setRatingBusy(true);
     const next = rateStudyWord(progress, plan, group, exposure.wordId, level);
     await saveProgress(next);
-    const ratedKeys = next.planDays[String(plan.day)]?.ratedExposureKeys ?? [];
-    const nextUnrated = exposures.findIndex((item, index) => index > activeIndex && !ratedKeys.includes(item.key));
-    const anyUnrated = nextUnrated >= 0 ? nextUnrated : exposures.findIndex((item) => !ratedKeys.includes(item.key));
-    setActiveIndex(anyUnrated >= 0 ? anyUnrated : Math.min(activeIndex + 1, exposures.length - 1));
+    if (activeIndex < exposures.length - 1) {
+      setActiveIndex(activeIndex + 1);
+    } else {
+      const ratedKeys = next.planDays[String(plan.day)]?.ratedExposureKeys ?? [];
+      const anyUnrated = exposures.findIndex((item) => !ratedKeys.includes(item.key));
+      if (anyUnrated >= 0) {
+        setActiveIndex(anyUnrated);
+      }
+    }
     setRatingBusy(false);
   };
 
@@ -625,9 +632,14 @@ function StudyToday({
         return;
       }
       if (editing) return;
-      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+      if (event.key === "ArrowLeft") {
         event.preventDefault();
-        move(event.key === "ArrowLeft" ? -1 : 1);
+        move(-1);
+        return;
+      }
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        if (rated) move(1);
         return;
       }
       if (event.code === "Space") {
@@ -644,15 +656,13 @@ function StudyToday({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [sessionActive, activeIndex, activeDetail?.id, activeDetail?.audioUrl, ratingBusy, progress]);
+  }, [sessionActive, activeIndex, activeDetail?.id, activeDetail?.audioUrl, ratingBusy, progress, rated]);
 
   const rootPriority = { root: 0, prefix: 1, suffix: 2, base: 3 };
   const rootLabels = { root: "词根", prefix: "前缀", suffix: "后缀", base: "词基" };
   const orderedParts = [...(activeDetail?.roots ?? [])].sort((a, b) => rootPriority[a.type] - rootPriority[b.type] || a.order - b.order);
   const longSentences = activeDetail?.longSentences ?? [];
   const longSentence = longSentences[longSentenceIndex];
-  const rated = exposure ? dayState?.ratedExposureKeys.includes(exposure.key) : false;
-  const activeProficiency = rated && exposure ? progress.words[exposure.wordId]?.proficiency : undefined;
 
   return (
     <div className={`today-view soft-transition transition-${sessionTransitionPhase}`}>
@@ -737,10 +747,26 @@ function StudyToday({
               <div className="session-rating">
                 {(["unmastered", "unclear", "mastered"] as Proficiency[]).map((level, index) => <button className={`${level} ${activeProficiency === level ? "active" : ""}`} disabled={!activeDetail || ratingBusy} onClick={() => void rate(level)} key={level}><kbd>{index + 1}</kbd><b>{proficiencyCopy[level].label}</b></button>)}
               </div>
-              <div className="session-navigation">
+              <div className={`session-navigation ${rated ? "has-next" : ""}`}>
                 <button disabled={activeIndex === 0} onClick={() => move(-1)}><kbd>←</kbd> 上一个</button>
-                <span><kbd>空格</kbd> 发音</span>
-                <button disabled={activeIndex === exposures.length - 1} onClick={() => move(1)}>下一个 <kbd>→</kbd></button>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  className="session-audio-trigger"
+                  onClick={() => activeDetail?.audioUrl && void new Audio(activeDetail.audioUrl).play().catch(() => undefined)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      if (activeDetail?.audioUrl) void new Audio(activeDetail.audioUrl).play().catch(() => undefined);
+                    }
+                  }}
+                  title="播放发音"
+                >
+                  <kbd>空格</kbd> 发音
+                </span>
+                {rated && (
+                  <button disabled={activeIndex === exposures.length - 1} onClick={() => move(1)}>下一个 <kbd>→</kbd></button>
+                )}
               </div>
             </footer>
           </main>

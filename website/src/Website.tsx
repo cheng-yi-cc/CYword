@@ -340,10 +340,10 @@ function WordDemo() {
                   </button>
                 ))}
               </div>
-              <div className="session-navigation">
+              <div className={`session-navigation ${activeRating !== null ? "has-next" : ""}`}>
                 <span><kbd>←</kbd> 上一个</span>
                 <span><kbd>空格</kbd> 播放发音</span>
-                <span>下一个 <kbd>→</kbd></span>
+                {activeRating !== null && <span>下一个 <kbd>→</kbd></span>}
               </div>
             </footer>
           </main>

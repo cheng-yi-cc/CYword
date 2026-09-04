@@ -9,7 +9,7 @@
 - 第一版只按 `root_type=root` 排课；前缀、后缀、词基只展示在单词详情中。无真正词根的单词作为独立组。
 - 同一真正词根组必须在同一天学完；多词根单词在各相关组重复学习，复习日按唯一单词去重。
 - 计划节奏固定为学习 3 天、累计复习 1 天；六级编译为 30 个学习日和 10 个复习日。
-- 熟练度只有 `unmastered`、`unclear`、`mastered` 三档；复习日默认跳过 `mastered`。
+- 熟练度只有 `unmastered`、`unclear`、`mastered` 三档；学习会话未评级词必须强制判断熟练度后自动跳入下一词（禁止无评级跳过），回看已评级词时提供前进入口与重新评级推进支持；复习日默认跳过 `mastered`。
 - 桌面端学习进度写入 Electron `userData/progress.json`，用户会话写入 `userData/session.json`；浏览器预览使用 localStorage。
 
 ## 官网与发布边界
