@@ -149,10 +149,10 @@ function PopoverCard({
       <div className="popover-header">
         <div className="popover-meta">
           {state.isUnlearned ? (
-            <span className="popover-badge unlearned">未学单词 · 第 {state.targetDay} 天</span>
+            <span className="popover-badge unlearned">后续词 · 计划第 {state.targetDay} 天</span>
           ) : (
             <span className="popover-badge learned">
-              {state.targetDay ? `第 ${state.targetDay} 天已学` : "词书词汇"}
+              {state.targetDay ? `计划第 ${state.targetDay} 天` : "词书词汇"}
             </span>
           )}
         </div>
@@ -280,7 +280,7 @@ export function WordHoverProvider({
 
   const checkWordStatus = useCallback(
     (wordRef: string) => {
-      let clean = wordRef.toLowerCase().trim();
+      let clean = wordRef.toLowerCase().trim().replace(/^word:/, "");
       // Clean affix suffixes like vis-根 -> vis, un-前缀 -> un
       clean = clean.replace(/-(?:根|缀|基|前缀|后缀|词根|词缀|词基)$/u, "");
       const targetApp = appearanceMap.get(clean);
@@ -322,7 +322,7 @@ export function WordHoverProvider({
   const showHover = useCallback(
     (wordRef: string, element: HTMLElement) => {
       clearTimers();
-      let clean = wordRef.toLowerCase().trim();
+      let clean = wordRef.toLowerCase().trim().replace(/^word:/, "");
       clean = clean.replace(/-(?:根|缀|基|前缀|后缀|词根|词缀|词基)$/u, "");
       const targetApp = appearanceMap.get(clean);
       if (!targetApp) return;

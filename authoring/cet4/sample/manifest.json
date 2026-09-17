@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "wordlistVersion": "cet4-2016-v1",
+  "selectedWords": [
+    "act", "action", "active", "activity", "actor", "react", "able", "ability", "enable", "disable",
+    "disabled", "import", "export", "report", "transport", "support", "inspect", "respect", "expect", "prospect",
+    "airport", "blackboard", "classroom", "newspaper", "well-known", "color", "child", "manufacture", "agriculture", "according to"
+  ],
+  "coverage": {
+    "simple_whole_word": ["color", "child"],
+    "productive_base": ["able"],
+    "derivation": ["action", "active", "activity", "actor", "react", "ability", "enable", "disable", "disabled"],
+    "true_root_families": ["act", "action", "active", "activity", "actor", "react", "import", "export", "report", "transport", "support", "inspect", "respect", "expect", "prospect"],
+    "compounds": ["airport", "blackboard", "classroom", "newspaper", "well-known"],
+    "multiple_true_roots": ["manufacture", "agriculture"],
+    "multiple_senses_or_parts_of_speech": ["act", "report", "support", "prospect", "color", "manufacture"],
+    "orthographic_variant": ["color"],
+    "hyphenated": ["well-known"],
+    "phrase": ["according to"],
+    "listed_related_source": ["action", "activity", "ability", "disabled"]
+  }
+}

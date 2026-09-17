@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-09-17",
+  "scope": "只映射已核对用法，未列出的词不得自动继承同字形映射。六级运行时数据及进度不在此修改。",
+  "mappings": [
+    {"legacyForm":"act","sharedKey":"morph:root:la:act:do","words":["action","act","interaction","interact","react","reaction","transaction","active","activate","radioactive","radioactivity","enact","enactment","counteract","counteraction"],"evidence":["ev-etym-act"]},
+    {"legacyForm":"ag","sharedKey":"morph:root:la:act:do","words":["agency","agent"],"evidence":["ev-etym-act"]},
+    {"legacyForm":"agr","sharedKey":"morph:root:la:agr:field","words":["agriculture","agricultural"],"evidence":["ev-etym-agriculture"]},
+    {"legacyForm":"cult","sharedKey":"morph:root:la:cult:cultivate","words":["culture","agriculture","agricultural","cultivate","cultivation","cult"],"evidence":["ev-etym-agriculture"]},
+    {"legacyForm":"fact","sharedKey":"morph:root:la:fact:make_do","words":["fact","factor","manufacture","manufacturer","artifact"],"evidence":["ev-etym-manufacture"]},
+    {"legacyForm":"manu","sharedKey":"morph:root:la:manu:hand","words":["manufacture","manufacturer","manipulate","manual","manuscript"],"evidence":["ev-etym-manufacture"]},
+    {"legacyForm":"port","sharedKey":"morph:root:la:port:carry","words":["portable","portability","transport","transportation","report","support","supportive","supporter","deport","deportation","porter"],"evidence":["ev-etym-port"]},
+    {"legacyForm":"spec","sharedKey":"morph:root:la:spect:look","words":["respect","respectful","despite","perspective","aspect","respectable","inspect","inspection","inspector","prospect","prospective","respective","respectively","expect","suspect","suspected","conspicuous","spectator","speculate","speculation","speculative","spectacle","spectrum","irrespective","retrospect","retrospective"],"evidence":["ev-etym-spect"]},
+    {"legacyForm":"spic","sharedKey":"morph:root:la:spect:look","words":["suspicious","suspicion","conspicuous","despise"],"evidence":["ev-etym-spect"]}
+  ],
+  "heldCases": [
+    {"legacyForm":"act","words":["character","characteristic","characterize"],"reason":"character 的字母片段 act 不应按‘行动’归组；原词族另核。","url":"https://www.etymonline.com/word/character"},
+    {"legacyForm":"cult","words":["faculty"],"reason":"faculty 对应拉丁语 facultas，不能因字面含 cult 就归入耕种组。","url":"https://www.etymonline.com/word/faculty"},
+    {"legacyForm":"ag","words":["manage","management","manager"],"reason":"manage 的历史词族与手有关，不能仅取中间 ag 归入行动组。","url":"https://www.etymonline.com/word/manage"},
+    {"legacyForm":"port","words":["port","portrait","important","portion","passport","portfolio"],"reason":"旧 port 同时混入不同来源和义项；运输、港口、门、部分、间接历史关系须逐项处理。","url":"https://www.etymonline.com/word/portion"},
+    {"legacyForm":"spic","words":["spicy","spice"],"reason":"香料义不能与看的 spect 词族直接合并。","url":"https://www.etymonline.com/word/spice"},
+    {"legacyForm":"fact","words":["counterfeit"],"reason":"历史上有关联，但表面没有 fact；先核准表面变体再登记。","url":"https://www.etymonline.com/word/counterfeit"}
+  ]
+}

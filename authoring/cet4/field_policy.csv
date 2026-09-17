@@ -1,0 +1,174 @@
+table_file,field_name,original_data_type,fill_method,required_when,default_value,editorial_source_path,rule,original_source_path,original_description
+analysis_seen_marks.csv,word_id,string,empty_table,不生成行,,editorial.analysis_seen_marks[].word_id,无个人查看历史，保留表头。,detail.content.analysis_seen_marks[].parent,单词 ID
+analysis_seen_marks.csv,raw_json,json,empty_table,不生成行,,editorial.analysis_seen_marks[].raw_json,该表保持零行；不制造个人查看历史。,detail.content.analysis_seen_marks[],服务端原始标记对象
+books.csv,book_id,string,constant,有行时必填,cyword-cet4,editorial.books[].book_id,本项目原创词书固定标识,books[].book.id,词书唯一标识
+books.csv,book_code,string,constant,有行时必填,cet4,editorial.books[].book_code,稳定代码；不得覆盖 cet6,books[].book.code,稳定词书代码
+books.csv,book_name,string,constant,有行时必填,大学英语四级,editorial.books[].book_name,词书显示名称,books[].book.name,词书名称
+books.csv,target_exam,string|null,constant,有行时必填,cet4,editorial.books[].target_exam,目标考试,books[].book.target_exam,目标考试类型
+books.csv,total_words_metadata,integer,computed,有行时必填,,editorial.books[].total_words_metadata,由冻结词表的学习词条数 N 生成；5418 是合并级别的原书印刷统计，不可写成四级词数。,books[].book.total_words,词书元数据标称词数
+books.csv,enumerated_unique_words,integer,computed,有行时必填,,editorial.books[].enumerated_unique_words,由实际导出 words.csv 唯一 word_id 数生成；来源是本项目导出，不是双接口枚举。,books[].integrity.enumerated_unique_words,DAY 与候选词接口一致的实际可枚举词数
+books.csv,metadata_difference,integer,computed,有行时必填,,editorial.books[].metadata_difference,total_words_metadata 减 enumerated_unique_words；完整正式版必须为 0。源 PDF 印刷统计差异另记 sources.json。,derived,标称词数减实际可枚举词数
+books.csv,root_count,integer,computed,有行时必填,,editorial.books[].root_count,root_markups 中全部构词类型的唯一 root_id 总数；真正词根数另在 book.json.statistics 中统计。,books[].book.root_count,词书标称构词元素数
+books.csv,purchase_status,string,constant,有行时必填,not_applicable,editorial.books[].purchase_status,原创词书，无上游购买经历,books[].book.purchase_status,购买状态
+books.csv,lifecycle_status,string,constant,有行时必填,draft,editorial.books[].lifecycle_status,仅在正式发布流程中改为 published,books[].book.lifecycle_status,发布生命周期状态
+books.csv,is_active,boolean,constant,有行时必填,false,editorial.books[].is_active,不替用户切换当前词书,books[].book.is_active,是否当前激活词书
+books.csv,currently_available,boolean,constant,有行时必填,false,editorial.books[].currently_available,草稿不能作为已发布词书使用；发布后由实际状态填写,books[].permission.currently_available,当前是否可访问
+books.csv,current_period_ends_at,datetime|null,empty,可空,,editorial.books[].current_period_ends_at,上游私有元数据或个人状态不适用，空字符串；不带凭据、隐藏提示或追踪信息。,books[].permission.current_period_ends_at,当前授权周期结束时间
+books.csv,final_ends_at,datetime|null,empty,可空,,editorial.books[].final_ends_at,上游私有元数据或个人状态不适用，空字符串；不带凭据、隐藏提示或追踪信息。,books[].permission.final_ends_at,最终授权结束时间
+collocations.csv,word_id,string,registry,有行时必填,,editorial.collocations[].word_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,word_details[].word_id,单词 ID
+collocations.csv,collocation_id,string,registry,有行时必填,,editorial.collocations[].collocation_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,collocations[].id,搭配 ID
+collocations.csv,order_index,integer,computed,有行时必填,,editorial.collocations[].order_index,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,单词内搭配顺序
+collocations.csv,phrase,string,original_editorial,有行时必填,,editorial.collocations[].phrase,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,collocations[].phrase,搭配短语
+collocations.csv,meaning,string|null,original_editorial,有行时必填,,editorial.collocations[].meaning,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,collocations[].meaning,中文含义
+collocations.csv,example,string|null,original_editorial,有行时必填,,editorial.collocations[].example,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,collocations[].example,搭配例句
+exam_examples.csv,word_id,string,registry,有行时必填,,editorial.exam_examples[].word_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,sentence_zone.exam_examples[].parent,单词 ID
+exam_examples.csv,exam_example_id,string,registry,有行时必填,,editorial.exam_examples[].exam_example_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,sentence_zone.exam_examples[].id,真题句 ID
+exam_examples.csv,order_index,integer,computed,有行时必填,,editorial.exam_examples[].order_index,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,单词内真题句顺序
+exam_examples.csv,sentence,string,verified_exam_source,有行时必填,,editorial.exam_examples[].sentence,英文摘录及出处必须可核验；翻译与用法讲解原创。无证据不创建行。,sentence_zone.exam_examples[].sentence,英文真题句
+exam_examples.csv,translation,string,verified_exam_source,有行时必填,,editorial.exam_examples[].translation,英文摘录及出处必须可核验；翻译与用法讲解原创。无证据不创建行。,sentence_zone.exam_examples[].translation,中文翻译
+exam_examples.csv,matched_surface,string|null,verified_exam_source,有行时必填,,editorial.exam_examples[].matched_surface,英文摘录及出处必须可核验；翻译与用法讲解原创。无证据不创建行。,sentence_zone.exam_examples[].matched_surface,命中的目标词表面形式
+exam_examples.csv,target_word_analysis,string|null,verified_exam_source,有行时必填,,editorial.exam_examples[].target_word_analysis,英文摘录及出处必须可核验；翻译与用法讲解原创。无证据不创建行。,sentence_zone.exam_examples[].target_word_analysis,目标词用法分析
+exam_examples.csv,exam_context,string|null,verified_exam_source,有行时必填,,editorial.exam_examples[].exam_context,英文摘录及出处必须可核验；翻译与用法讲解原创。无证据不创建行。,sentence_zone.exam_examples[].exam_context,真题上下文说明
+exam_examples.csv,difficulty_rationale,string|null,verified_exam_source,有行时必填,,editorial.exam_examples[].difficulty_rationale,英文摘录及出处必须可核验；翻译与用法讲解原创。无证据不创建行。,sentence_zone.exam_examples[].difficulty_rationale,难度说明
+exam_examples.csv,source_year,integer|null,verified_exam_source,有行时必填,,editorial.exam_examples[].source_year,有记录时必填，必须由已核验试卷得出。,sentence_zone.exam_examples[].source.year,真题年份
+exam_examples.csv,source_paper,string|null,verified_exam_source,有行时必填,,editorial.exam_examples[].source_paper,有记录时必填，包含年份、月份/考次与套卷信息；证据台账另存 URL 和页码。,sentence_zone.exam_examples[].source.paper,试卷名称
+exam_examples.csv,source_section,string|null,verified_exam_source,有行时必填,,editorial.exam_examples[].source_section,有记录时必填，注明题型、段落或题号，可回到原文定位。,sentence_zone.exam_examples[].source.section,题型/章节
+exam_examples.csv,source_exam_type,string|null,constant,有行时必填,cet4,editorial.exam_examples[].source_exam_type,只允许可核验的四级考题,sentence_zone.exam_examples[].source.exam_type,考试类型
+examples.csv,word_id,string,registry,有行时必填,,editorial.examples[].word_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,sentence_zone.examples[].parent,单词 ID
+examples.csv,example_id,string,registry,有行时必填,,editorial.examples[].example_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,sentence_zone.examples[].id,例句 ID
+examples.csv,order_index,integer,computed,有行时必填,,editorial.examples[].order_index,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,单词内例句顺序
+examples.csv,sentence,string,original_editorial,有行时必填,,editorial.examples[].sentence,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,sentence_zone.examples[].sentence,英文例句
+examples.csv,translation,string,original_editorial,有行时必填,,editorial.examples[].translation,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,sentence_zone.examples[].translation,中文翻译
+examples.csv,matched_surface,string|null,original_editorial,有行时必填,,editorial.examples[].matched_surface,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,sentence_zone.examples[].matched_surface,命中的目标词表面形式
+examples.csv,context_explanation,string|null,original_editorial,有行时必填,,editorial.examples[].context_explanation,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,sentence_zone.examples[].context_explanation,语境解释
+examples.csv,difficulty_rationale,string|null,original_editorial,有行时必填,,editorial.examples[].difficulty_rationale,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,sentence_zone.examples[].difficulty_rationale,难度说明
+field_dictionary.csv,table_file,string,computed,有行时必填,,editorial.field_dictionary[].table_file,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,,原字典未自描述，本规范补足。
+field_dictionary.csv,field_name,string,computed,有行时必填,,editorial.field_dictionary[].field_name,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,,原字典未自描述，本规范补足。
+field_dictionary.csv,category,string,computed,有行时必填,,editorial.field_dictionary[].category,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,,原字典未自描述，本规范补足。
+field_dictionary.csv,data_type,string,computed,有行时必填,,editorial.field_dictionary[].data_type,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,,原字典未自描述，本规范补足。
+field_dictionary.csv,source_path,string,computed,有行时必填,,editorial.field_dictionary[].source_path,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,,原字典未自描述，本规范补足。
+field_dictionary.csv,description,string,computed,有行时必填,,editorial.field_dictionary[].description,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,,原字典未自描述，本规范补足。
+field_dictionary.csv,primary_key,boolean,computed,有行时必填,,editorial.field_dictionary[].primary_key,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,,原字典未自描述，本规范补足。
+frequencies.csv,word_id,string,registry,有行时必填,,editorial.frequencies[].word_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,word_details[].word_id,单词 ID
+frequencies.csv,exam_type,string,computed_from_corpus,有行时必填,,editorial.frequencies[].exam_type,使用 cet4；年份、套卷覆盖、归并与去重规则在语料清单里记录，不拼进考试类型。,frequencies[].exam_type,考试类型
+frequencies.csv,frequency_count,integer,computed,有行时必填,,editorial.frequencies[].frequency_count,由冻结真题语料实际统计，非负整数；没有语料记录时整行缺省，不能用 0 表示未查。,frequencies[].frequency_count,出现次数
+frequencies.csv,per_10k_words,number,computed_from_corpus,有行时必填,,editorial.frequencies[].per_10k_words,实际出现次数 / 已声明的有效语料总词数 × 10000；分母与归并规则须可复现。,frequencies[].per_10k_words,每万词频率
+long_sentence_analysis.csv,word_id,string,registry,有行时必填,,editorial.long_sentence_analysis[].word_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,parent,单词 ID
+long_sentence_analysis.csv,long_sentence_id,string,registry,有行时必填,,editorial.long_sentence_analysis[].long_sentence_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,parent,长难句 ID
+long_sentence_analysis.csv,section_index,integer,computed,有行时必填,,editorial.long_sentence_analysis[].section_index,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,reader_parse.sections[].index,分析区块顺序
+long_sentence_analysis.csv,section_kind,string,original_editorial,有行时必填,,editorial.long_sentence_analysis[].section_kind,采用现有结构分类 structure/difficulty/target/transfer/culture；按内容选用，文化解释不要求凑数。,reader_parse.sections[].kind,分析区块类型
+long_sentence_analysis.csv,item_index,integer,computed,有行时必填,,editorial.long_sentence_analysis[].item_index,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,reader_parse.sections[].items[].index,区块内条目顺序
+long_sentence_analysis.csv,dimension,string,original_editorial,有行时必填,,editorial.long_sentence_analysis[].dimension,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,reader_parse.sections[].items[].dimension,分析维度
+long_sentence_analysis.csv,keyword,string,original_editorial,有行时必填,,editorial.long_sentence_analysis[].keyword,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,reader_parse.sections[].items[].keyword,对应关键词/短语
+long_sentence_analysis.csv,refs_json,json,original_editorial,有行时必填,,editorial.long_sentence_analysis[].refs_json,JSON 非负整数数组；每项均为本句有效 segment_index。,reader_parse.sections[].items[].refs,引用片段索引数组
+long_sentence_analysis.csv,analysis_text,string,original_editorial,有行时必填,,editorial.long_sentence_analysis[].analysis_text,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,reader_parse.sections[].items[].text,分析正文
+long_sentence_analysis.csv,examples_json,json|null,original_editorial,可空,,editorial.long_sentence_analysis[].examples_json,"可空或 JSON 二维数组 [[英文,中文],…]；迁移句必须与分析相关。",reader_parse.sections[].items[].examples,迁移例句二维数组
+long_sentence_segments.csv,word_id,string,registry,有行时必填,,editorial.long_sentence_segments[].word_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,parent,单词 ID
+long_sentence_segments.csv,long_sentence_id,string,registry,有行时必填,,editorial.long_sentence_segments[].long_sentence_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,parent,长难句 ID
+long_sentence_segments.csv,segment_index,integer,computed,有行时必填,,editorial.long_sentence_segments[].segment_index,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,reader_parse.segments[].index,片段顺序
+long_sentence_segments.csv,role,string|null,original_editorial,有行时必填,,editorial.long_sentence_segments[].role,采用已有角色 subj/pred/obj/attr/adv/appos/ocomp/scomp；无标签时可空但需解释，不捏造句法。,reader_parse.segments[].role,句法角色代码
+long_sentence_segments.csv,role_label,string|null,original_editorial,有行时必填,,editorial.long_sentence_segments[].role_label,对应的中文句法标签；与 role、原句和分析一致。,reader_parse.segments[].roleLabel,句法角色中文标签
+long_sentence_segments.csv,text,string,original_editorial,有行时必填,,editorial.long_sentence_segments[].text,原句连续片段；按 segment_index 拼接须能还原原句（允许约定的空格归一化）。,reader_parse.segments[].text,英文片段
+long_sentence_segments.csv,gloss,string|null,original_editorial,有行时必填,,editorial.long_sentence_segments[].gloss,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,reader_parse.segments[].gloss,中文意译
+long_sentence_segments.csv,level,integer|null,original_editorial,有行时必填,,editorial.long_sentence_segments[].level,非负整数；主层 0，逐层嵌套加 1。,reader_parse.segments[].level,结构层级
+long_sentence_segments.csv,spine,boolean|null,original_editorial,有行时必填,,editorial.long_sentence_segments[].spine,true/false；按实际主干判断。,reader_parse.segments[].spine,是否属于主干
+long_sentences.csv,word_id,string,registry,有行时必填,,editorial.long_sentences[].word_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,sentence_zone.long_sentences[].parent,单词 ID
+long_sentences.csv,long_sentence_id,string,registry,有行时必填,,editorial.long_sentences[].long_sentence_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,sentence_zone.long_sentences[].id,长难句 ID
+long_sentences.csv,order_index,integer,computed,有行时必填,,editorial.long_sentences[].order_index,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,单词内长难句顺序
+long_sentences.csv,sentence,string,original_editorial,有行时必填,,editorial.long_sentences[].sentence,原创英文长句，包含目标词或正确屈折形式；不是主键，主键为 long_sentence_id。,sentence_zone.long_sentences[].sentence,英文长难句
+long_sentences.csv,translation,string,original_editorial,有行时必填,,editorial.long_sentences[].translation,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,sentence_zone.long_sentences[].translation,中文翻译
+long_sentences.csv,difficulty_band,string|null,original_editorial,可空,,editorial.long_sentences[].difficulty_band,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,sentence_zone.long_sentences[].difficulty_band,难度分段
+long_sentences.csv,sentence_difficulty,string|null,original_editorial,有行时必填,,editorial.long_sentences[].sentence_difficulty,依据实际复杂度填写，例如 cet4_standard/cet4_upper；是本项目编辑标签，不声称考纲定级。,sentence_zone.long_sentences[].sentence_difficulty,句子难度标签
+long_sentences.csv,target_word,string|null,original_editorial,有行时必填,,editorial.long_sentences[].target_word,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,sentence_zone.long_sentences[].target_word,目标词
+long_sentences.csv,target_sense,string|null,original_editorial,有行时必填,,editorial.long_sentences[].target_sense,本句所用的具体中文义项，与词性、语境和译文一致。,sentence_zone.long_sentences[].target_sense,目标义项
+long_sentences.csv,source_note,string|null,original_editorial,有行时必填,,editorial.long_sentences[].source_note,原创句写 cyword_original，并在证据台账注明作者/批次；不得填伪造年份或考卷。,sentence_zone.long_sentences[].source_note,来源说明
+long_sentences.csv,reader_parse_version,integer|null,constant,有行时必填,1,editorial.long_sentences[].reader_parse_version,第一版结构解析协议,reader_parse.version,阅读解析结构版本
+long_sentences.csv,reader_parse_target_ref,integer|null,original_editorial,有行时必填,,editorial.long_sentences[].reader_parse_target_ref,从 0 开始的目标片段索引；必须命中本句 segments，不能引用别句。,reader_parse.targetRef,目标词所在片段索引
+raw_field_inventory.csv,field_path,string,computed,有行时必填,,editorial.raw_field_inventory[].field_path,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,dynamic,标准化数组路径
+raw_field_inventory.csv,observed_types,string,computed,有行时必填,,editorial.raw_field_inventory[].observed_types,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,dynamic,实际观察到的数据类型
+raw_field_inventory.csv,occurrences,integer,computed,有行时必填,,editorial.raw_field_inventory[].occurrences,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,dynamic,字段出现次数
+raw_field_inventory.csv,non_null_occurrences,integer,computed,有行时必填,,editorial.raw_field_inventory[].non_null_occurrences,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,dynamic,非空出现次数
+relation_words.csv,word_id,string,registry,有行时必填,,editorial.relation_words[].word_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,parent,源单词 ID
+relation_words.csv,relation_type,string,original_editorial,有行时必填,,editorial.relation_words[].relation_type,继承所属 relations 分组；同一 word_id 与 relation_type 唯一分组。,parent,关系类型
+relation_words.csv,related_index,integer,computed,有行时必填,,editorial.relation_words[].related_index,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,相关词顺序
+relation_words.csv,related_word_id,string,registry,有行时必填,,editorial.relation_words[].related_word_id,必须命中本书词表；书外扩展词用普通正文展示，不伪造本书 ID。,relations[].words[].id,相关词 ID
+relation_words.csv,spelling,string,original_editorial,有行时必填,,editorial.relation_words[].spelling,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,relations[].words[].spelling,相关词拼写
+relation_words.csv,display_text,string,original_editorial,有行时必填,,editorial.relation_words[].display_text,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,relations[].words[].display_text,展示文本
+relation_words.csv,meaning,string,original_editorial,有行时必填,,editorial.relation_words[].meaning,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,relations[].words[].meaning,相关词含义
+relations.csv,word_id,string,registry,有行时必填,,editorial.relations[].word_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,detail.content.relations[].parent,单词 ID
+relations.csv,relation_index,integer,computed,有行时必填,,editorial.relations[].relation_index,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,关系分组顺序
+relations.csv,relation_type,string,original_editorial,有行时必填,,editorial.relations[].relation_type,枚举 synonym/near_synonym/antonym/derivative；依据真实语义或构词关系编写。,detail.content.relations[].relation_type,关系类型
+relations.csv,related_word_count,integer,computed,有行时必填,,editorial.relations[].related_word_count,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,该分组中的相关词数量
+root_markup_links.csv,word_id,string,registry,有行时必填,,editorial.root_markup_links[].word_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,parent,单词 ID
+root_markup_links.csv,root_id,string,registry,有行时必填,,editorial.root_markup_links[].root_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,parent,构词元素 ID
+root_markup_links.csv,link_index,integer,computed,有行时必填,,editorial.root_markup_links[].link_index,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,链接顺序
+root_markup_links.csv,target_identifier,string,original_editorial,有行时必填,,editorial.root_markup_links[].target_identifier,与构词正文中的 identifier 完全对应；由解析器生成。,root_markups[].markup_links[].target_identifier,标记文本
+root_markup_links.csv,target_type,string,original_editorial,有行时必填,,editorial.root_markup_links[].target_type,枚举 word/root/prefix/suffix/base；必须与目标实体一致。,root_markups[].markup_links[].target_type,目标类型
+root_markup_links.csv,target_id,string,registry,有行时必填,,editorial.root_markup_links[].target_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,root_markups[].markup_links[].target_id,目标 ID
+root_markups.csv,word_id,string,registry,有行时必填,,editorial.root_markups[].word_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,detail.content.root_markups[].parent,单词 ID
+root_markups.csv,root_index,integer,computed,有行时必填,,editorial.root_markups[].root_index,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,构词元素顺序
+root_markups.csv,root_id,string,registry,有行时必填,,editorial.root_markups[].root_id,来自构词登记表的稳定 ID，不得用字母片段自动推断归属。,detail.content.root_markups[].id,构词元素 ID
+root_markups.csv,spelling,string,original_editorial,有行时必填,,editorial.root_markups[].spelling,引用构词登记表的展示形式，保留前缀尾连字符、后缀首连字符。,detail.content.root_markups[].spelling,构词元素拼写
+root_markups.csv,root_type,string,original_editorial,有行时必填,,editorial.root_markups[].root_type,枚举 root/prefix/suffix/base；只有有依据的 root 参与排课。,detail.content.root_markups[].root_type,root/prefix/suffix/base
+root_markups.csv,meaning,string,original_editorial,有行时必填,,editorial.root_markups[].meaning,同一 root_id 的含义与登记表一致；同形异源元素须不同 ID。,detail.content.root_markups[].meaning,构词元素含义
+root_markups.csv,memory_method,string|null,original_editorial,可空,,editorial.root_markups[].memory_method,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,detail.content.root_markups[].memory_method,构词元素记忆方法
+sentence_zones.csv,word_id,string,registry,有行时必填,,editorial.sentence_zones[].word_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,sentence_zone.word_id,单词 ID
+sentence_zones.csv,book_id,string,constant,有行时必填,cyword-cet4,editorial.sentence_zones[].book_id,本项目原创词书固定标识,sentence_zone.book_id,词书 ID
+sentence_zones.csv,status,string,original_editorial,有行时必填,,editorial.sentence_zones[].status,正式导出的已复核句子区使用 ready；与 words.sentence_zone_status 和子表计数一致。,sentence_zone.status,句子区状态
+sentence_zones.csv,contract_source,string|null,constant,有行时必填,cyword_original,editorial.sentence_zones[].contract_source,本项目原创内容；真实考题另记逐条来源,sentence_zone.contract.source,句子区内容来源契约
+sentence_zones.csv,requires_membership,boolean|null,constant,有行时必填,false,editorial.sentence_zones[].requires_membership,无第三方会员契约；不改应用现有访问控制,sentence_zone.contract.requires_membership,是否要求词书权限
+sentence_zones.csv,no_auto_fallback,boolean|null,constant,有行时必填,true,editorial.sentence_zones[].no_auto_fallback,缺失内容不自动替换为六级或模拟内容,sentence_zone.contract.no_auto_fallback,无权限时是否禁止自动降级
+sentence_zones.csv,example_count,integer,computed,有行时必填,,editorial.sentence_zones[].example_count,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,普通例句数量
+sentence_zones.csv,long_sentence_count,integer,computed,有行时必填,,editorial.sentence_zones[].long_sentence_count,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,长难句数量
+sentence_zones.csv,exam_example_count,integer,computed,有行时必填,,editorial.sentence_zones[].exam_example_count,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,真题句数量
+table_catalog.csv,table_file,string,computed,有行时必填,,editorial.table_catalog[].table_file,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,,原字典未自描述，本规范补足。
+table_catalog.csv,row_count,integer,computed,有行时必填,,editorial.table_catalog[].row_count,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,,原字典未自描述，本规范补足。
+table_catalog.csv,primary_key,string,computed,有行时必填,,editorial.table_catalog[].primary_key,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,,原字典未自描述，本规范补足。
+table_catalog.csv,description,string,computed,有行时必填,,editorial.table_catalog[].description,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,,原字典未自描述，本规范补足。
+word_markup_links.csv,word_id,string,registry,有行时必填,,editorial.word_markup_links[].word_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,detail.content.markup_links[].parent,单词 ID
+word_markup_links.csv,link_index,integer,computed,有行时必填,,editorial.word_markup_links[].link_index,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,链接顺序
+word_markup_links.csv,target_identifier,string,original_editorial,有行时必填,,editorial.word_markup_links[].target_identifier,与正文 [[identifier|display]] 中的 identifier 完全对应；由解析器生成。,detail.content.markup_links[].target_identifier,正文标记文本
+word_markup_links.csv,target_type,string,original_editorial,有行时必填,,editorial.word_markup_links[].target_type,枚举 word/root/prefix/suffix/base；必须与目标实体一致。,detail.content.markup_links[].target_type,目标类型
+word_markup_links.csv,target_id,string,registry,有行时必填,,editorial.word_markup_links[].target_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,detail.content.markup_links[].target_id,目标 ID
+words.csv,word_id,string,registry,有行时必填,,editorial.words[].word_id,引用稳定 ID 登记表；主键唯一，所有外键可解析，不能跨书混用。,word_details[].word_id,单词唯一标识；所有子表外键
+words.csv,book_id,string,constant,有行时必填,cyword-cet4,editorial.words[].book_id,本项目原创词书固定标识,book.id,所属词书 ID
+words.csv,book_code,string,constant,有行时必填,cet4,editorial.words[].book_code,稳定代码；不得覆盖 cet6,book.code,所属词书代码
+words.csv,book_name,string,constant,有行时必填,大学英语四级,editorial.words[].book_name,词书显示名称,book.name,所属词书名称
+words.csv,day_id,string,empty,可空,,editorial.words[].day_id,不伪造原始 DAY；新学习日由编译器分组生成，多词根词没有唯一学习日。,word_index[].day_id,学习 DAY 唯一标识
+words.csv,day_number,integer,empty,可空,,editorial.words[].day_number,不伪造原始 DAY；新学习日由编译器分组生成，多词根词没有唯一学习日。,word_index[].day_number,学习 DAY 编号
+words.csv,order_in_day,integer,empty,可空,,editorial.words[].order_in_day,不伪造原始 DAY；新学习日由编译器分组生成，多词根词没有唯一学习日。,derived,在当前 DAY 中的顺序（从 1 开始）
+words.csv,word_order,integer,computed,有行时必填,,editorial.words[].word_order,冻结词表的连续顺序，从 1 开始；编译器可根据真实依赖调整学习顺序。,word_index[].word_order,服务端词序
+words.csv,spelling,string,frozen_wordlist,必填,,editorial.words[].spelling,来自冻结词表 canonical_spelling；变体在编辑台账保存，正文需要时展示。,detail.content.spelling,单词拼写
+words.csv,pronunciation,string|null,verified_reference,正式版必填,,editorial.words[].pronunciation,阶段 3 必填；核验口音与多音情况。考纲没有读音，不得注明来自考纲。,detail.content.pronunciation,音标
+words.csv,definition_cn,string|null,original_editorial,有行时必填,,editorial.words[].definition_cn,阶段 3 必填；逐义项标词性，用中文原创概括；同形词保留必要义项，不冒充考纲给出的释义。,detail.content.definitions,中文释义
+words.csv,audio_url,string|null,verified_reference,可空,,editorial.words[].audio_url,可空；有适合采用的真实音频来源且链接可访问才填，不猜 CDN 地址。,detail.content.audio_url,单词音频 URL
+words.csv,memory_markup,string|null,original_editorial,有行时必填,,editorial.words[].memory_markup,阶段 4 必填；原创助记，可用联想但须明确其为记忆法。仅向已登记实体生成双向链接。,detail.content.memory_markup,记忆思路 Markdown/标记文本
+words.csv,etymology_markup,string|null,original_editorial,可空,,editorial.words[].etymology_markup,有可靠构词或词源依据才写事实说明；不以谐音或字母巧合充当词源。无证据可空，并在进度中标 not_applicable 或待核实。,detail.content.etymology_markup,词源与构词 Markdown/标记文本
+words.csv,root_affix_notes,string|null,original_editorial,有行时必填,,editorial.words[].root_affix_notes,记录核实后的构词解释、变体与用法；无法拆分时明确整体记忆，不创建假词根。,detail.content.root_affix_notes,词根词缀笔记
+words.csv,root_affix_accumulation,string|null,original_editorial,可空,,editorial.words[].root_affix_accumulation,依据编写规范原创并复核；引用事实记录来源，不从六级复制教学正文。,detail.content.root_affix_accumulation,词根词缀积累内容
+words.csv,vocabulary_id,string|null,empty,可空,,editorial.words[].vocabulary_id,上游私有元数据或个人状态不适用，空字符串；不带凭据、隐藏提示或追踪信息。,detail.content.vocabulary_id,生词本成员 ID
+words.csv,is_completed,boolean,constant,有行时必填,false,editorial.words[].is_completed,发行数据不携带个人进度,word_index[].is_completed,当前 DAY 是否已完成该词
+words.csv,studied,boolean,constant,有行时必填,false,editorial.words[].studied,发行数据不携带个人进度,candidate_snapshot.studied,是否学过
+words.csv,reviewed,boolean,constant,有行时必填,false,editorial.words[].reviewed,发行数据不携带个人进度,candidate_snapshot.reviewed,是否复习过
+words.csv,memorized_count,integer,constant,有行时必填,0,editorial.words[].memorized_count,发行数据不携带个人进度,candidate_snapshot.memorized_count,学习侧记忆次数
+words.csv,reviewed_count,integer,constant,有行时必填,0,editorial.words[].reviewed_count,发行数据不携带个人进度,candidate_snapshot.reviewed_count,复习次数
+words.csv,sentence_zone_status,string,original_editorial,有行时必填,,editorial.words[].sentence_zone_status,已验收句子内容导出 ready；与 sentence_zones.status 一致。无句子时保持草稿，不伪称 ready。,sentence_zone.status,句子区状态
+words.csv,example_count,integer,computed,有行时必填,,editorial.words[].example_count,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,普通例句数量
+words.csv,long_sentence_count,integer,computed,有行时必填,,editorial.words[].long_sentence_count,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,长难句数量
+words.csv,exam_example_count,integer,computed,有行时必填,,editorial.words[].exam_example_count,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,真题句数量
+words.csv,frequency_count,integer,computed,有行时必填,,editorial.words[].frequency_count,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,词频记录数量
+words.csv,collocation_count,integer,computed,有行时必填,,editorial.words[].collocation_count,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,搭配数量
+words.csv,root_markup_count,integer,computed,有行时必填,,editorial.words[].root_markup_count,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,构词元素数量
+words.csv,relation_group_count,integer,computed,有行时必填,,editorial.words[].relation_group_count,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,关系词分组数量
+words.csv,analysis_seen_mark_count,integer,computed,有行时必填,,editorial.words[].analysis_seen_mark_count,由实际编辑数据、顺序或子表生成，禁止手写统计。所有 index 从 0 开始；word_order 从 1 开始。,derived,已查看分析标记数量
+words.csv,access_allowed,boolean,constant,有行时必填,true,editorial.words[].access_allowed,仅描述本项目已复核导出内容，不声称拥有第三方访问权限,detail.access_policy.allowed,服务端是否允许访问
+words.csv,access_reason,string|null,empty,可空,,editorial.words[].access_reason,上游私有元数据或个人状态不适用，空字符串；不带凭据、隐藏提示或追踪信息。,detail.access_policy.reason,访问判定原因
+words.csv,permission_type,string|null,empty,可空,,editorial.words[].permission_type,上游私有元数据或个人状态不适用，空字符串；不带凭据、隐藏提示或追踪信息。,detail.access_policy.permission_type,权限类型
+words.csv,permission_is_expired,boolean,constant,有行时必填,false,editorial.words[].permission_is_expired,原创内容无上游到期授权,detail.access_policy.is_expired,权限是否过期
+words.csv,protection_content_type,string,empty,可空,,editorial.words[].protection_content_type,上游私有元数据或个人状态不适用，空字符串；不带凭据、隐藏提示或追踪信息。,detail.protection.content_type,内容保护类型
+words.csv,protection_exposure_weight,number,empty,可空,,editorial.words[].protection_exposure_weight,上游私有元数据或个人状态不适用，空字符串；不带凭据、隐藏提示或追踪信息。,detail.protection.exposure_weight,服务端曝光权重
+words.csv,protection_trace_id,string,empty,可空,,editorial.words[].protection_trace_id,上游私有元数据或个人状态不适用，空字符串；不带凭据、隐藏提示或追踪信息。,detail.protection.trace_id,服务端追踪 ID
+words.csv,protection_marker_type,string,empty,可空,,editorial.words[].protection_marker_type,上游私有元数据或个人状态不适用，空字符串；不带凭据、隐藏提示或追踪信息。,detail.protection.marker_type,内容标记类型
+words.csv,protection_marker_version,string|null,empty,可空,,editorial.words[].protection_marker_version,上游私有元数据或个人状态不适用，空字符串；不带凭据、隐藏提示或追踪信息。,detail.protection.marker_version,内容标记版本
+words.csv,protection_hidden_prompt,string|null,empty,可空,,editorial.words[].protection_hidden_prompt,上游私有元数据或个人状态不适用，空字符串；不带凭据、隐藏提示或追踪信息。,detail.protection.hidden_prompt,服务端返回的隐藏提示字段，原样保留
+words.csv,detail_status,string,original_editorial,有行时必填,,editorial.words[].detail_status,只有该词必填教学内容全部复核、可选项状态已交代且校验通过，才导出 ok；草稿不进入正式 words.csv。,word_details[].status,详情批次条目状态

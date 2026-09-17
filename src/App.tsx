@@ -396,8 +396,8 @@ function HomeView({
 function PlanView({ plan, progress, current, onSelectDay }: { plan: PlanDay[]; progress: AppProgress; current: PlanDay; onSelectDay: (dayNumber: number) => void }) {
   return (
     <div className="page plan-page">
-      <PageHeader eyebrow="40 DAY PLAN" title="词书计划" description="每三个学习日插入一个集中复习日；复习范围会随已学单词动态增长。" aside={<div className="plan-legend"><span><i className="study" />学习日</span><span><i className="review" />复习日</span></div>} />
-      <div className="plan-overview"><div><span>当前进度</span><b>Day {current.day}</b></div><div><span>学习日</span><b>30</b></div><div><span>复习日</span><b>10</b></div><div><span>学习曝光</span><b>{plan.filter((day) => day.kind === "study").reduce((sum, day) => sum + day.appearanceCount, 0)}</b></div></div>
+      <PageHeader eyebrow={`${plan.length} DAY PLAN`} title="词书计划" description="每三个学习日插入一个集中复习日；复习范围会随已学单词动态增长。" aside={<div className="plan-legend"><span><i className="study" />学习日</span><span><i className="review" />复习日</span></div>} />
+      <div className="plan-overview"><div><span>当前进度</span><b>Day {current.day}</b></div><div><span>学习日</span><b>{plan.filter((day) => day.kind === "study").length}</b></div><div><span>复习日</span><b>{plan.filter((day) => day.kind === "review").length}</b></div><div><span>学习曝光</span><b>{plan.filter((day) => day.kind === "study").reduce((sum, day) => sum + day.appearanceCount, 0)}</b></div></div>
       <div className="plan-grid">
         {plan.map((day) => {
           const fraction = planDayFraction(progress, day);
@@ -585,7 +585,7 @@ function StudyToday({
             <button className="today-group-toggle" aria-expanded={!collapsed} aria-label={`${collapsed ? "展开" : "收起"}${item.spelling}词根组`} onClick={() => toggleGroup(item.id)}>
               <i>{String(groupIndex + 1).padStart(2, "0")}</i>
               <div><span>{item.kind === "root" ? "词根" : "独立成组"}</span><h2>{item.spelling}</h2></div>
-              <p>{item.kind === "solo" ? "无独立词根，按单词自身学习" : item.meaning}</p>
+              <p>{item.kind === "solo" ? "本组按完整单词学习" : item.meaning}</p>
               <em>{item.wordCount} 词</em>
             </button>
             {!collapsed && <div className="today-word-table">
@@ -615,7 +615,7 @@ function StudyToday({
 
       {sessionActive && exposure && <div className="study-session-overlay" role="dialog" aria-modal="true" aria-label="今日单词学习">
         <header className="study-session-topbar">
-          <div><span>大学英语六级</span><b>Day {plan.day} · {group?.kind === "root" ? group.spelling : "独立词"}</b></div>
+          <div><span>{catalog.book.name}</span><b>Day {plan.day} · {group?.kind === "root" ? group.spelling : "独立词"}</b></div>
           <div className="session-progress"><i style={{ width: `${Math.max(completedCount / Math.max(1, plan.appearanceCount), 1 / Math.max(1, plan.appearanceCount)) * 100}%` }} /></div>
           <strong>{activeIndex + 1} / {exposures.length}</strong>
           <button onClick={() => transitionSession(false)}><kbd>Esc</kbd> 退出学习</button>

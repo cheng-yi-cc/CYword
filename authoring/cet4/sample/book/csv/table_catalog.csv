@@ -1,0 +1,20 @@
+table_file,row_count,primary_key,description
+analysis_seen_marks.csv,0,word_id,四级阶段 2 样板：analysis_seen_marks.csv
+books.csv,1,book_id,四级阶段 2 样板：books.csv
+collocations.csv,30,collocation_id,四级阶段 2 样板：collocations.csv
+exam_examples.csv,0,exam_example_id,四级阶段 2 样板：exam_examples.csv
+examples.csv,30,example_id,四级阶段 2 样板：examples.csv
+field_dictionary.csv,173,table_file + field_name,四级阶段 2 样板：field_dictionary.csv
+frequencies.csv,0,word_id + exam_type,四级阶段 2 样板：frequencies.csv
+long_sentence_analysis.csv,60,long_sentence_id + section_index + item_index,四级阶段 2 样板：long_sentence_analysis.csv
+long_sentence_segments.csv,90,long_sentence_id + segment_index,四级阶段 2 样板：long_sentence_segments.csv
+long_sentences.csv,30,long_sentence_id,四级阶段 2 样板：long_sentences.csv
+raw_field_inventory.csv,17,field_path,四级阶段 2 样板：raw_field_inventory.csv
+relation_words.csv,17,word_id + relation_type + related_index,四级阶段 2 样板：relation_words.csv
+relations.csv,13,word_id + relation_index,四级阶段 2 样板：relations.csv
+root_markup_links.csv,0,word_id + root_id + link_index,四级阶段 2 样板：root_markup_links.csv
+root_markups.csv,56,word_id + root_index,四级阶段 2 样板：root_markups.csv
+sentence_zones.csv,30,word_id,四级阶段 2 样板：sentence_zones.csv
+table_catalog.csv,19,table_file,四级阶段 2 样板：table_catalog.csv
+word_markup_links.csv,85,word_id + link_index,四级阶段 2 样板：word_markup_links.csv
+words.csv,30,word_id,四级阶段 2 样板：words.csv

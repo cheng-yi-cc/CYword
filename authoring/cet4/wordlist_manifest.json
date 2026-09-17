@@ -1,0 +1,18 @@
+{
+  "bookCode": "cet4",
+  "wordlistVersion": "cet4-2016-v1",
+  "includeListedRelated": true,
+  "uniqueLearningEntries": 6161,
+  "headwordBackedEntries": 4069,
+  "relatedOnlyEntries": 2092,
+  "sourceLinks": 6248,
+  "excludedSourceEntries": 1695,
+  "multiSourceEntries": 83,
+  "phrases": [
+    "according to",
+    "baby boom",
+    "baby boomer",
+    "owing to"
+  ],
+  "wordlistSha256": "c7f97ea24f32387df77a5559bb49abf72704492900471d0c9777be8b18295088"
+}

@@ -1,0 +1,2242 @@
+{
+  "Biblical/biblical": {
+    "groups": [
+      [
+        "Biblical",
+        "biblical"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "Celsius/-cius": {
+    "groups": [
+      [
+        "Celsius"
+      ]
+    ],
+    "kind": "source_spelling_repair",
+    "excluded_spellings": [
+      "Celcius"
+    ],
+    "note": "只收核实的 Celsius；原文 -cius 保留在来源台账，不当作标准拼写。",
+    "evidence": [
+      "https://dictionary.cambridge.org/dictionary/english/celsius"
+    ]
+  },
+  "Internet/internet": {
+    "groups": [
+      [
+        "Internet",
+        "internet"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "a/an": {
+    "groups": [
+      [
+        "a"
+      ],
+      [
+        "an"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "administer/administrate": {
+    "groups": [
+      [
+        "administer"
+      ],
+      [
+        "administrate"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "advertisement/ad": {
+    "groups": [
+      [
+        "advertisement"
+      ],
+      [
+        "ad"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "advisor/-er": {
+    "groups": [
+      [
+        "advisor",
+        "adviser"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "afterward(s)": {
+    "groups": [
+      [
+        "afterward",
+        "afterwards"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "ag(e)ing": {
+    "groups": [
+      [
+        "aging",
+        "ageing"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "airplane/aeroplane": {
+    "groups": [
+      [
+        "airplane",
+        "aeroplane"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "alphabetic(al)": {
+    "groups": [
+      [
+        "alphabetic"
+      ],
+      [
+        "alphabetical"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "alumin(i)um": {
+    "groups": [
+      [
+        "aluminum",
+        "aluminium"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "amid(st)": {
+    "groups": [
+      [
+        "amid"
+      ],
+      [
+        "amidst"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "among(st)": {
+    "groups": [
+      [
+        "among"
+      ],
+      [
+        "amongst"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "analytic(al)": {
+    "groups": [
+      [
+        "analytic"
+      ],
+      [
+        "analytical"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "analyze/-yse": {
+    "groups": [
+      [
+        "analyze",
+        "analyse"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "anybody/anyone": {
+    "groups": [
+      [
+        "anybody"
+      ],
+      [
+        "anyone"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "apartment/apt.": {
+    "groups": [
+      [
+        "apartment"
+      ],
+      [
+        "apt."
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "apologize/-ise": {
+    "groups": [
+      [
+        "apologize",
+        "apologise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "appal(l)": {
+    "groups": [
+      [
+        "appal",
+        "appall"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "armo(u)r": {
+    "groups": [
+      [
+        "armor",
+        "armour"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "authorization/-sation": {
+    "groups": [
+      [
+        "authorization",
+        "authorisation"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "authorize/-ise": {
+    "groups": [
+      [
+        "authorize",
+        "authorise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "auto(mobile)": {
+    "groups": [
+      [
+        "auto"
+      ],
+      [
+        "automobile"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "autobiographic(al)": {
+    "groups": [
+      [
+        "autobiographic"
+      ],
+      [
+        "autobiographical"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "ax(e)": {
+    "groups": [
+      [
+        "ax",
+        "axe"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "barbecue/BBQ": {
+    "groups": [
+      [
+        "barbecue"
+      ],
+      [
+        "BBQ"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "behavio(u)r": {
+    "groups": [
+      [
+        "behavior",
+        "behaviour"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "behavio(u)ral": {
+    "groups": [
+      [
+        "behavioral",
+        "behavioural"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "bicycle/bike": {
+    "groups": [
+      [
+        "bicycle"
+      ],
+      [
+        "bike"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "blond(e)": {
+    "groups": [
+      [
+        "blond",
+        "blonde"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "catalog(ue)": {
+    "groups": [
+      [
+        "catalog",
+        "catalogue"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "center/-tre": {
+    "groups": [
+      [
+        "center",
+        "centre"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "centimeter/-tre": {
+    "groups": [
+      [
+        "centimeter",
+        "centimetre"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "centralize/-ise": {
+    "groups": [
+      [
+        "centralize",
+        "centralise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "chairman/chairperson": {
+    "groups": [
+      [
+        "chairman"
+      ],
+      [
+        "chairperson"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "characterize/-ise": {
+    "groups": [
+      [
+        "characterize",
+        "characterise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "check/cheque": {
+    "groups": [
+      [
+        "check",
+        "cheque"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "cigaret(te)": {
+    "groups": [
+      [
+        "cigaret",
+        "cigarette"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "civilization/-sation": {
+    "groups": [
+      [
+        "civilization",
+        "civilisation"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "civilize/-ise": {
+    "groups": [
+      [
+        "civilize",
+        "civilise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "colo(u)r": {
+    "groups": [
+      [
+        "color",
+        "colour"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "colo(u)rful": {
+    "groups": [
+      [
+        "colorful",
+        "colourful"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "colonize/-ise": {
+    "groups": [
+      [
+        "colonize",
+        "colonise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "commercialize/-ise": {
+    "groups": [
+      [
+        "commercialize",
+        "commercialise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "computerize/-ise": {
+    "groups": [
+      [
+        "computerize",
+        "computerise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "connection/-xion": {
+    "groups": [
+      [
+        "connection",
+        "connexion"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "缩写 -xion 替换 -ction，不能按等长截断。"
+  },
+  "council(l)or": {
+    "groups": [
+      [
+        "councilor",
+        "councillor"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "counsel(l)or": {
+    "groups": [
+      [
+        "counselor",
+        "counsellor"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "coup (d'état)": {
+    "groups": [
+      [
+        "coup"
+      ],
+      [
+        "coup d'état"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "附加括号为可选短语部分，不是单词内部的可选字母；此出处为六级。"
+  },
+  "cozy/-sy": {
+    "groups": [
+      [
+        "cozy",
+        "cosy"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "criticize/-ise": {
+    "groups": [
+      [
+        "criticize",
+        "criticise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "dad(dy)": {
+    "groups": [
+      [
+        "dad"
+      ],
+      [
+        "daddy"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "defense/-ce": {
+    "groups": [
+      [
+        "defense",
+        "defence"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "demonstration/demo": {
+    "groups": [
+      [
+        "demonstration"
+      ],
+      [
+        "demo"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "dialog(ue)": {
+    "groups": [
+      [
+        "dialog",
+        "dialogue"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "disk/disc": {
+    "groups": [
+      [
+        "disk",
+        "disc"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "dispatch/despatch": {
+    "groups": [
+      [
+        "dispatch",
+        "despatch"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "distil(l)": {
+    "groups": [
+      [
+        "distil",
+        "distill"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "dormitory/dorm": {
+    "groups": [
+      [
+        "dormitory"
+      ],
+      [
+        "dorm"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "electric(al)": {
+    "groups": [
+      [
+        "electric"
+      ],
+      [
+        "electrical"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "emphasize/-ise": {
+    "groups": [
+      [
+        "emphasize",
+        "emphasise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "encyclop(a)edia": {
+    "groups": [
+      [
+        "encyclopedia",
+        "encyclopaedia"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "endeavo(u)r": {
+    "groups": [
+      [
+        "endeavor",
+        "endeavour"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "enrol(l)": {
+    "groups": [
+      [
+        "enrol",
+        "enroll"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "enrol(l)ment": {
+    "groups": [
+      [
+        "enrolment",
+        "enrollment"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "esthetic/aesthetic": {
+    "groups": [
+      [
+        "esthetic",
+        "aesthetic"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "esthetics/aesthetics": {
+    "groups": [
+      [
+        "esthetics",
+        "aesthetics"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "exam(ination)": {
+    "groups": [
+      [
+        "exam"
+      ],
+      [
+        "examination"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "familiarize/-ise": {
+    "groups": [
+      [
+        "familiarize",
+        "familiarise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "favo(u)r": {
+    "groups": [
+      [
+        "favor",
+        "favour"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "favo(u)rable": {
+    "groups": [
+      [
+        "favorable",
+        "favourable"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "favo(u)rite": {
+    "groups": [
+      [
+        "favorite",
+        "favourite"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "fertilizer/-iser": {
+    "groups": [
+      [
+        "fertilizer",
+        "fertiliser"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "fiber/-bre": {
+    "groups": [
+      [
+        "fiber",
+        "fibre"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "finalize/-ise": {
+    "groups": [
+      [
+        "finalize",
+        "finalise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "flavo(u)r": {
+    "groups": [
+      [
+        "flavor",
+        "flavour"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "fulfil(l)": {
+    "groups": [
+      [
+        "fulfil",
+        "fulfill"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "fulfil(l)ment": {
+    "groups": [
+      [
+        "fulfilment",
+        "fulfillment"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "gasoline/petrol": {
+    "groups": [
+      [
+        "gasoline"
+      ],
+      [
+        "petrol"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "generalize/-ise": {
+    "groups": [
+      [
+        "generalize",
+        "generalise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "glamo(u)r": {
+    "groups": [
+      [
+        "glamor",
+        "glamour"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "glamo(u)rous": {
+    "groups": [
+      [
+        "glamorous",
+        "glamourous"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "globalize/-ise": {
+    "groups": [
+      [
+        "globalize",
+        "globalise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "gram(me)": {
+    "groups": [
+      [
+        "gram",
+        "gramme"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "gray/grey": {
+    "groups": [
+      [
+        "gray",
+        "grey"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "gym(nasium)": {
+    "groups": [
+      [
+        "gym"
+      ],
+      [
+        "gymnasium"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "hamburger/burger": {
+    "groups": [
+      [
+        "hamburger"
+      ],
+      [
+        "burger"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "harbo(u)r": {
+    "groups": [
+      [
+        "harbor",
+        "harbour"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "hero/heroine": {
+    "groups": [
+      [
+        "hero"
+      ],
+      [
+        "heroine"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "homosexual/homo": {
+    "groups": [
+      [
+        "homosexual"
+      ],
+      [
+        "homo"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "hono(u)r": {
+    "groups": [
+      [
+        "honor",
+        "honour"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "hono(u)rable": {
+    "groups": [
+      [
+        "honorable",
+        "honourable"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "hono(u)rary": {
+    "groups": [
+      [
+        "honorary",
+        "honourary"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "humo(u)r": {
+    "groups": [
+      [
+        "humor",
+        "humour"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "humo(u)rous": {
+    "groups": [
+      [
+        "humorous",
+        "humourous"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "immunize/-ise": {
+    "groups": [
+      [
+        "immunize",
+        "immunise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "industrialize/-ise": {
+    "groups": [
+      [
+        "industrialize",
+        "industrialise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "influenza/flu": {
+    "groups": [
+      [
+        "influenza"
+      ],
+      [
+        "flu"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "inquire/enquire": {
+    "groups": [
+      [
+        "inquire",
+        "enquire"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "inquiry/enquiry": {
+    "groups": [
+      [
+        "inquiry",
+        "enquiry"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "instal(l)": {
+    "groups": [
+      [
+        "instal",
+        "install"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "instal(l)ation": {
+    "groups": [
+      [
+        "instalation",
+        "installation"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "instal(l)ment": {
+    "groups": [
+      [
+        "instalment",
+        "installment"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "insure/ensure": {
+    "groups": [
+      [
+        "insure"
+      ],
+      [
+        "ensure"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "ironic(al)": {
+    "groups": [
+      [
+        "ironic"
+      ],
+      [
+        "ironical"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "jail/gaol": {
+    "groups": [
+      [
+        "jail",
+        "gaol"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "jeopardize/-ise": {
+    "groups": [
+      [
+        "jeopardize",
+        "jeopardise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "jewel(l)ery": {
+    "groups": [
+      [
+        "jewelry",
+        "jewellery"
+      ]
+    ],
+    "kind": "source_spelling_repair",
+    "excluded_spellings": [
+      "jewelery"
+    ],
+    "note": "保留考纲原记法；按词典核实美式 jewelry、英式 jewellery，不生成非标准 jewelery。",
+    "evidence": [
+      "https://dictionary.cambridge.org/dictionary/english/jewelry",
+      "https://dictionary.cambridge.org/dictionary/english/jewellery"
+    ]
+  },
+  "judg(e)ment": {
+    "groups": [
+      [
+        "judgment",
+        "judgement"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "kilogram(me)/kilo": {
+    "groups": [
+      [
+        "kilogram",
+        "kilogramme"
+      ],
+      [
+        "kilo"
+      ]
+    ],
+    "kind": "mixed",
+    "note": "kilogram/kilogramme 为拼写变体；缩略词 kilo 独立。"
+  },
+  "kilometer/-tre": {
+    "groups": [
+      [
+        "kilometer",
+        "kilometre"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "labo(u)r": {
+    "groups": [
+      [
+        "labor",
+        "labour"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "laboratory/lab": {
+    "groups": [
+      [
+        "laboratory"
+      ],
+      [
+        "lab"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "landlord/landlady": {
+    "groups": [
+      [
+        "landlord"
+      ],
+      [
+        "landlady"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "legalize/-ise": {
+    "groups": [
+      [
+        "legalize",
+        "legalise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "license/-ce": {
+    "groups": [
+      [
+        "license",
+        "licence"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "liter/-tre": {
+    "groups": [
+      [
+        "liter",
+        "litre"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "logistic(al)": {
+    "groups": [
+      [
+        "logistic"
+      ],
+      [
+        "logistical"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "maneuver/manoeuvre": {
+    "groups": [
+      [
+        "maneuver",
+        "manoeuvre"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "marvel(l)ous": {
+    "groups": [
+      [
+        "marvelous",
+        "marvellous"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "materialize/-ise": {
+    "groups": [
+      [
+        "materialize",
+        "materialise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "math(ematics)/maths": {
+    "groups": [
+      [
+        "math",
+        "maths"
+      ],
+      [
+        "mathematics"
+      ]
+    ],
+    "kind": "mixed",
+    "note": "math/maths 作为缩略形式共用词条；mathematics 独立。"
+  },
+  "maximize/-ise": {
+    "groups": [
+      [
+        "maximize",
+        "maximise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "mechanization/-sation": {
+    "groups": [
+      [
+        "mechanization",
+        "mechanisation"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "mechanize/-ise": {
+    "groups": [
+      [
+        "mechanize",
+        "mechanise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "memorandum/memo": {
+    "groups": [
+      [
+        "memorandum"
+      ],
+      [
+        "memo"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "memorize/-ise": {
+    "groups": [
+      [
+        "memorize",
+        "memorise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "meter/-tre": {
+    "groups": [
+      [
+        "meter",
+        "metre"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "millimeter/-tre": {
+    "groups": [
+      [
+        "millimeter",
+        "millimetre"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "minimize/-ise": {
+    "groups": [
+      [
+        "minimize",
+        "minimise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "mo(u)ld": {
+    "groups": [
+      [
+        "mold",
+        "mould"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "mo(u)ldy": {
+    "groups": [
+      [
+        "moldy",
+        "mouldy"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "mobilize/-ise": {
+    "groups": [
+      [
+        "mobilize",
+        "mobilise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "modernization/-sation": {
+    "groups": [
+      [
+        "modernization",
+        "modernisation"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "modernize/-ise": {
+    "groups": [
+      [
+        "modernize",
+        "modernise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "mom(my)": {
+    "groups": [
+      [
+        "mom"
+      ],
+      [
+        "mommy"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "monopolize/-ise": {
+    "groups": [
+      [
+        "monopolize",
+        "monopolise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "neighbo(u)r": {
+    "groups": [
+      [
+        "neighbor",
+        "neighbour"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "neighbo(u)rhood": {
+    "groups": [
+      [
+        "neighborhood",
+        "neighbourhood"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "neutralize/-ise": {
+    "groups": [
+      [
+        "neutralize",
+        "neutralise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "normalization/-sation": {
+    "groups": [
+      [
+        "normalization",
+        "normalisation"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "normalize/-ise": {
+    "groups": [
+      [
+        "normalize",
+        "normalise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "odo(u)r": {
+    "groups": [
+      [
+        "odor",
+        "odour"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "offense/-ce": {
+    "groups": [
+      [
+        "offense",
+        "offence"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "often/oftentimes": {
+    "groups": [
+      [
+        "often"
+      ],
+      [
+        "oftentimes"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "organization/-sation": {
+    "groups": [
+      [
+        "organization",
+        "organisation"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "organizational/-sational": {
+    "groups": [
+      [
+        "organizational",
+        "organisational"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "organize/-ise": {
+    "groups": [
+      [
+        "organize",
+        "organise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "paralyze/-yse": {
+    "groups": [
+      [
+        "paralyze",
+        "paralyse"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "patronize/-ise": {
+    "groups": [
+      [
+        "patronize",
+        "patronise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "penalize/-ise": {
+    "groups": [
+      [
+        "penalize",
+        "penalise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "photo(graph)": {
+    "groups": [
+      [
+        "photo"
+      ],
+      [
+        "photograph"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "plough/plow": {
+    "groups": [
+      [
+        "plough",
+        "plow"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "practise/-ice": {
+    "groups": [
+      [
+        "practise",
+        "practice"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "pretense/-ce": {
+    "groups": [
+      [
+        "pretense",
+        "pretence"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "prince/princess": {
+    "groups": [
+      [
+        "prince"
+      ],
+      [
+        "princess"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "privatization/-sation": {
+    "groups": [
+      [
+        "privatization",
+        "privatisation"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "privatize/-ise": {
+    "groups": [
+      [
+        "privatize",
+        "privatise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "program(me)": {
+    "groups": [
+      [
+        "program",
+        "programme"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "publicize/-ise": {
+    "groups": [
+      [
+        "publicize",
+        "publicise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "railway/railroad": {
+    "groups": [
+      [
+        "railway"
+      ],
+      [
+        "railroad"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "realization/-sation": {
+    "groups": [
+      [
+        "realization",
+        "realisation"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "realize/-ise": {
+    "groups": [
+      [
+        "realize",
+        "realise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "recognize/-ise": {
+    "groups": [
+      [
+        "recognize",
+        "recognise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "refrigerator/fridge": {
+    "groups": [
+      [
+        "refrigerator"
+      ],
+      [
+        "fridge"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "rigo(u)r": {
+    "groups": [
+      [
+        "rigor",
+        "rigour"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "rumo(u)r": {
+    "groups": [
+      [
+        "rumor",
+        "rumour"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "scrutinize/-ise": {
+    "groups": [
+      [
+        "scrutinize",
+        "scrutinise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "skeptic/sceptic": {
+    "groups": [
+      [
+        "skeptic",
+        "sceptic"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "skeptical/sceptical": {
+    "groups": [
+      [
+        "skeptical",
+        "sceptical"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "skepticism/scepticism": {
+    "groups": [
+      [
+        "skepticism",
+        "scepticism"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "skil(l)ful": {
+    "groups": [
+      [
+        "skilful",
+        "skillful"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "sober/-re": {
+    "groups": [
+      [
+        "sober"
+      ]
+    ],
+    "kind": "excluded_cet6_anomaly",
+    "excluded_spellings": [
+      "sobre"
+    ],
+    "note": "原页确实印为 sober/-re，且标为六级。该出处不进入四级；不猜测改成 somber/sombre。"
+  },
+  "socialize/-ise": {
+    "groups": [
+      [
+        "socialize",
+        "socialise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "spaceship/spacecraft": {
+    "groups": [
+      [
+        "spaceship"
+      ],
+      [
+        "spacecraft"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "specialization/-sation": {
+    "groups": [
+      [
+        "specialization",
+        "specialisation"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "specialize/-ise": {
+    "groups": [
+      [
+        "specialize",
+        "specialise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "specialty/speciality": {
+    "groups": [
+      [
+        "specialty",
+        "speciality"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "splendo(u)r": {
+    "groups": [
+      [
+        "splendor",
+        "splendour"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "spokesman/spokeswoman": {
+    "groups": [
+      [
+        "spokesman"
+      ],
+      [
+        "spokeswoman"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "sportsman/sportswoman": {
+    "groups": [
+      [
+        "sportsman"
+      ],
+      [
+        "sportswoman"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "stabilize/-ise": {
+    "groups": [
+      [
+        "stabilize",
+        "stabilise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "standardization/-sation": {
+    "groups": [
+      [
+        "standardization",
+        "standardisation"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "standardize/-ise": {
+    "groups": [
+      [
+        "standardize",
+        "standardise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "steward(ess)": {
+    "groups": [
+      [
+        "steward"
+      ],
+      [
+        "stewardess"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "stor(e)y": {
+    "groups": [
+      [
+        "story",
+        "storey"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "subsidize/-ise": {
+    "groups": [
+      [
+        "subsidize",
+        "subsidise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "sulfur/sulphur": {
+    "groups": [
+      [
+        "sulfur",
+        "sulphur"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "summarize/-ise": {
+    "groups": [
+      [
+        "summarize",
+        "summarise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "symbolic(al)": {
+    "groups": [
+      [
+        "symbolic"
+      ],
+      [
+        "symbolical"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "symmetric(al)": {
+    "groups": [
+      [
+        "symmetric"
+      ],
+      [
+        "symmetrical"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "sympathize/-ise": {
+    "groups": [
+      [
+        "sympathize",
+        "sympathise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "synthesize/-ise": {
+    "groups": [
+      [
+        "synthesize",
+        "synthesise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "technology/tech": {
+    "groups": [
+      [
+        "technology"
+      ],
+      [
+        "tech"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "telephone/phone": {
+    "groups": [
+      [
+        "telephone"
+      ],
+      [
+        "phone"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "television/TV": {
+    "groups": [
+      [
+        "television"
+      ],
+      [
+        "TV"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "theater/-tre": {
+    "groups": [
+      [
+        "theater",
+        "theatre"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "therapeutic(al)": {
+    "groups": [
+      [
+        "therapeutic"
+      ],
+      [
+        "therapeutical"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "toward(s)": {
+    "groups": [
+      [
+        "toward",
+        "towards"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "tumo(u)r": {
+    "groups": [
+      [
+        "tumor",
+        "tumour"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "tyre/tire": {
+    "groups": [
+      [
+        "tyre",
+        "tire"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "urbanization/-sation": {
+    "groups": [
+      [
+        "urbanization",
+        "urbanisation"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "urbanize/-ise": {
+    "groups": [
+      [
+        "urbanize",
+        "urbanise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "utilization/-sation": {
+    "groups": [
+      [
+        "utilization",
+        "utilisation"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "utilize/-ise": {
+    "groups": [
+      [
+        "utilize",
+        "utilise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "vapo(u)r": {
+    "groups": [
+      [
+        "vapor",
+        "vapour"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "visualize/-ise": {
+    "groups": [
+      [
+        "visualize",
+        "visualise"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "wag(g)on": {
+    "groups": [
+      [
+        "wagon",
+        "waggon"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "waiter/waitress": {
+    "groups": [
+      [
+        "waiter"
+      ],
+      [
+        "waitress"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "while/whilst": {
+    "groups": [
+      [
+        "while"
+      ],
+      [
+        "whilst"
+      ]
+    ],
+    "kind": "distinct_lexemes",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  },
+  "wool(l)en": {
+    "groups": [
+      [
+        "woolen",
+        "woollen"
+      ]
+    ],
+    "kind": "orthographic",
+    "note": "仅扩展原文明确写出的形式；拼写变体合并，独立词、缩略词和非纯拼写的形态差别分开。"
+  }
+}

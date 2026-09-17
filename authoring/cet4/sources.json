@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-09-03",
+  "sources": [
+    {
+      "id": "neea-cet-syllabus-2016",
+      "title": "全国大学英语四、六级考试大纲（2016年修订版）",
+      "publisher": "全国大学英语四、六级考试委员会；教育部教育考试院官网公开提供",
+      "listingUrl": "https://cet.neea.edu.cn/html1/folder/16113/1588-1.htm",
+      "url": "https://cet.neea.edu.cn/res/Home/1704/55b02330ac17274664f06d9d3db8249d.pdf",
+      "sha256": "9166d3c03b7bc43abd9d9df91bd2ef8085b4419286f1e5ca100dea68f3cfd1f1",
+      "bytes": 12070155,
+      "pdfPages": 215,
+      "instructionsPdfPage": 20,
+      "instructionsPrintedPage": 15,
+      "vocabularyPdfPages": [21, 149],
+      "vocabularyPrintedPages": [16, 144],
+      "printedTotals": {"headwords": 5418, "listedRelated": 2551},
+      "enumerated": {"headwordRows": 5377, "listedRelatedCells": 2519, "cet4HeadRows": 4114, "cet4ListedRelatedCells": 2087, "cet6HeadRows": 1263, "cet6ListedRelatedCells": 432},
+      "countDifference": {"headwords": 41, "listedRelated": 32},
+      "countNote": "印刷合计与逐行、逐格枚举数量不同。129 页已用独立解析器核对字母顺序及星号，未发现漏字。尚无足够依据解释出版合计的统计口径；保留两种数字，不把差额补成单词，也不把合并级别合计写成四级词数。",
+      "scopeEvidence": "说明页规定六级词以 ★ 标出，词表仅列词形，不提供词性、释义和读音。",
+      "relatedLevelRule": "附列单元格没有独立等级符号时，按所在主词条行的等级处理；这是本项目明确采用的编辑解释，level_basis 保存该区别。",
+      "localCache": ".work/cet4/source/cet-syllabus-2016.pdf",
+      "usage": "仅用于词形收录范围、来源定位及规范化；不从该 PDF 生成不存在的释义、音标、词频或词源。"
+    },
+    {
+      "id": "cambridge-jewelry",
+      "title": "Cambridge Dictionary: jewelry / jewellery",
+      "urls": ["https://dictionary.cambridge.org/dictionary/english/jewelry", "https://dictionary.cambridge.org/dictionary/english/jewellery"],
+      "usage": "核实 jewelry 与 jewellery 的拼写关系；不复制词典定义。"
+    },
+    {
+      "id": "cambridge-celsius",
+      "title": "Cambridge Dictionary: Celsius",
+      "urls": ["https://dictionary.cambridge.org/dictionary/english/celsius"],
+      "usage": "采用核实的 Celsius 拼写；原表 /-cius 记法单独保留，不据此生成 Celcius。"
+    }
+  ]
+}

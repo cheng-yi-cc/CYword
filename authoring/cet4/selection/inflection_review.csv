@@ -1,0 +1,353 @@
+word_id,spelling,lemma,source_roles,translation_reference,category,review_status,decision,reason,evidence,reviewed_at
+cet4-w-2a5ce4035df85fb684d5,accounting,account,listed_related,"n. 会计学, 帐单, 清帐
+[计] 帐户处理, 记帐",lexicalized,editorial_reviewed,retain_independent,会计、会计学，是专业或业务名称。,references/lexical.csv#cet4-w-2a5ce4035df85fb684d5,2026-09-17
+cet4-w-12952370deeb322c92b6,acting,act,listed_related,"n. 演戏, 装腔作势
+a. 代理的, 演出用的, 起作用的",lexicalized,editorial_reviewed,retain_independent,表演这一活动，以及代理职务的形容词用法。,references/lexical.csv#cet4-w-12952370deeb322c92b6,2026-09-17
+cet4-w-7d7b5cb0fd482530edf8,advanced,advance,listed_related,"a. 在前的, 高级的, 先进的, 年老的
+[法] 预付的, 预支的, 垫付的",lexicalized,editorial_reviewed,retain_independent,高级的、先进的，用于描述程度或水平。,references/lexical.csv#cet4-w-7d7b5cb0fd482530edf8,2026-09-17
+cet4-w-3b16e43a39094468b1ab,aged,age,listed_related,"a. 老的, 陈的, 有...岁的
+[化] 老化的; 老化了的; 陈化的; 陈化了的",lexicalized,editorial_reviewed,retain_independent,年老的、某岁数的，保留年龄表达与读音区别。,references/lexical.csv#cet4-w-3b16e43a39094468b1ab,2026-09-17
+cet4-w-0723e3d778f3f044c45b,AIDS,aid,headword,"n. 爱滋病(获得性免疫缺陷综合征)
+[计] 高级综合数据系统, 先进交互调试系统, 自动图解文档编制系统
+美国决策学学会, 信息自动显示系统, 自动综合调试系统",false_lemma,editorial_reviewed,retain_independent,疾病名称缩写；不能当作 aid 的第三人称单数。,references/lexical.csv#cet4-w-0723e3d778f3f044c45b,2026-09-17
+cet4-w-760c96a5ae4e10b05524,alleged,allege,listed_related,"a. 被断言的, 所谓的
+[法] 提出而尚未证实的, 声称的, 宣称的",lexicalized,editorial_reviewed,retain_independent,所谓的、被指称的，含尚未证实之意。,references/lexical.csv#cet4-w-760c96a5ae4e10b05524,2026-09-17
+cet4-w-6ebe7811deb3d5c6ea1c,appealing,appeal,listed_related,"a. 有感染力的, 动人的, 恳求的",lexicalized,editorial_reviewed,retain_independent,有吸引力的，描述事物令人喜欢的性质。,references/lexical.csv#cet4-w-6ebe7811deb3d5c6ea1c,2026-09-17
+cet4-w-e9718e53908641cd97e0,bacteria,bacterium,headword,"pl. 细菌
+[医] 细菌, [无芽胞]杆菌",syllabus_form,editorial_reviewed,retain_independent,考纲采用的细菌复数形式；当前目标表不另列 bacterium，在本条补单数。,references/lexical.csv#cet4-w-e9718e53908641cd97e0,2026-09-17
+cet4-w-2f40e346a5e8e9a8a296,banking,bank,listed_related,"n. 银行业务
+[经] 银行业, 银行事务",lexicalized,editorial_reviewed,retain_independent,银行业、银行业务，是行业名称。,references/lexical.csv#cet4-w-2f40e346a5e8e9a8a296,2026-09-17
+cet4-w-4dfd084c6de0495a2bde,bearing,bear,headword,"n. 举止, 轴承, 忍受, 关系, 意义, 方向, 生育
+[化] 轴承",lexicalized,editorial_reviewed,retain_independent,轴承、方位、关系、举止等独立名词义。,references/lexical.csv#cet4-w-4dfd084c6de0495a2bde,2026-09-17
+cet4-w-98e29c79a2bfdad7a335,bedding,bed,listed_related,"n. 被褥, 寝具, 床上用品, 基床
+[机] 褥草, 被褥",lexicalized,editorial_reviewed,retain_independent,床上用品，指一类物品。,references/lexical.csv#cet4-w-98e29c79a2bfdad7a335,2026-09-17
+cet4-w-97fc225684c868ce0315,beginning,begin,listed_related,n. 开始,lexicalized,editorial_reviewed,retain_independent,开端、开始部分，可作名词。,references/lexical.csv#cet4-w-97fc225684c868ce0315,2026-09-17
+cet4-w-728655f6e5db49abd4ff,being,be,headword,"n. 存在, 性质, 生命, 人, 生物, be的现在分词",lexicalized,editorial_reviewed,retain_independent,生物、存在，保留 human being 等名词用法。,references/lexical.csv#cet4-w-728655f6e5db49abd4ff,2026-09-17
+cet4-w-7e74cfd51d6156a18345,best,good,headword,"a. 最好的
+adv. 最好地
+n. 最好的人",irregular_comparison,editorial_reviewed,retain_independent,大纲单列的不规则最高级，并有最佳者、最好地等用法；关联 good。,references/lexical.csv#cet4-w-7e74cfd51d6156a18345,2026-09-17
+cet4-w-96700ce8fe4d5fa4593f,better,good,headword,"a. 较好的
+adv. 比较好",irregular_comparison,editorial_reviewed,retain_independent,大纲单列的不规则比较级，并有改善的动词用法；关联 good。,references/lexical.csv#cet4-w-96700ce8fe4d5fa4593f,2026-09-17
+cet4-w-27f74e7c9c3dd68895c9,bit,bite,headword,"n. 少量, 马嚼子, 辅币
+vt. 给马上嚼子, 控制
+bite的过去式和过去分词
+[计] 比特, 二进制数位, 机内测试",homograph,editorial_reviewed,retain_independent,小块、少量、比特等义，不应随 bite 的过去式一并移除。,references/lexical.csv#cet4-w-27f74e7c9c3dd68895c9,2026-09-17
+cet4-w-219f8ce640e8ab9d26ee,blessing,bless,listed_related,n. 祝福,lexicalized,editorial_reviewed,retain_independent,祝福、幸事，可作名词。,references/lexical.csv#cet4-w-219f8ce640e8ab9d26ee,2026-09-17
+cet4-w-05bbeec750c9c2e09f44,bore,bear,headword,"n. 令人讨厌的人, 激浪, 枪膛, 孔
+vt. 使烦扰, 钻孔
+vi. 钻孔
+bear的过去式
+[计] 内径; 孔径",homograph,editorial_reviewed,retain_independent,使厌烦、钻孔等独立词义，与 bear 的过去式区分。,references/lexical.csv#cet4-w-05bbeec750c9c2e09f44,2026-09-17
+cet4-w-305b0b496be89016a9d0,born,bear,headword,"a. 天生的
+bear的过去分词",lexicalized,editorial_reviewed,retain_independent,天生的，以及 be born 的固定出生表达。,references/lexical.csv#cet4-w-305b0b496be89016a9d0,2026-09-17
+cet4-w-e2bc673172f86b1d0bbb,bound,bind,headword,"n. 跃, 回跳, 范围, 边界
+a. 受约束的, 装有封面的, 有义务的, 关联的, 被束缚的, 准备去...的, 便秘的
+vi. 跳跃, 弹起
+vt. 使跳, 限制, 形成...的疆界
+bind过去式和过去分词
+[计] 装订的",homograph,editorial_reviewed,retain_independent,界限、跳跃，以及注定的等用法；不能只按 bind 的过去式处理。,references/lexical.csv#cet4-w-e2bc673172f86b1d0bbb,2026-09-17
+cet4-w-52b71831eedcfc500805,boxing,box,headword,"n. 拳击
+[医] 围模(牙科)",lexicalized,editorial_reviewed,retain_independent,拳击，是运动名称。,references/lexical.csv#cet4-w-52b71831eedcfc500805,2026-09-17
+cet4-w-1a2b3ce9a736184068bc,briefing,brief,listed_related,"n. 简报
+[法] 简报, 情况的简要介绍",lexicalized,editorial_reviewed,retain_independent,情况介绍、简报会，是可独立命名的活动。,references/lexical.csv#cet4-w-1a2b3ce9a736184068bc,2026-09-17
+cet4-w-81570b03050d59e427f7,broke,break,headword,"a. 一文不名的
+break的过去式",lexicalized,editorial_reviewed,retain_independent,身无分文的，与 break 的时态变化区分。,references/lexical.csv#cet4-w-81570b03050d59e427f7,2026-09-17
+cet4-w-3ee2972d6114ed86308c,building,build,listed_related,"n. 建筑物, 建筑
+[法] 营造, 建筑, 建筑物",lexicalized,editorial_reviewed,retain_independent,建筑物，可数名词。,references/lexical.csv#cet4-w-3ee2972d6114ed86308c,2026-09-17
+cet4-w-5267f172cc91ccaa2452,calculating,calculate,listed_related,"a. 计算的, (贬)专为自己打算的, 深谋远虑的
+[计] 计算",lexicalized,editorial_reviewed,retain_independent,精于算计的，描述性格。,references/lexical.csv#cet4-w-5267f172cc91ccaa2452,2026-09-17
+cet4-w-f33dd244a0c0043dba33,calling,call,headword,"n. 职业, 行业, 呼唤, 召集
+[计] 呼叫",lexicalized,editorial_reviewed,retain_independent,职业、使命感，与 call 的动作变化区分。,references/lexical.csv#cet4-w-f33dd244a0c0043dba33,2026-09-17
+cet4-w-d169357c4b44d892ab63,challenging,challenge,listed_related,"a. 挑战的, 引起争论的",lexicalized,editorial_reviewed,retain_independent,有挑战性的，描述任务的难度。,references/lexical.csv#cet4-w-d169357c4b44d892ab63,2026-09-17
+cet4-w-6ff4a3da5ce47e9a1735,charming,charm,listed_related,"a. 迷人的, 有吸引力的",lexicalized,editorial_reviewed,retain_independent,迷人的，描述人物或事物的吸引力。,references/lexical.csv#cet4-w-6ff4a3da5ce47e9a1735,2026-09-17
+cet4-w-e3a052bfcd2176b6c6dc,classified,classify,listed_related,"a. 分类的, 被归入某类的, 被指定为机密的
+[建] 分了类的, 分了级的",lexicalized,editorial_reviewed,retain_independent,机密的，与普通分类动作区分。,references/lexical.csv#cet4-w-e3a052bfcd2176b6c6dc,2026-09-17
+cet4-w-6af5dd75fda7b45e411d,compelling,compel,listed_related,"a. 强制的, 强迫性的, 激发兴趣的",lexicalized,editorial_reviewed,retain_independent,令人信服的、引人入胜的，描述理由或内容。,references/lexical.csv#cet4-w-6af5dd75fda7b45e411d,2026-09-17
+cet4-w-7fade0b6e4380dd2c13b,concerning,concern,listed_related,"prep. 关于
+[法] 关于",lexicalized,editorial_reviewed,retain_independent,关于，介词用法。,references/lexical.csv#cet4-w-7fade0b6e4380dd2c13b,2026-09-17
+cet4-w-e43f37ad4b770818e4c0,considering,consider,listed_related,"prep. 就...而论
+conj. 考虑到",lexicalized,editorial_reviewed,retain_independent,考虑到，介词或连词用法。,references/lexical.csv#cet4-w-e43f37ad4b770818e4c0,2026-09-17
+cet4-w-f3d22936262a03311713,contented,content,listed_related,"a. 满足的, 心安的",lexicalized,editorial_reviewed,retain_independent,满足的，描述心理状态。,references/lexical.csv#cet4-w-f3d22936262a03311713,2026-09-17
+cet4-w-e5088d65fe59d6b0eaa0,convincing,convince,listed_related,"a. 使人信服的, 有力的, 令人心悦诚服的",lexicalized,editorial_reviewed,retain_independent,令人信服的，描述说法或证据。,references/lexical.csv#cet4-w-e5088d65fe59d6b0eaa0,2026-09-17
+cet4-w-02a556cb45788b318903,corresponding,correspond,listed_related,"a. 相当的, 一致的, 通信的
+[计] 对应",lexicalized,editorial_reviewed,retain_independent,相应的，表示事物间的对应关系。,references/lexical.csv#cet4-w-02a556cb45788b318903,2026-09-17
+cet4-w-83c322b375aa7e9b6805,crossing,cross,listed_related,"n. 横越, 横渡, 交叉点, 渡口
+[经] 划线",lexicalized,editorial_reviewed,retain_independent,路口、人行横道、渡口等地点名词。,references/lexical.csv#cet4-w-83c322b375aa7e9b6805,2026-09-17
+cet4-w-e1b28e200b35c37e2b5a,crowded,crowd,listed_related,"a. 拥挤的, 塞满的",lexicalized,editorial_reviewed,retain_independent,拥挤的，描述空间状态。,references/lexical.csv#cet4-w-e1b28e200b35c37e2b5a,2026-09-17
+cet4-w-8f1e80c80964947107da,customs,custom,headword,"n. 海关, 关卡, 关税
+[经] 关税, 海关",lexicalized,editorial_reviewed,retain_independent,海关、关税，与 custom 的习俗义复数区分。,references/lexical.csv#cet4-w-8f1e80c80964947107da,2026-09-17
+cet4-w-5f05488a7f1273c35739,cycling,cycle,listed_related,"n. 骑脚踏车兜风, 骑脚踏车消遣
+[机] 循环操作",lexicalized,editorial_reviewed,retain_independent,骑自行车，是活动名称。,references/lexical.csv#cet4-w-5f05488a7f1273c35739,2026-09-17
+cet4-w-81455c50f12eb556b2c7,daring,dare,listed_related,a. 大胆的,lexicalized,editorial_reviewed,retain_independent,大胆的、胆量，具有形容词和名词用法。,references/lexical.csv#cet4-w-81455c50f12eb556b2c7,2026-09-17
+cet4-w-c58294afad9cc3d74011,dating,date,listed_related,"[计] 记日期的
+[经] 注明日期",reference_corrected,editorial_reviewed,retain_independent,约会、确定年代；原参考仅有记日期等专业义，须补常用名词义。,https://dictionary.cambridge.org/dictionary/english/dating,2026-09-17
+cet4-w-f9805f4336b7049923f3,dealing,deal,listed_related,"n. 经营行为, 行为, 交易
+[法] 待遇, 处置, 行为",lexicalized,editorial_reviewed,retain_independent,交易、经营行为，保留商业名词用法。,references/lexical.csv#cet4-w-f9805f4336b7049923f3,2026-09-17
+cet4-w-ae2be157fca25b88dc79,demanding,demand,listed_related,"a. 要求高的, 费力的",lexicalized,editorial_reviewed,retain_independent,要求高的、费力的，描述任务或人。,references/lexical.csv#cet4-w-ae2be157fca25b88dc79,2026-09-17
+cet4-w-6ad4be45db50b1d446c3,detailed,detail,listed_related,"a. 详细的, 复杂的
+[法] 详细的, 详尽的",lexicalized,editorial_reviewed,retain_independent,详细的，描述信息的细致程度。,references/lexical.csv#cet4-w-6ad4be45db50b1d446c3,2026-09-17
+cet4-w-9fb7d6f40584b1aa38ff,determined,determine,listed_related,"a. 坚决的, 已下决心的",lexicalized,editorial_reviewed,retain_independent,坚定的，描述决心。,references/lexical.csv#cet4-w-9fb7d6f40584b1aa38ff,2026-09-17
+cet4-w-f9edcd3213541606b12b,disciplined,discipline,listed_related,a. 遵守纪律的；受过训练的,lexicalized,editorial_reviewed,retain_independent,自律的、训练有素的，描述行为品质。,references/lexical.csv#cet4-w-f9edcd3213541606b12b,2026-09-17
+cet4-w-ad5ad651c93ba3d65d11,disgusting,disgust,listed_related,a. 令人厌恶的,lexicalized,editorial_reviewed,retain_independent,令人厌恶的，描述引起的感受。,references/lexical.csv#cet4-w-ad5ad651c93ba3d65d11,2026-09-17
+cet4-w-d0ba34157a83e1d457a4,dove,dive,headword,"n. 鸽子
+dive的过去式",homograph,editorial_reviewed,retain_independent,鸽子，是独立名词，不随 dive 的过去式删除。,references/lexical.csv#cet4-w-d0ba34157a83e1d457a4,2026-09-17
+cet4-w-f77dc220af04385ebe48,drawing,draw,listed_related,"n. 图画, 制图, 拉
+[计] 绘图",lexicalized,editorial_reviewed,retain_independent,图画、绘画，是作品或活动名称。,references/lexical.csv#cet4-w-f77dc220af04385ebe48,2026-09-17
+cet4-w-f58a56e08652f19cefb5,drunk,drink,headword,"a. 喝醉了的
+drink的过去式",lexicalized,editorial_reviewed,retain_independent,醉的、醉汉；drink 的过去分词为 drunk，原参考的过去式标注需纠正。,references/lexical.csv#cet4-w-f58a56e08652f19cefb5,2026-09-17
+cet4-w-5b1264beb21f1da02ba9,dying,die,listed_related,"a. 垂死的
+[法] 快要死的, 垂死的, 临终的",lexicalized,editorial_reviewed,retain_independent,垂死的，描述生命状态。,references/lexical.csv#cet4-w-5b1264beb21f1da02ba9,2026-09-17
+cet4-w-78b7cef442f54f2f186a,encouraging,encourage,listed_related,"a. 鼓励的, 促进的",lexicalized,editorial_reviewed,retain_independent,令人鼓舞的，描述消息或进展。,references/lexical.csv#cet4-w-78b7cef442f54f2f186a,2026-09-17
+cet4-w-978c97ec4cddf1442181,ending,end,listed_related,"n. 终止, 终了, 收场
+[医] 末梢",lexicalized,editorial_reviewed,retain_independent,结尾、结局，指作品或事件的一部分。,references/lexical.csv#cet4-w-978c97ec4cddf1442181,2026-09-17
+cet4-w-e6ecbd4b1ded9aecf0f4,enlightening,enlighten,listed_related,"a. 有启发作用的, 使人领悟的",lexicalized,editorial_reviewed,retain_independent,有启发的，描述信息带来的理解。,references/lexical.csv#cet4-w-e6ecbd4b1ded9aecf0f4,2026-09-17
+cet4-w-924c96f538d5cdc7dea8,entertaining,entertain,listed_related,"a. 使人愉快的, 有趣的",lexicalized,editorial_reviewed,retain_independent,有趣的、令人愉快的，描述内容。,references/lexical.csv#cet4-w-924c96f538d5cdc7dea8,2026-09-17
+cet4-w-e3f1bdff6f5765e79972,evening,even,headword,"n. 傍晚, 晚间, 末期",false_lemma,editorial_reviewed,retain_independent,傍晚、晚上不能按动词 even 的变化归并。,references/lexical.csv#cet4-w-e3f1bdff6f5765e79972,2026-09-17
+cet4-w-112059f76d47759539f8,existing,exist,listed_related,"a. 存在的, 目前的, 现存的, 现有的
+[计] 现成的, 已有的, 现存的",lexicalized,editorial_reviewed,retain_independent,现有的，用于区分已有和新添事物。,references/lexical.csv#cet4-w-112059f76d47759539f8,2026-09-17
+cet4-w-1d9735e1cf33b291617c,experienced,experience,listed_related,"a. 富有经验的, 老练的, 熟练的",lexicalized,editorial_reviewed,retain_independent,有经验的，描述能力水平。,references/lexical.csv#cet4-w-1d9735e1cf33b291617c,2026-09-17
+cet4-w-3806aed7f8dad6096432,extended,extend,listed_related,"a. 延续的, 伸出的, 竭尽全力的, 广大的, 扩大范围的
+[法] 展期的, 延期的, 延长的",lexicalized,editorial_reviewed,retain_independent,延长的、扩大的，保留 extended family 等固定用法。,references/lexical.csv#cet4-w-3806aed7f8dad6096432,2026-09-17
+cet4-w-51c23e1da50ebac844be,farming,farm,listed_related,"n. 农业, 耕作",lexicalized,editorial_reviewed,retain_independent,农业、农事，指行业或活动。,references/lexical.csv#cet4-w-51c23e1da50ebac844be,2026-09-17
+cet4-w-e7d16e878ae22f89df79,farther,far,headword,"a. 更远的, 进一步的
+adv. 更远的, 此外, far的比较级",irregular_comparison,editorial_reviewed,retain_independent,大纲单列的不规则比较级，表达空间距离更远；关联 far，不再额外扩充其他变化。,references/lexical.csv#cet4-w-e7d16e878ae22f89df79,2026-09-17
+cet4-w-9e08b8ed639c89cb82af,feeling,feel,listed_related,"n. 摸, 触觉, 知觉, 感觉, 情绪, 同情
+a. 有同情心的, 有感觉的, 仁慈的, 动人的",lexicalized,editorial_reviewed,retain_independent,感觉、情感，具有独立名词用法。,references/lexical.csv#cet4-w-9e08b8ed639c89cb82af,2026-09-17
+cet4-w-ecefc86f83da8a8bb5bf,filling,fill,listed_related,"n. 充填物, 填料
+[化] 加填; 填充",lexicalized,editorial_reviewed,retain_independent,馅料、填充物、补牙材料等物品名词。,references/lexical.csv#cet4-w-ecefc86f83da8a8bb5bf,2026-09-17
+cet4-w-b64488cbd449a51e39b7,finding,find,listed_related,"n. 发现, 发现物, 决定, 裁决
+[法] 调查结果, 对事实的认定, 判定的要素",lexicalized,editorial_reviewed,retain_independent,调查结果、发现，具有结果名词义。,references/lexical.csv#cet4-w-b64488cbd449a51e39b7,2026-09-17
+cet4-w-36ca0971ace261bc8b21,fireworks,firework,headword,"n. 烟火, 激烈争论
+[化] 焰火",syllabus_form,editorial_reviewed,retain_independent,考纲收录的烟花复数形式；当前目标表不另列 firework，在本条说明单复数。,references/lexical.csv#cet4-w-36ca0971ace261bc8b21,2026-09-17
+cet4-w-20d93a003f78e3997afe,fishing,fish,listed_related,"n. 钓鱼, 鱼业
+a. 钓鱼的",lexicalized,editorial_reviewed,retain_independent,钓鱼、捕鱼，是活动名称。,references/lexical.csv#cet4-w-20d93a003f78e3997afe,2026-09-17
+cet4-w-6b92b3d93810d1018549,fixed,fix,listed_related,"a. 固定的, 不变的
+[法] 固定的, 确定的, 不变的",lexicalized,editorial_reviewed,retain_independent,固定的，描述数额、位置等不变状态。,references/lexical.csv#cet4-w-6b92b3d93810d1018549,2026-09-17
+cet4-w-0d5a54368772f4274af5,following,follow,listed_related,"n. 下列各项, 部下, 追随者
+a. 下列的, 其次的",lexicalized,editorial_reviewed,retain_independent,下列的、接下来的，并有追随者群体的名词义。,references/lexical.csv#cet4-w-0d5a54368772f4274af5,2026-09-17
+cet4-w-2568812accbcbce8fa8d,forgiving,forgive,listed_related,"a. 宽大的, 容许有错误的",lexicalized,editorial_reviewed,retain_independent,宽容的，描述性格。,references/lexical.csv#cet4-w-2568812accbcbce8fa8d,2026-09-17
+cet4-w-061c67da9148dbd355d2,found,find,headword,"vt. 建立, 创立, 铸造
+find的过去式和过去分词",homograph,editorial_reviewed,retain_independent,创立、建立，是独立动词；另说明 find 的过去式同形。,references/lexical.csv#cet4-w-061c67da9148dbd355d2,2026-09-17
+cet4-w-1b6e0ec6b3c9eb6a6edd,founding,found,listed_related,[计] 铸造,reference_corrected,editorial_reviewed,retain_independent,创立、创办，以及创始的；不只保留原参考的铸造专业义。,https://dictionary.cambridge.org/dictionary/english/founding,2026-09-17
+cet4-w-a9dfef5e7dcd8565d094,frustrating,frustrate,listed_related,a. 令人沮丧的,lexicalized,editorial_reviewed,retain_independent,令人沮丧的，描述引起的感受。,references/lexical.csv#cet4-w-a9dfef5e7dcd8565d094,2026-09-17
+cet4-w-af19924cccad60ad3b1d,funding,fund,listed_related,[经] 债务转期,reference_corrected,editorial_reviewed,retain_independent,资金、资助，是独立名词；不只保留债务转期这一专业义。,https://dictionary.cambridge.org/us/dictionary/english/funding,2026-09-17
+cet4-w-beac2ae534b13a56b4a2,further,far,headword,"a. 更远的, 此外的, 更多的
+vt. 促进, 增进, 助长
+adv. 更进一步地, 更远地, 此外",lexicalized,editorial_reviewed,retain_independent,进一步的、进一步地，以及促进的动词义。,references/lexical.csv#cet4-w-beac2ae534b13a56b4a2,2026-09-17
+cet4-w-bd2df0c96a74fff87398,gathering,gather,listed_related,"n. 聚集, 集中, 采集
+[化] 富集",lexicalized,editorial_reviewed,retain_independent,聚会、集会，是活动名称。,references/lexical.csv#cet4-w-bd2df0c96a74fff87398,2026-09-17
+cet4-w-c777bc60f3e6d2548406,gifted,gift,listed_related,a. 有天才的,lexicalized,editorial_reviewed,retain_independent,有天赋的，描述能力。,references/lexical.csv#cet4-w-c777bc60f3e6d2548406,2026-09-17
+cet4-w-8d351268e14f26d569da,given,give,headword,"a. 赠予的, 沉溺的, 约定的
+give的过去分词",lexicalized,editorial_reviewed,retain_independent,规定的、特定的，以及考虑到的介词用法。,references/lexical.csv#cet4-w-8d351268e14f26d569da,2026-09-17
+cet4-w-0310a6c10477251e0168,granted,grant,listed_related,"adv. 算是如此, 但是",lexicalized,editorial_reviewed,retain_independent,诚然、假定，保留让步或条件表达。,references/lexical.csv#cet4-w-0310a6c10477251e0168,2026-09-17
+cet4-w-dfee3bcfbe8f6aaeaea5,greeting,greet,listed_related,"n. 祝贺, 问候",lexicalized,editorial_reviewed,retain_independent,问候、招呼，是独立名词。,references/lexical.csv#cet4-w-dfee3bcfbe8f6aaeaea5,2026-09-17
+cet4-w-6670eb63d00350c182a9,ground,grind,headword,"n. 土地, 战场, 场地, 地面, 范围
+a. 土地的, 地面上的
+vt. 放在地上, 使搁浅, 打基础, 给...以训练
+vi. 搁浅, 落地, 根据, 基于
+a. 磨过的
+grind的过去式和过去分词",homograph,editorial_reviewed,retain_independent,地面、土地、理由等名词义，不随 grind 的过去式删除。,references/lexical.csv#cet4-w-6670eb63d00350c182a9,2026-09-17
+cet4-w-0d5fa73900f7bb9b3e7a,handicapped,handicap,listed_related,"a. 残疾的
+[法] 有生理缺陷的, 残废的",lexicalized,editorial_reviewed,retain_independent,有残障的；正文需交代用语语境，避免作为称呼人的默认表达。,references/lexical.csv#cet4-w-0d5fa73900f7bb9b3e7a,2026-09-17
+cet4-w-9377f21d61b121f485ba,heading,head,headword,"n. 标题, 起始字, 方向
+[计] 上标题",lexicalized,editorial_reviewed,retain_independent,标题，是文档组成部分。,references/lexical.csv#cet4-w-9377f21d61b121f485ba,2026-09-17
+cet4-w-d577cc7393b24c03d348,hearing,hear,listed_related,"n. 听, 听觉, 听讯
+[医] 听, 听觉",lexicalized,editorial_reviewed,retain_independent,听力、听证会，具有独立名词义。,references/lexical.csv#cet4-w-d577cc7393b24c03d348,2026-09-17
+cet4-w-eee01c4c2ef587308cd4,heated,heat,listed_related,"a. 热的, 激昂的, 兴奋的",lexicalized,editorial_reviewed,retain_independent,激烈的，保留 heated discussion 等引申用法。,references/lexical.csv#cet4-w-eee01c4c2ef587308cd4,2026-09-17
+cet4-w-5e0fb787cd1d2bb5c05a,heating,heat,listed_related,"n. 加热, 供热, 暖气设备, 供暖系统, 暖气装置
+a. 加热的, 供暖的",lexicalized,editorial_reviewed,retain_independent,供暖、暖气系统，是设施或活动名称。,references/lexical.csv#cet4-w-5e0fb787cd1d2bb5c05a,2026-09-17
+cet4-w-22b8b04ce288a54c2827,hiding,hide,listed_related,"n. 隐匿, 隐藏之事, 隐匿之所, 痛打
+[法] 躲藏, 躲藏处",lexicalized,editorial_reviewed,retain_independent,躲藏、藏身状态，保留 in hiding 等名词结构。,references/lexical.csv#cet4-w-22b8b04ce288a54c2827,2026-09-17
+cet4-w-e8f3db190e926d96f676,housing,house,listed_related,"n. 遮盖, 住房供给, 居留(处), 房屋, 装饰
+[化] 外壳",lexicalized,editorial_reviewed,retain_independent,住房、住房供给，不按 house 的普通变化删去。,references/lexical.csv#cet4-w-e8f3db190e926d96f676,2026-09-17
+cet4-w-bd6c4e0c5385ee9eb3de,hunting,hunt,listed_related,"n. 狩猎, 猎狐, 探求
+[计] 寻找平衡; 寻找",lexicalized,editorial_reviewed,retain_independent,狩猎，是活动名称。,references/lexical.csv#cet4-w-bd6c4e0c5385ee9eb3de,2026-09-17
+cet4-w-922d8fa9245fa206e980,imaging,image,listed_related,"[计] 成象
+[化] 成像",lexicalized,editorial_reviewed,retain_independent,成像，是技术或过程名称。,references/lexical.csv#cet4-w-922d8fa9245fa206e980,2026-09-17
+cet4-w-8ab646c912a25e8eb253,imposing,impose,listed_related,"a. 令人难忘的, 壮丽的, 威风的",lexicalized,editorial_reviewed,retain_independent,壮观的、气势宏伟的，具有稳定形容词义。,references/lexical.csv#cet4-w-8ab646c912a25e8eb253,2026-09-17
+cet4-w-a814ea0e5ceea9d8c99a,including,include,listed_related,"prep. 包含, 包括
+[经] 包括, 算入",lexicalized,editorial_reviewed,retain_independent,包括，介词用法。,references/lexical.csv#cet4-w-a814ea0e5ceea9d8c99a,2026-09-17
+cet4-w-c7965a5e8de3fecb09d5,interested,interest,listed_related,"a. 感兴趣的
+[法] 有利害关系的, 有股份的, 偏私的",lexicalized,editorial_reviewed,retain_independent,感兴趣的，描述人的状态。,references/lexical.csv#cet4-w-c7965a5e8de3fecb09d5,2026-09-17
+cet4-w-586ad8852b0ce897beae,inviting,invite,listed_related,"a. 引人动心的, 有魅力的
+[法] 诱惑人的, 动人心的",lexicalized,editorial_reviewed,retain_independent,诱人的、吸引人的，描述事物性质。,references/lexical.csv#cet4-w-586ad8852b0ce897beae,2026-09-17
+cet4-w-d8bf0b3998d0da4826dc,involved,involve,listed_related,"a. 难懂的, 复杂的, 不易懂的, 卷入...之中的, 累及..., 与...有关, 被纠缠的
+[计] 包含, 涉及",lexicalized,editorial_reviewed,retain_independent,复杂的、有关的，保留形容词义项。,references/lexical.csv#cet4-w-d8bf0b3998d0da4826dc,2026-09-17
+cet4-w-55bf16aba7fa8123ed18,landing,land,listed_related,"n. 登陆, 码头, 降落
+[经] 上岸, 登陆, 降落",lexicalized,editorial_reviewed,retain_independent,降落、楼梯平台等名词义。,references/lexical.csv#cet4-w-55bf16aba7fa8123ed18,2026-09-17
+cet4-w-e661a46d5a1744b48f2e,later,late,listed_related,"adv. 以后, 随后",lexicalized,editorial_reviewed,retain_independent,后来、以后，作为常用时间副词独立讲解。,references/lexical.csv#cet4-w-e661a46d5a1744b48f2e,2026-09-17
+cet4-w-0287e7f24b809f85d98d,lay,lie,headword,"vt. 放置, 产, 铺设, 布置, 提出, 平息
+vi. 下蛋, 打赌
+n. 位置, 层, 隐藏处
+a. 世俗的, 外行的
+lie的过去式",homograph,editorial_reviewed,retain_independent,放置、产卵，是独立动词；与 lie 的过去式区分。,references/lexical.csv#cet4-w-0287e7f24b809f85d98d,2026-09-17
+cet4-w-366f95811fa9e85bcc9a,leading,lead,listed_related,"n. 领导, 指挥, 神示, 铅板
+a. 领导的, 主要的, 在前的",lexicalized,editorial_reviewed,retain_independent,主要的、领先的，描述地位或作用。,references/lexical.csv#cet4-w-366f95811fa9e85bcc9a,2026-09-17
+cet4-w-35246d78d4aaac3c248b,learned,learn,listed_related,"a. 有学问的, 学术上的
+learn的过去式和过去分词",lexicalized,editorial_reviewed,retain_independent,博学的，形容词读音与普通过去式有别。,references/lexical.csv#cet4-w-35246d78d4aaac3c248b,2026-09-17
+cet4-w-a3c527992464b0a5a2a0,learning,learn,listed_related,"n. 学问, 学识, 学习
+[计] 学习",lexicalized,editorial_reviewed,retain_independent,学问、学习，作为抽象名词讲解。,references/lexical.csv#cet4-w-a3c527992464b0a5a2a0,2026-09-17
+cet4-w-099c2b502dfe15f90e44,left,leave,headword,"a. 左边的, 左倾的, 左侧的, 左派的
+adv. 在左面
+n. 左, 左面, 左派
+leave的过去式和过去分词",homograph,editorial_reviewed,retain_independent,左边、向左等独立用法，不随 leave 的过去式删除。,references/lexical.csv#cet4-w-099c2b502dfe15f90e44,2026-09-17
+cet4-w-e946b1890e1037dbfab4,lighting,light,listed_related,"n. 照明, 照明设备, 舞台灯光",lexicalized,editorial_reviewed,retain_independent,照明、灯光设备，是独立名词。,references/lexical.csv#cet4-w-e946b1890e1037dbfab4,2026-09-17
+cet4-w-0312f9f2afc8eb5f7025,limited,limit,listed_related,"a. 有限制的, 有限的, 有限责任的
+n. 特别快车",lexicalized,editorial_reviewed,retain_independent,有限的，描述数量或范围。,references/lexical.csv#cet4-w-0312f9f2afc8eb5f7025,2026-09-17
+cet4-w-fedc8659e09758a3b1ff,living,live,listed_related,"n. 生活, 生计, 生存
+a. 活的, 逼真的, 现存的",lexicalized,editorial_reviewed,retain_independent,生计、生活，以及活着的，具有独立词性义项。,references/lexical.csv#cet4-w-fedc8659e09758a3b1ff,2026-09-17
+cet4-w-3aa6f265dc543e463697,lodging,lodge,listed_related,"n. 寄宿处, 寄宿
+[法] 提起, 住所",lexicalized,editorial_reviewed,retain_independent,住宿、住处，是独立名词。,references/lexical.csv#cet4-w-3aa6f265dc543e463697,2026-09-17
+cet4-w-cf6fab02898bc07fd3c8,lower,low,listed_related,"a. 低的, 下级的, 下层的
+vi. 降低, 跌落, 减弱
+vt. 放下, 降下, 减弱, 贬低",lexicalized,editorial_reviewed,retain_independent,降低、放下的动词用法，需要区别于 low 的比较级。,references/lexical.csv#cet4-w-cf6fab02898bc07fd3c8,2026-09-17
+cet4-w-dcc51bd7ebc6dc650eea,meaning,mean,listed_related,"n. 意义, 含义, 目的, 意图
+a. 意味深长的",lexicalized,editorial_reviewed,retain_independent,含义、意义，是独立名词。,references/lexical.csv#cet4-w-dcc51bd7ebc6dc650eea,2026-09-17
+cet4-w-c591527a740d890f968e,means,mean,headword,"n. 方法, 手段, 工具, 财产, 收入
+[经] 方法, 手段, 工具; 意谓",lexicalized,editorial_reviewed,retain_independent,方法、手段，单复数同形，不能只按 mean 的变化处理。,references/lexical.csv#cet4-w-c591527a740d890f968e,2026-09-17
+cet4-w-3018c1abc3106407ea79,mechanics,mechanic,listed_related,"n. 机械学, 结构, 力学
+[化] 力学",lexicalized,editorial_reviewed,retain_independent,力学，与 mechanic 的机械师复数区分。,references/lexical.csv#cet4-w-3018c1abc3106407ea79,2026-09-17
+cet4-w-410b5e6b5fb30ace8f33,meeting,meet,headword,"n. 会议, 会面
+[法] 会议, 会谈, 集会",lexicalized,editorial_reviewed,retain_independent,会议、会面，是独立名词。,references/lexical.csv#cet4-w-410b5e6b5fb30ace8f33,2026-09-17
+cet4-w-132e12c23e7b1f992e95,mining,mine,listed_related,"n. 采矿
+[经] 采矿, 采矿业",lexicalized,editorial_reviewed,retain_independent,采矿、采矿业，是行业名称。,references/lexical.csv#cet4-w-132e12c23e7b1f992e95,2026-09-17
+cet4-w-2951f66b6d2dbd227e34,missing,miss,headword,"a. 不见的, 缺少的
+[法] 行踪不明的, 失踪的, 遗失的",lexicalized,editorial_reviewed,retain_independent,失踪的、缺失的，描述状态。,references/lexical.csv#cet4-w-2951f66b6d2dbd227e34,2026-09-17
+cet4-w-85c297570918277162a6,mistaken,mistake,listed_related,"a. 犯错的, 错误的
+mistake的过去分词",lexicalized,editorial_reviewed,retain_independent,错误的、误解的，具有形容词用法。,references/lexical.csv#cet4-w-85c297570918277162a6,2026-09-17
+cet4-w-402d1b7c42f48239e7fb,mounting,mount,listed_related,"n. 装备, 衬托纸, 舞台效果, 上马
+[化] 装配",lexicalized,editorial_reviewed,retain_independent,安装、支架等名词义，以及不断增加的形容词用法。,references/lexical.csv#cet4-w-402d1b7c42f48239e7fb,2026-09-17
+cet4-w-65cd27db40c741faafc8,networking,network,listed_related,"[计] 连网, 建网",lexicalized,editorial_reviewed,retain_independent,联网、建立人际联系，保留现代常用义。,references/lexical.csv#cet4-w-65cd27db40c741faafc8,2026-09-17
+cet4-w-f93105df517938a0619d,number,numb,headword,"n. 数, 数字, 数目, 号码
+vt. 数, 计算, 共计
+vi. 计算, 报数
+[计] 数字",false_lemma,editorial_reviewed,retain_independent,数字、数量的 number 不能归入 numb 的比较级。,references/lexical.csv#cet4-w-f93105df517938a0619d,2026-09-17
+cet4-w-0e3245882363cacf69bd,offering,offer,listed_related,"n. 提供, 奉献物, 牲礼, 上市的股票(或证券等)
+[经] 出售物",lexicalized,editorial_reviewed,retain_independent,供品、提供的产品等，指具体事物。,references/lexical.csv#cet4-w-0e3245882363cacf69bd,2026-09-17
+cet4-w-f72cca3b2235143e9d03,Olympics,olympic,listed_related,n. 奥林匹克运动会,lexicalized,editorial_reviewed,retain_independent,奥林匹克运动会，是固定赛事名称。,references/lexical.csv#cet4-w-f72cca3b2235143e9d03,2026-09-17
+cet4-w-6f96468bcfa4e49268b4,opening,open,listed_related,"n. 开始, 口子, 穴, 揭幕
+a. 开始的",lexicalized,editorial_reviewed,retain_independent,开口、开幕、空缺等独立名词义。,references/lexical.csv#cet4-w-6f96468bcfa4e49268b4,2026-09-17
+cet4-w-7019c7670baea72dd8b2,outing,out,headword,"n. 郊游, 远足
+a. 远足适用的",lexicalized,editorial_reviewed,retain_independent,郊游、短途出游，是活动名称。,references/lexical.csv#cet4-w-7019c7670baea72dd8b2,2026-09-17
+cet4-w-1fc7f87a2b99df359815,overwhelming,overwhelm,listed_related,"a. 压倒性的, 无法抵抗的",lexicalized,editorial_reviewed,retain_independent,压倒性的，描述力量或程度。,references/lexical.csv#cet4-w-1fc7f87a2b99df359815,2026-09-17
+cet4-w-09b98b780b69d7456e51,parking,park,listed_related,"n. 停车
+a. 停车的",lexicalized,editorial_reviewed,retain_independent,停车、停车位供给，是独立名词。,references/lexical.csv#cet4-w-09b98b780b69d7456e51,2026-09-17
+cet4-w-cf14b16e2aa42e145c80,planning,plan,listed_related,"n. 计划的制订, 策划, 设计, 规划
+[计] 计划, 规划",lexicalized,editorial_reviewed,retain_independent,规划、筹划，是独立名词。,references/lexical.csv#cet4-w-cf14b16e2aa42e145c80,2026-09-17
+cet4-w-de4e03339d4155a13802,pleasing,please,listed_related,"a. 令人喜爱的, 愉快的, 舒适的",lexicalized,editorial_reviewed,retain_independent,令人愉快的，描述引起的感受。,references/lexical.csv#cet4-w-de4e03339d4155a13802,2026-09-17
+cet4-w-d44565b061edfb27e665,politeness,politenes,listed_related,"n. 有礼, 优雅",false_lemma,editorial_reviewed,retain_independent,礼貌，是 polite 的派生名词；politenes 是错误的词形还原结果。,references/lexical.csv#cet4-w-d44565b061edfb27e665,2026-09-17
+cet4-w-95b78e9b109355167769,pressing,press,listed_related,"a. 紧迫的, 迫切的, 热切的
+n. 压, 压榨, 冲压件, 唱片",lexicalized,editorial_reviewed,retain_independent,紧迫的，描述问题或需求。,references/lexical.csv#cet4-w-95b78e9b109355167769,2026-09-17
+cet4-w-cdfde1df5e1179a4fb44,printing,print,listed_related,"n. 印刷, 印刷术, 印花
+[计] 打印; 印刷",lexicalized,editorial_reviewed,retain_independent,印刷、印刷业，是活动或行业名称。,references/lexical.csv#cet4-w-cdfde1df5e1179a4fb44,2026-09-17
+cet4-w-323389565a4034a1693f,privileged,privilege,listed_related,"a. 有特权的, 有特别恩典的
+[法] 特许的, 有特权的",lexicalized,editorial_reviewed,retain_independent,有特权的、荣幸的，具有形容词用法。,references/lexical.csv#cet4-w-323389565a4034a1693f,2026-09-17
+cet4-w-9bbbc863ffbfc0c56b8e,proceedings,proceeding,listed_related,"n. 诉讼, 事项, 行径, 事件, 活动, 项目, 会议录, 记录汇编, 活动记录",lexicalized,editorial_reviewed,retain_independent,会议记录、诉讼程序等固定复数名词义。,references/lexical.csv#cet4-w-9bbbc863ffbfc0c56b8e,2026-09-17
+cet4-w-a08b8537fe27627f9e7d,promising,promise,listed_related,"a. 有希望的, 前途有望的
+[经] 有希望的",lexicalized,editorial_reviewed,retain_independent,有前途的，描述发展潜力。,references/lexical.csv#cet4-w-a08b8537fe27627f9e7d,2026-09-17
+cet4-w-b7872938f182fd0b12b8,provided,provide,headword,"conj. 倘若, 以...为条件",lexicalized,editorial_reviewed,retain_independent,只要、假如，连词用法。,references/lexical.csv#cet4-w-b7872938f182fd0b12b8,2026-09-17
+cet4-w-701b71ee38626f22b48e,ragged,rag,listed_related,"a. 衣衫褴褛的, 参差不齐的, 不协调的, 粗糙的, 刺耳的",lexicalized,editorial_reviewed,retain_independent,破烂的、参差不齐的，具有稳定形容词义和独立读音。,references/lexical.csv#cet4-w-701b71ee38626f22b48e,2026-09-17
+cet4-w-bbcee9d758fc7ba7ca85,raging,rage,listed_related,"a. 愤怒的, 狂暴的, 猛烈的, 使极痛的",lexicalized,editorial_reviewed,retain_independent,猛烈的、肆虐的，描述火灾或风暴等。,references/lexical.csv#cet4-w-bbcee9d758fc7ba7ca85,2026-09-17
+cet4-w-8e092d36dd9f29cde1a0,rating,rate,listed_related,"n. 等级, 额定功率, 责骂
+[经] 等级评定",lexicalized,editorial_reviewed,retain_independent,等级、评级，是独立名词。,references/lexical.csv#cet4-w-8e092d36dd9f29cde1a0,2026-09-17
+cet4-w-5e7b1c4240dbdf224bcb,reading,read,listed_related,"n. 阅读, 知识, 读物
+a. 阅读的",lexicalized,editorial_reviewed,retain_independent,阅读、读数、理解方式等独立名词义。,references/lexical.csv#cet4-w-5e7b1c4240dbdf224bcb,2026-09-17
+cet4-w-fece2444728e443c8a70,recording,record,listed_related,"a. 记录的, 记录用的
+n. 录音",lexicalized,editorial_reviewed,retain_independent,录音、录像、录制品，指作品或活动。,references/lexical.csv#cet4-w-fece2444728e443c8a70,2026-09-17
+cet4-w-c60e3de80e1a5bbe8cf6,regarding,regard,headword,prep. 关于,lexicalized,editorial_reviewed,retain_independent,关于，介词用法。,references/lexical.csv#cet4-w-c60e3de80e1a5bbe8cf6,2026-09-17
+cet4-w-6576e7df405fb3e25628,rendering,render,listed_related,"n. 翻译, 表现, 描写, 表演, 打底, 透视图",lexicalized,editorial_reviewed,retain_independent,翻译、演绎、效果图等名词义。,references/lexical.csv#cet4-w-6576e7df405fb3e25628,2026-09-17
+cet4-w-fa0d2dceb9d415c4b7cc,reserved,reserve,listed_related,"a. 保留的, 预备的, 预定的, 腼腆的, 不露感情的, 含蓄的, 缄默的, 冷淡的
+[法] 用作储备的, 保留的, 预定的",lexicalized,editorial_reviewed,retain_independent,矜持的、寡言的，描述性格。,references/lexical.csv#cet4-w-fa0d2dceb9d415c4b7cc,2026-09-17
+cet4-w-97e0e1faf06411dcec55,retelling,retell,listed_related,"v. （以不同的方式或语言）复述, 重述( retell的现在分词 )",reference_corrected,editorial_reviewed,retain_independent,复述、改述的故事版本，保留名词义，不仅作为 retell 的现在分词。,https://www.collinsdictionary.com/dictionary/english/retelling,2026-09-17
+cet4-w-0e572aab150781d5b5cb,retired,retire,listed_related,"a. 隐退的, 退休的, 退役的
+[经] 退休的, 已收回的",lexicalized,editorial_reviewed,retain_independent,退休的，描述职业状态。,references/lexical.csv#cet4-w-0e572aab150781d5b5cb,2026-09-17
+cet4-w-7e3ba8452b09144ecc1f,rewarding,reward,listed_related,"a. 有益的, 有报酬的, 报答的",lexicalized,editorial_reviewed,retain_independent,值得做的、有益的，描述事情带来的满足或收益。,references/lexical.csv#cet4-w-7e3ba8452b09144ecc1f,2026-09-17
+cet4-w-9dc2588ece438925684c,rose,rise,headword,"n. 玫瑰, 蔷薇, 玫瑰色
+a. 玫瑰色的, 玫瑰花的
+vt. 使成玫瑰色
+rise的过去式",homograph,editorial_reviewed,retain_independent,玫瑰，是独立名词，不随 rise 的过去式删除。,references/lexical.csv#cet4-w-9dc2588ece438925684c,2026-09-17
+cet4-w-005ee7c36aef57ae0e19,ruling,rule,listed_related,"n. 判决, 裁定, 统治
+a. 统治的, 支配的, 普遍的",lexicalized,editorial_reviewed,retain_independent,裁决，以及执政的，具有独立词性义项。,references/lexical.csv#cet4-w-005ee7c36aef57ae0e19,2026-09-17
+cet4-w-08f39012c401499d185e,running,run,listed_related,"n. 赛跑, 流出, 运转
+a. 流动的, 跑着的, 连续的",lexicalized,editorial_reviewed,retain_independent,跑步、运营，以及连续的，具有独立词性义项。,references/lexical.csv#cet4-w-08f39012c401499d185e,2026-09-17
+cet4-w-babca14381e34b62ee9c,sailing,sail,listed_related,"n. 航行, 航海术, 启航
+a. 航行的",lexicalized,editorial_reviewed,retain_independent,帆船运动、航行，是活动名称。,references/lexical.csv#cet4-w-babca14381e34b62ee9c,2026-09-17
+cet4-w-2b6684347a3a0585dbbd,saving,save,listed_related,"n. 存款, 挽救, 节约
+a. 搭救的, 节约的, 保留的, 补偿的
+prep. 除...之外",lexicalized,editorial_reviewed,retain_independent,节省、节约额；另在本条说明 savings 的储蓄义。,references/lexical.csv#cet4-w-2b6684347a3a0585dbbd,2026-09-17
+cet4-w-fdca8fc7cc753500e42f,saying,say,listed_related,"n. 叙述, 话, 说, 言论",lexicalized,editorial_reviewed,retain_independent,谚语、格言，是独立名词。,references/lexical.csv#cet4-w-fdca8fc7cc753500e42f,2026-09-17
+cet4-w-ae070600afc484c4df96,schooling,school,listed_related,"n. 学校教育, 学费",lexicalized,editorial_reviewed,retain_independent,学校教育，是独立名词。,references/lexical.csv#cet4-w-ae070600afc484c4df96,2026-09-17
+cet4-w-1bfcee0d4724a27a7b27,seeming,seem,listed_related,"a. 表面上的
+n. 外观",lexicalized,editorial_reviewed,retain_independent,表面上的，描述外观与事实可能有别。,references/lexical.csv#cet4-w-1bfcee0d4724a27a7b27,2026-09-17
+cet4-w-891135dc3ae37e758465,serving,serve,listed_related,"n. 服务, 招待, 上菜, 一份食物",lexicalized,editorial_reviewed,retain_independent,一份食物，是可数名词。,references/lexical.csv#cet4-w-891135dc3ae37e758465,2026-09-17
+cet4-w-3bf09a6ce0bf8d60a851,setting,set,headword,"n. 环境, 背景, 布景, 镶嵌, 调整, 沉落, 一副餐具
+[计] 设置",lexicalized,editorial_reviewed,retain_independent,背景、环境、设置等独立名词义。,references/lexical.csv#cet4-w-3bf09a6ce0bf8d60a851,2026-09-17
+cet4-w-acc126bcf0120dcaaf3a,shipping,ship,listed_related,"n. 装运, 航行, 船舶, 船舶吨数
+[经] 装运, 运送, 海运",lexicalized,editorial_reviewed,retain_independent,航运、装运，是行业或活动名称。,references/lexical.csv#cet4-w-acc126bcf0120dcaaf3a,2026-09-17
+cet4-w-f9a4eb2d17e51e60f83d,shopping,shop,listed_related,"n. 买东西, 购物
+[经] 购物, 买东西",lexicalized,editorial_reviewed,retain_independent,购物，是活动名称。,references/lexical.csv#cet4-w-f9a4eb2d17e51e60f83d,2026-09-17
+cet4-w-2f4fc24309319a395a70,shot,shoot,headword,"n. 发射, 炮弹, 射击, 射手, 投篮, 射门, 子弹, 射程, 拍摄, 注射
+vt. 装弹, 使成颗粒状
+a. 杂色的, 交织着的, 渗透的, 点焊的, 破旧的
+shoot的过去式和过去分词",homograph,editorial_reviewed,retain_independent,射击、照片、注射等名词义，不随 shoot 的过去式删除。,references/lexical.csv#cet4-w-2f4fc24309319a395a70,2026-09-17
+cet4-w-b9798f7407880d66b604,sitting,sit,listed_related,"n. 入席, 就坐, 开庭, 孵卵
+a. 坐着的, 就座的, 在职的, 在孵卵中的, 易被击中的",lexicalized,editorial_reviewed,retain_independent,一次会议或就餐等，以及现任的，具有独立词性义项。,references/lexical.csv#cet4-w-b9798f7407880d66b604,2026-09-17
+cet4-w-e7ce0ecbbeea529183c9,skating,skate,listed_related,n. 溜冰,lexicalized,editorial_reviewed,retain_independent,滑冰，是运动名称。,references/lexical.csv#cet4-w-e7ce0ecbbeea529183c9,2026-09-17
+cet4-w-5cc2b7567ca4bf0e1083,skiing,ski,listed_related,"n. 滑雪运动, 滑雪术",lexicalized,editorial_reviewed,retain_independent,滑雪，是运动名称。,references/lexical.csv#cet4-w-5cc2b7567ca4bf0e1083,2026-09-17
+cet4-w-e929e3440d06630730f7,sophisticated,sophisticate,headword,"a. 复杂的, 久经世故的
+[法] 尖端的, 高级的, 非常有经验的",lexicalized,editorial_reviewed,retain_independent,复杂精密的、老练的，具有稳定形容词义。,references/lexical.csv#cet4-w-e929e3440d06630730f7,2026-09-17
+cet4-w-315bfab2a365e3499853,speeding,speed,listed_related,n. 超速行驶,lexicalized,editorial_reviewed,retain_independent,超速驾驶，指特定行为。,references/lexical.csv#cet4-w-315bfab2a365e3499853,2026-09-17
+cet4-w-3781d579d7ca26c86353,spelling,spell,listed_related,"n. 拼, 拼字, 拼法
+[计] 拼写检查",lexicalized,editorial_reviewed,retain_independent,拼写、拼法，是独立名词。,references/lexical.csv#cet4-w-3781d579d7ca26c86353,2026-09-17
+cet4-w-7be262e604b319fe2979,spending,spend,listed_related,"n. 经费, 开销
+[经] 开支, 开销, 经费",lexicalized,editorial_reviewed,retain_independent,支出、开销，是独立名词。,references/lexical.csv#cet4-w-7be262e604b319fe2979,2026-09-17
+cet4-w-d99924a7fc8f817edf74,stocking,stock,headword,"n. 长袜
+[医] 马足水肿; 长袜",homograph,editorial_reviewed,retain_independent,长袜，是具体物品，不按 stock 的动作变化归并。,references/lexical.csv#cet4-w-d99924a7fc8f817edf74,2026-09-17
+cet4-w-7f00452678ca71c44ec1,stranger,strange,listed_related,"n. 陌生人, 门外汉
+[法] 局外人, 非当事人, 第三者",false_lemma,editorial_reviewed,retain_independent,陌生人，是 strange 的派生名词；不能仅当作比较级。,references/lexical.csv#cet4-w-7f00452678ca71c44ec1,2026-09-17
+cet4-w-f06f260cece268d9f507,striking,strike,listed_related,"a. 醒目的, 惊人的, 打击的, 罢工的
+[法] 罢工的, 罢市的, 罢课的",lexicalized,editorial_reviewed,retain_independent,显著的、引人注目的，具有稳定形容词义。,references/lexical.csv#cet4-w-f06f260cece268d9f507,2026-09-17
+cet4-w-502cf4381edf771eb373,stuffing,stuff,listed_related,"n. 填塞物, 填料",lexicalized,editorial_reviewed,retain_independent,填充物、馅料，指具体事物。,references/lexical.csv#cet4-w-502cf4381edf771eb373,2026-09-17
+cet4-w-97f7bb333809b418be8f,suffering,suffer,listed_related,"n. 苦难, 受苦",lexicalized,editorial_reviewed,retain_independent,痛苦、苦难，是独立名词。,references/lexical.csv#cet4-w-97f7bb333809b418be8f,2026-09-17
+cet4-w-c84b9e78282a281845c7,surfing,surf,listed_related,n. 冲浪运动,lexicalized,editorial_reviewed,retain_independent,冲浪，是运动名称。,references/lexical.csv#cet4-w-c84b9e78282a281845c7,2026-09-17
+cet4-w-701b76d45f89927d858d,swimming,swim,listed_related,"n. 游泳, 眩晕",lexicalized,editorial_reviewed,retain_independent,游泳，是运动名称。,references/lexical.csv#cet4-w-701b76d45f89927d858d,2026-09-17
+cet4-w-990b97c678979a6f6a61,teaching,teach,listed_related,"n. 教学, 学说, 教导",lexicalized,editorial_reviewed,retain_independent,教学、教导、学说，具有独立名词义。,references/lexical.csv#cet4-w-990b97c678979a6f6a61,2026-09-17
+cet4-w-8bfadd7cae14b621f539,telecommunications,telecommunication,headword,"n. 电信, 通讯, 电信学
+[电] 电通信",syllabus_form,editorial_reviewed,retain_independent,电信、电信业，考纲采用此复数形式，当前目标表不重复收录单数。,references/lexical.csv#cet4-w-8bfadd7cae14b621f539,2026-09-17
+cet4-w-58042fc06554df5e5293,telling,tell,listed_related,"a. 有效的, 显著的, 显露内心活动的",lexicalized,editorial_reviewed,retain_independent,说明问题的、有力的，保留形容词义。,references/lexical.csv#cet4-w-58042fc06554df5e5293,2026-09-17
+cet4-w-ce7200f93e523c89dc74,thinking,think,listed_related,"n. 思考, 思想
+a. 思考的, 有理性的",lexicalized,editorial_reviewed,retain_independent,思考、看法，具有独立名词义。,references/lexical.csv#cet4-w-ce7200f93e523c89dc74,2026-09-17
+cet4-w-b91ac6e53938cb55a6fc,thought,think,headword,"n. 想法, 思想, 思维, 关心, 挂念
+think的过去式和过去分词",lexicalized,editorial_reviewed,retain_independent,想法、思想，不能只当作 think 的过去式。,references/lexical.csv#cet4-w-b91ac6e53938cb55a6fc,2026-09-17
+cet4-w-f0815fe27096e2f84d38,tiring,tire,listed_related,"a. 引起疲劳的, 累人的
+[医] 轮箍术(髌骨骨折时)",lexicalized,editorial_reviewed,retain_independent,累人的，描述引起的感受。,references/lexical.csv#cet4-w-f0815fe27096e2f84d38,2026-09-17
+cet4-w-fc8a3a3f8bd8974e993e,trying,try,listed_related,"a. 难受的, 难堪的
+[法] 裁决, 审判, 审理; 使人痛苦的, 难堪的, 难处的",lexicalized,editorial_reviewed,retain_independent,令人厌烦的、难对付的，描述经历或处境。,references/lexical.csv#cet4-w-fc8a3a3f8bd8974e993e,2026-09-17
+cet4-w-099347927fe93ee06f5c,underdeveloped,underdevelop,headword,"a. 开发不充分的, 不发达的, 发育不全的",lexicalized,editorial_reviewed,retain_independent,不发达的、发育不足的，具有稳定形容词义。,references/lexical.csv#cet4-w-099347927fe93ee06f5c,2026-09-17
+cet4-w-76965f1198a21f2bd900,understanding,understand,listed_related,"n. 理解, 谅解
+[法] 协商, 协议, 谅解",lexicalized,editorial_reviewed,retain_independent,理解、谅解，以及体谅人的，具有独立词性义项。,references/lexical.csv#cet4-w-76965f1198a21f2bd900,2026-09-17
+cet4-w-31da33cd78d42adb2c9c,undertaking,undertake,listed_related,"n. 事业, 企业, 保证
+[经] 企业, 事业, 承担",lexicalized,editorial_reviewed,retain_independent,任务、事业、承诺，是独立名词。,references/lexical.csv#cet4-w-31da33cd78d42adb2c9c,2026-09-17
+cet4-w-fdd28331f9b6ef98b09e,used,use,headword,"a. 使用过的, 二手的, 习惯的",lexicalized,editorial_reviewed,retain_independent,二手的，以及 be used to 的习惯表达。,references/lexical.csv#cet4-w-fdd28331f9b6ef98b09e,2026-09-17
+cet4-w-cf5847909ba151b9d350,warning,warn,listed_related,"n. 警告, 预告, 预兆, 通知
+[法] 警告, 警戒, 预告; 警告的, 注意的",lexicalized,editorial_reviewed,retain_independent,警告、警报，是独立名词。,references/lexical.csv#cet4-w-cf5847909ba151b9d350,2026-09-17
+cet4-w-fa39d587b5e5e23941e4,washing,wash,listed_related,"n. 洗涤, 浸, 洗涤物
+[机] 涂浆, 洗涤",lexicalized,editorial_reviewed,retain_independent,洗涤、待洗或已洗的衣物，是独立名词。,references/lexical.csv#cet4-w-fa39d587b5e5e23941e4,2026-09-17
+cet4-w-a9f107e38ed6f77a2a1d,weed,wee,headword,"n. 杂草, 野草
+vi. 除草
+vt. 除...的草, 剔除",false_lemma,editorial_reviewed,retain_independent,杂草、除草的 weed 不能归入 wee 的变化。,references/lexical.csv#cet4-w-a9f107e38ed6f77a2a1d,2026-09-17
+cet4-w-0bbe3441b4e6dd3efb1a,worried,worry,listed_related,"a. 担心的, 闷闷不乐的",lexicalized,editorial_reviewed,retain_independent,担心的，描述人的状态。,references/lexical.csv#cet4-w-0bbe3441b4e6dd3efb1a,2026-09-17
+cet4-w-ea3e14790fcbd319e152,worse,bad,headword,"n. 更坏的事, 更恶劣的事, 败局
+a. 更坏的, 更恶劣的
+adv. 更坏地, 更恶劣地",irregular_comparison,editorial_reviewed,retain_independent,大纲单列的不规则比较级；保留更坏的、更坏地，关联 bad。,references/lexical.csv#cet4-w-ea3e14790fcbd319e152,2026-09-17
+cet4-w-0a4f39e1d308f06ecf92,worst,bad,headword,"n. 最坏, 最坏的时候
+a. 最坏的, 最恶劣的, 最不利的
+adv. 最坏, 最糟",irregular_comparison,editorial_reviewed,retain_independent,大纲单列的不规则最高级；保留最坏的、最坏情况，关联 bad。,references/lexical.csv#cet4-w-0a4f39e1d308f06ecf92,2026-09-17
+cet4-w-dc0fa9f48ef0d6abdcd0,wound,wind,headword,"n. 创伤, 伤口, 伤疤, 伤害, 痛苦
+vt. 伤害, 损害, 使受伤
+vi. 打伤, 伤害
+wind的过去式和过去分词",homograph,editorial_reviewed,retain_independent,伤口、使受伤，与 wind 的过去式读音义项有别。,references/lexical.csv#cet4-w-dc0fa9f48ef0d6abdcd0,2026-09-17
+cet4-w-ca63dc7b2e8b33628ab5,wrapping,wrap,listed_related,"n. 用于包裹的材料
+[计] 绕接",lexicalized,editorial_reviewed,retain_independent,包装材料、包装纸，指具体物品。,references/lexical.csv#cet4-w-ca63dc7b2e8b33628ab5,2026-09-17
+cet4-w-d9a23f011e913b6ec7c5,writing,write,listed_related,"n. 书写, 著作, 笔迹, 作品
+[医] 书写",lexicalized,editorial_reviewed,retain_independent,写作、文字、作品，具有独立名词义。,references/lexical.csv#cet4-w-d9a23f011e913b6ec7c5,2026-09-17

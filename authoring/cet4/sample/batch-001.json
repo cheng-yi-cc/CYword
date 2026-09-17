@@ -1,0 +1,1164 @@
+{
+  "batchId": "cet4-s2-b001",
+  "stage": 2,
+  "status": "reviewed",
+  "reviewer": "codex_second_pass",
+  "reviewedAt": "2026-09-17",
+  "entries": [
+    {
+      "wordId": "cet4-w-dcc6b6de5d3f3f80ff02",
+      "wordOrder": 72,
+      "spelling": "act",
+      "variants": [],
+      "pronunciation": "/ækt/",
+      "definitionCn": "v. 行动；表现；扮演。n. 行为；法案；一幕。",
+      "memoryMarkup": "导演一喊“Action!”，演员立刻推门进场。act 就抓住这一下“做起来”的动作，放到舞台上是表演，放到生活里是行动。",
+      "etymologyMarkup": "[[morph:root:la:act:do|act]] 源自表示“做、驱动”的拉丁词干；名词与动词都围绕“做”展开。",
+      "rootAffixNotes": "act 可作动词或名词。act as 表示“担任；起……作用”，act on 表示“根据……采取行动”。",
+      "rootAffixAccumulation": "同族：[[word:action|action]]、[[word:active|active]]、[[word:actor|actor]]、[[word:react|react]]。",
+      "morphemes": [
+        {
+          "key": "morph:root:la:act:do",
+          "spelling": "act",
+          "memoryMethod": "抓住“做、行动”这一核心，不把 act 机械对应成单一中文词。"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "We must act before the small leak becomes a serious problem.",
+          "translation": "我们必须在小泄漏变成严重问题之前采取行动。",
+          "matchedSurface": "act",
+          "contextExplanation": "情境是及时处理风险，act 表示采取行动。",
+          "difficultyRationale": "before 引导时间从句，句意清楚。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "act on advice",
+          "meaning": "听取建议并采取行动",
+          "example": "The team acted on the engineer's advice immediately."
+        }
+      ],
+      "relations": [
+        {
+          "type": "derivative",
+          "words": [
+            {
+              "spelling": "action",
+              "displayText": "action 行动；措施",
+              "meaning": "act 的名词派生词"
+            },
+            {
+              "spelling": "active",
+              "displayText": "active 积极的；活跃的",
+              "meaning": "act 的形容词派生词"
+            },
+            {
+              "spelling": "actor",
+              "displayText": "actor 演员",
+              "meaning": "表示行动或表演者的派生词"
+            }
+          ]
+        }
+      ],
+      "longSentences": [
+        {
+          "sentence": "Although the alarm sounded before dawn, the guard acted at once and led every visitor to safety.",
+          "translation": "尽管警报在黎明前响起，警卫仍立即采取行动，把每位访客带到了安全地带。",
+          "difficultyBand": "四级中等",
+          "sentenceDifficulty": "cet4_standard",
+          "targetSurface": "acted",
+          "targetSense": "采取行动",
+          "targetSegment": 2,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "让步状语从句",
+              "text": "Although the alarm sounded before dawn, ",
+              "gloss": "尽管警报在黎明前响起",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "subj",
+              "roleLabel": "主语",
+              "text": "the guard",
+              "gloss": "警卫",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "pred",
+              "roleLabel": "并列谓语",
+              "text": " acted at once and led every visitor to safety.",
+              "gloss": "立即行动并把所有访客带到安全地带",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "主干",
+              "keyword": "Although 与并列谓语",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "Although 引导让步背景；主句主语是 the guard，acted 与 led 是两个并列谓语。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "目标词",
+              "keyword": "acted at once",
+              "refs": [
+                2
+              ],
+              "analysisText": "act 在这里不是“表演”，而是面对警报立即采取行动；at once 强化紧迫性。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-act",
+        "ev-edit-b001",
+        "ev-etym-act"
+      ]
+    },
+    {
+      "wordId": "cet4-w-b4e76965b5a7943279ac",
+      "wordOrder": 74,
+      "spelling": "action",
+      "variants": [],
+      "pronunciation": "/ˈækʃən/",
+      "definitionCn": "n. 行动；措施；行为；作用。",
+      "memoryMarkup": "计划写满了三页，人却还坐着。等你合上本子去办第一件事，才有了 action。[[word:act|act]] 是动手做，action 是拿出来的行动。",
+      "etymologyMarkup": "[[morph:root:la:act:do|act]]（做）+ [[morph:suffix:la:-ion:action_noun|-ion]]（动作或过程名词）→ 行动、行为。",
+      "rootAffixNotes": "常见结构 take action to do sth.；action 作不可数名词时强调行动这一过程。",
+      "rootAffixAccumulation": "-ion 常把动词概念转为动作、过程或结果名词。",
+      "morphemes": [
+        {
+          "key": "morph:root:la:act:do",
+          "spelling": "act"
+        },
+        {
+          "key": "morph:suffix:la:-ion:action_noun",
+          "spelling": "-ion"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "Quick action prevented the fire from spreading upstairs.",
+          "translation": "迅速采取行动阻止了火势向楼上蔓延。",
+          "matchedSurface": "action",
+          "contextExplanation": "action 表示应对火情的实际行动。",
+          "difficultyRationale": "prevent ... from doing 是四级常见结构。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "take action",
+          "meaning": "采取行动",
+          "example": "Local residents took action to protect the wetland."
+        }
+      ],
+      "relations": [
+        {
+          "type": "derivative",
+          "words": [
+            {
+              "spelling": "act",
+              "displayText": "act 行动",
+              "meaning": "对应的基础动词和名词"
+            }
+          ]
+        }
+      ],
+      "longSentences": [
+        {
+          "sentence": "Because repeated warnings had been ignored, the committee demanded immediate action to protect the river.",
+          "translation": "由于一再发出的警告都被忽视，委员会要求立即采取行动保护这条河。",
+          "difficultyBand": "四级中等",
+          "sentenceDifficulty": "cet4_standard",
+          "targetSurface": "action",
+          "targetSense": "行动；措施",
+          "targetSegment": 2,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "原因状语从句",
+              "text": "Because repeated warnings had been ignored, ",
+              "gloss": "由于一再发出的警告都被忽视",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "subj",
+              "roleLabel": "主语",
+              "text": "the committee",
+              "gloss": "委员会",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "pred",
+              "roleLabel": "谓语和宾语",
+              "text": " demanded immediate action to protect the river.",
+              "gloss": "要求立即采取行动保护河流",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "因果",
+              "keyword": "Because",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "Because 从句交代委员会提出要求的原因，主句核心是 the committee demanded action。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "搭配",
+              "keyword": "immediate action",
+              "refs": [
+                2
+              ],
+              "analysisText": "action 是不可数的行动概念；immediate 说明行动不能拖延，后面的不定式说明目的。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-action",
+        "ev-edit-b001",
+        "ev-etym-act"
+      ]
+    },
+    {
+      "wordId": "cet4-w-560e8b954a1a6e8c9768",
+      "wordOrder": 75,
+      "spelling": "active",
+      "variants": [],
+      "pronunciation": "/ˈæktɪv/",
+      "definitionCn": "adj. 积极的；活跃的；在运作的。",
+      "memoryMarkup": "聚餐还没定地方，他已经问好人数、订好桌了。这个总能先行动起来的人很 active。抓住 [[word:act|act]] 的“做”，记住积极、活跃的样子。",
+      "etymologyMarkup": "[[morph:root:la:act:do|act]]（做、行动）+ [[morph:suffix:la:-ive:adjective_tendency|-ive]]（具有……性质的）→ 活跃的、主动的。",
+      "rootAffixNotes": "active 可描述人、生活方式、组织或设备；be active in 表示积极参与某领域。",
+      "rootAffixAccumulation": "名词 [[word:activity|activity]] 表示活动或活跃状态。",
+      "morphemes": [
+        {
+          "key": "morph:root:la:act:do",
+          "spelling": "act"
+        },
+        {
+          "key": "morph:suffix:la:-ive:adjective_tendency",
+          "spelling": "-ive"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "She remains active in several student clubs.",
+          "translation": "她仍积极参加几个学生社团。",
+          "matchedSurface": "active",
+          "contextExplanation": "active 描写持续参与社团活动。",
+          "difficultyRationale": "remain 加形容词作表语。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "play an active role",
+          "meaning": "发挥积极作用",
+          "example": "Young volunteers played an active role in the survey."
+        }
+      ],
+      "relations": [
+        {
+          "type": "derivative",
+          "words": [
+            {
+              "spelling": "activity",
+              "displayText": "activity 活动",
+              "meaning": "active 对应的名词派生词"
+            }
+          ]
+        }
+      ],
+      "longSentences": [
+        {
+          "sentence": "Students who stay active outside class often develop skills that cannot be learned from textbooks alone.",
+          "translation": "课外保持活跃的学生，往往会培养出仅靠课本无法学到的能力。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "active",
+          "targetSense": "活跃的；积极参与的",
+          "targetSegment": 1,
+          "segments": [
+            {
+              "role": "subj",
+              "roleLabel": "主语中心词",
+              "text": "Students",
+              "gloss": "学生",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "attr",
+              "roleLabel": "定语从句",
+              "text": " who stay active outside class",
+              "gloss": "课外保持活跃的",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "pred",
+              "roleLabel": "谓语和宾语",
+              "text": " often develop skills that cannot be learned from textbooks alone.",
+              "gloss": "往往培养出仅靠课本无法学到的能力",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "双层定语",
+              "keyword": "who 与 that",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "who 从句修饰 Students；that 从句嵌在宾语 skills 后，说明这些能力的性质。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "表语",
+              "keyword": "stay active",
+              "refs": [
+                1
+              ],
+              "analysisText": "stay 是系动词，active 作表语，表示持续处于积极参与的状态。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-active",
+        "ev-edit-b001",
+        "ev-etym-act"
+      ]
+    },
+    {
+      "wordId": "cet4-w-4ced4a567905ee623d9d",
+      "wordOrder": 77,
+      "spelling": "activity",
+      "variants": [],
+      "pronunciation": "/ækˈtɪvəti/",
+      "definitionCn": "n. 活动；活跃；活动量。",
+      "memoryMarkup": "周末群里突然热闹起来，约球的、爬山的都在报名。让大家从 [[word:active|active]] 的活跃状态里忙起来的一件件事，就是 activities；单数写 activity。",
+      "etymologyMarkup": "[[morph:root:la:act:do|act]]（行动）+ [[morph:suffix:la:-ive:adjective_tendency|-ive]] + [[morph:suffix:la:-ity:abstract_quality|-ity]]（状态）→ 活动或活跃状态。",
+      "rootAffixNotes": "activity 可数时是一项活动；表示某地或系统中的活动状况时可作不可数名词。",
+      "rootAffixAccumulation": "active → activity 时重音后移，拼写保留 activ- 再接 -ity。",
+      "morphemes": [
+        {
+          "key": "morph:root:la:act:do",
+          "spelling": "act"
+        },
+        {
+          "key": "morph:suffix:la:-ive:adjective_tendency",
+          "spelling": "-ive"
+        },
+        {
+          "key": "morph:suffix:la:-ity:abstract_quality",
+          "spelling": "-ity"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "Reading is a quiet activity that can reduce stress.",
+          "translation": "阅读是一项能够减轻压力的安静活动。",
+          "matchedSurface": "activity",
+          "contextExplanation": "activity 是可数名词，指阅读这一活动。",
+          "difficultyRationale": "that 从句修饰 activity。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "physical activity",
+          "meaning": "体育活动；身体活动",
+          "example": "Regular physical activity can improve sleep."
+        }
+      ],
+      "relations": [
+        {
+          "type": "derivative",
+          "words": [
+            {
+              "spelling": "active",
+              "displayText": "active 活跃的",
+              "meaning": "activity 对应的形容词"
+            }
+          ]
+        }
+      ],
+      "longSentences": [
+        {
+          "sentence": "While online activity makes information easier to share, it can also expose careless users to unnecessary risks.",
+          "translation": "网络活动虽然让信息更易分享，却也可能使粗心的用户面临不必要的风险。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "activity",
+          "targetSense": "活动；行为",
+          "targetSegment": 0,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "让步状语从句",
+              "text": "While online activity makes information easier to share, ",
+              "gloss": "网络活动虽然让信息更易分享",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "subj",
+              "roleLabel": "主语",
+              "text": "it",
+              "gloss": "它，即网络活动",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "pred",
+              "roleLabel": "谓语和宾语补足结构",
+              "text": " can also expose careless users to unnecessary risks.",
+              "gloss": "也可能使粗心用户面临不必要的风险",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "让步与指代",
+              "keyword": "While ... it",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "While 表示让步；主句 it 回指 online activity，主句说明其另一面影响。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "名词修饰",
+              "keyword": "online activity",
+              "refs": [
+                0
+              ],
+              "analysisText": "online 限定 activity 的范围，指在线上的活动或行为，而不是“活跃程度”。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-activity",
+        "ev-edit-b001",
+        "ev-etym-act"
+      ]
+    },
+    {
+      "wordId": "cet4-w-45384c5a5727e65aeb71",
+      "wordOrder": 78,
+      "spelling": "actor",
+      "variants": [],
+      "pronunciation": "/ˈæktə(r)/",
+      "definitionCn": "n. 演员；行动者；参与者。",
+      "memoryMarkup": "同一个人，刚才还是笑着聊天的同学，幕布一拉开就成了国王。他在 [[word:act|act]]，他的身份就是 actor。词尾 [[morph:suffix:la:-or:agent|-or]] 把动作接到了做这件事的人身上。",
+      "etymologyMarkup": "[[morph:root:la:act:do|act]]（做、表演）+ [[morph:suffix:la:-or:agent|-or]]（做事者）→ 演员或行动参与者。",
+      "rootAffixNotes": "日常最常见义是演员；正式语境中也可指在事件中发挥作用的个人或组织。",
+      "rootAffixAccumulation": "-or 还见于表示执行者的词，但不能仅凭结尾判断词源。",
+      "morphemes": [
+        {
+          "key": "morph:root:la:act:do",
+          "spelling": "act"
+        },
+        {
+          "key": "morph:suffix:la:-or:agent",
+          "spelling": "-or"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "The young actor learned every line before the first rehearsal.",
+          "translation": "这位年轻演员在第一次排练前就记住了所有台词。",
+          "matchedSurface": "actor",
+          "contextExplanation": "actor 指参加戏剧表演的人。",
+          "difficultyRationale": "before 引导时间短语，词义直接。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "a leading actor",
+          "meaning": "主演；主要演员",
+          "example": "The leading actor answered questions after the film."
+        }
+      ],
+      "relations": [
+        {
+          "type": "derivative",
+          "words": [
+            {
+              "spelling": "act",
+              "displayText": "act 表演；行动",
+              "meaning": "actor 的基础词"
+            }
+          ]
+        }
+      ],
+      "longSentences": [
+        {
+          "sentence": "Although the actor had only a minor role, his calm performance gave the final scene unexpected emotional weight.",
+          "translation": "尽管这位演员只有一个小角色，他沉稳的表演却给最后一幕增添了意外的情感分量。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "actor",
+          "targetSense": "演员",
+          "targetSegment": 0,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "让步状语从句",
+              "text": "Although the actor had only a minor role, ",
+              "gloss": "尽管这位演员只有一个小角色",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "subj",
+              "roleLabel": "主语",
+              "text": "his calm performance",
+              "gloss": "他沉稳的表演",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "pred",
+              "roleLabel": "谓语和双宾语式结构",
+              "text": " gave the final scene unexpected emotional weight.",
+              "gloss": "给最后一幕增添了意外的情感分量",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "让步",
+              "keyword": "Although",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "从句中的小角色与主句产生的强烈效果形成让步对照。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "人物名词",
+              "keyword": "the actor",
+              "refs": [
+                0
+              ],
+              "analysisText": "actor 明确指演员；role 和 performance 提供了表演语境。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-actor",
+        "ev-edit-b001",
+        "ev-etym-act"
+      ]
+    },
+    {
+      "wordId": "cet4-w-25dfe87120b7c0b3f123",
+      "wordOrder": 4489,
+      "spelling": "react",
+      "variants": [],
+      "pronunciation": "/riˈækt/",
+      "definitionCn": "v. 作出反应；回应；发生化学反应。",
+      "memoryMarkup": "有人突然在你背后拍手，你“啊”一声转过头来。外面先有一下刺激，你跟着作出动作，这个“回应一下”就是 react。[[word:act|act]] 前面添 re-，把注意力放在反应上。",
+      "etymologyMarkup": "[[morph:prefix:la:re-:back_again|re-]]（回、再）+ [[morph:root:la:act:do|act]]（行动）→ 回应、作出反应。",
+      "rootAffixNotes": "react to 后接引发反应的人或事；化学语境常用 react with。",
+      "rootAffixAccumulation": "re- 在 react 中表示回应性的“回”，不是简单重复动作。",
+      "morphemes": [
+        {
+          "key": "morph:prefix:la:re-:back_again",
+          "spelling": "re-"
+        },
+        {
+          "key": "morph:root:la:act:do",
+          "spelling": "act"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "People react differently to sudden changes.",
+          "translation": "人们对突如其来的变化反应不同。",
+          "matchedSurface": "react",
+          "contextExplanation": "react to 表示对变化作出反应。",
+          "difficultyRationale": "副词 differently 说明反应方式。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "react to pressure",
+          "meaning": "应对压力；对压力作出反应",
+          "example": "Some people react to pressure by working faster."
+        }
+      ],
+      "relations": [],
+      "longSentences": [
+        {
+          "sentence": "When customers react negatively to a new service, managers should examine the cause before changing the entire plan.",
+          "translation": "当顾客对一项新服务作出负面反应时，管理者应先查明原因，再改变整个计划。",
+          "difficultyBand": "四级中等",
+          "sentenceDifficulty": "cet4_standard",
+          "targetSurface": "react",
+          "targetSense": "作出反应",
+          "targetSegment": 0,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "时间状语从句",
+              "text": "When customers react negatively to a new service, ",
+              "gloss": "当顾客对新服务作出负面反应时",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "subj",
+              "roleLabel": "主语",
+              "text": "managers",
+              "gloss": "管理者",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "pred",
+              "roleLabel": "谓语和时间顺序",
+              "text": " should examine the cause before changing the entire plan.",
+              "gloss": "应在改变整个计划前查明原因",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "时间层次",
+              "keyword": "When 与 before",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "When 从句设置情形，before doing 规定主句动作的先后顺序。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "介词搭配",
+              "keyword": "react negatively to",
+              "refs": [
+                0
+              ],
+              "analysisText": "react to 指对某事作出反应；negatively 说明反应是负面的。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-react",
+        "ev-edit-b001",
+        "ev-etym-act"
+      ]
+    },
+    {
+      "wordId": "cet4-w-4336a9e7fc5d08328b8e",
+      "wordOrder": 4,
+      "spelling": "able",
+      "variants": [],
+      "pronunciation": "/ˈeɪbəl/",
+      "definitionCn": "adj. 能够的；有能力的；能干的。",
+      "memoryMarkup": "瓶盖太紧，几个人轮着拧都没开。你接过来一拧，开了。I am able to open it，这里的 able 就是“能办到”。",
+      "etymologyMarkup": "把 [[morph:base:en:able:capable|able]] 作为现代英语词基整体掌握，表示有能力或有条件完成某事。",
+      "rootAffixNotes": "be able to do 可用于 can 不便使用的时态；able 单独修饰人时还可表示能干的。",
+      "rootAffixAccumulation": "词族：[[word:ability|ability]]、[[word:enable|enable]]、[[word:disable|disable]]。",
+      "morphemes": [
+        {
+          "key": "morph:base:en:able:capable",
+          "spelling": "able"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "With a clear map, we were able to find the village before dark.",
+          "translation": "有了清晰的地图，我们得以在天黑前找到那个村庄。",
+          "matchedSurface": "able",
+          "contextExplanation": "were able to 表示在特定条件下成功做到。",
+          "difficultyRationale": "介词短语先交代条件。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "be able to do something",
+          "meaning": "能够做某事",
+          "example": "You will be able to download the file after signing in."
+        }
+      ],
+      "relations": [
+        {
+          "type": "derivative",
+          "words": [
+            {
+              "spelling": "ability",
+              "displayText": "ability 能力",
+              "meaning": "able 对应的名词"
+            },
+            {
+              "spelling": "enable",
+              "displayText": "enable 使能够",
+              "meaning": "en- 加 able 构成的动词"
+            },
+            {
+              "spelling": "disable",
+              "displayText": "disable 使失去能力；禁用",
+              "meaning": "dis- 加 able 构成的动词"
+            }
+          ]
+        }
+      ],
+      "longSentences": [
+        {
+          "sentence": "By comparing several sources, readers are better able to recognize claims that lack reliable evidence.",
+          "translation": "通过比较多个来源，读者能更好地识别缺乏可靠证据的说法。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "able",
+          "targetSense": "能够的",
+          "targetSegment": 1,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "方式状语",
+              "text": "By comparing several sources, ",
+              "gloss": "通过比较多个来源",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "pred",
+              "roleLabel": "主句主干",
+              "text": "readers are better able to recognize claims",
+              "gloss": "读者能更好地识别各种说法",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "attr",
+              "roleLabel": "定语从句",
+              "text": " that lack reliable evidence.",
+              "gloss": "缺乏可靠证据的",
+              "level": 1,
+              "spine": false
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "方式与定语",
+              "keyword": "By doing 与 that",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "By doing 说明实现能力提升的方法；that 从句限定 claims。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "比较结构",
+              "keyword": "better able to",
+              "refs": [
+                1
+              ],
+              "analysisText": "better 修饰 able，表示与原先相比更有能力做某事。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-able",
+        "ev-edit-b001",
+        "ev-etym-able"
+      ]
+    },
+    {
+      "wordId": "cet4-w-798668299e6f528c3725",
+      "wordOrder": 3,
+      "spelling": "ability",
+      "variants": [],
+      "pronunciation": "/əˈbɪləti/",
+      "definitionCn": "n. 能力；本领；才能。",
+      "memoryMarkup": "同一只紧瓶盖，别人打不开，你能打开。[[word:able|able]] 说你能做到，ability 则把那份本事单独拎出来说。换成游泳、解题，也是同一个意思。",
+      "etymologyMarkup": "[[morph:base:en:able:capable|abil(e)]]（能够的）+ [[morph:suffix:la:-ity:abstract_quality|-ity]]（性质、状态）→ 能力。",
+      "rootAffixNotes": "ability to do sth. 表示做某事的能力；表示不同方面的才干时可用复数 abilities。",
+      "rootAffixAccumulation": "able 接 -ity 时表面形式变为 abil-，属于同一词基的拼写变化。",
+      "morphemes": [
+        {
+          "key": "morph:base:en:able:capable",
+          "spelling": "abil"
+        },
+        {
+          "key": "morph:suffix:la:-ity:abstract_quality",
+          "spelling": "-ity"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "Her ability to explain difficult ideas impressed the interviewers.",
+          "translation": "她解释复杂观点的能力给面试官留下了深刻印象。",
+          "matchedSurface": "ability",
+          "contextExplanation": "ability 后用不定式说明具体能力。",
+          "difficultyRationale": "to explain 作后置说明。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "the ability to learn",
+          "meaning": "学习能力",
+          "example": "Curiosity strengthens a child's ability to learn."
+        }
+      ],
+      "relations": [
+        {
+          "type": "derivative",
+          "words": [
+            {
+              "spelling": "able",
+              "displayText": "able 能够的",
+              "meaning": "ability 对应的形容词"
+            }
+          ]
+        }
+      ],
+      "longSentences": [
+        {
+          "sentence": "A student's ability to question familiar ideas often matters more than the number of facts that can be memorized.",
+          "translation": "学生质疑熟悉观点的能力，往往比能够记住多少事实更重要。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "ability",
+          "targetSense": "能力",
+          "targetSegment": 0,
+          "segments": [
+            {
+              "role": "subj",
+              "roleLabel": "扩展主语",
+              "text": "A student's ability to question familiar ideas",
+              "gloss": "学生质疑熟悉观点的能力",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "pred",
+              "roleLabel": "比较谓语",
+              "text": " often matters more than the number of facts",
+              "gloss": "往往比事实的数量更重要",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "attr",
+              "roleLabel": "定语从句",
+              "text": " that can be memorized.",
+              "gloss": "能够被记住的",
+              "level": 1,
+              "spine": false
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "比较主干",
+              "keyword": "matters more than",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "主干比较 ability 与 the number；that 从句只修饰 facts。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "后置不定式",
+              "keyword": "ability to question",
+              "refs": [
+                0
+              ],
+              "analysisText": "to question 具体说明是哪一种能力，question 在这里作动词“质疑”。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-ability",
+        "ev-edit-b001",
+        "ev-etym-able"
+      ]
+    },
+    {
+      "wordId": "cet4-w-c87b5d351d670ef64440",
+      "wordOrder": 1894,
+      "spelling": "enable",
+      "variants": [],
+      "pronunciation": "/ɪˈneɪbəl/",
+      "definitionCn": "v. 使能够；使成为可能；启用。",
+      "memoryMarkup": "轮椅在台阶前停住，门口加了一道坡道，人就能自己进去了。这个“让原本做不到的人变得 [[word:able|able]]”的变化，就是 enable。",
+      "etymologyMarkup": "[[morph:prefix:fr:en-:make_cause|en-]]（使）+ [[morph:base:en:able:capable|able]]（能够的）→ 使能够。",
+      "rootAffixNotes": "enable sb. to do sth. 是核心结构；技术语境中还可表示启用功能。",
+      "rootAffixAccumulation": "与 [[word:disable|disable]] 在“启用/禁用”语境中构成反义对照。",
+      "morphemes": [
+        {
+          "key": "morph:prefix:fr:en-:make_cause",
+          "spelling": "en-"
+        },
+        {
+          "key": "morph:base:en:able:capable",
+          "spelling": "able"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "The new ramp enables wheelchair users to enter the library independently.",
+          "translation": "新坡道使轮椅使用者能够独立进入图书馆。",
+          "matchedSurface": "enables",
+          "contextExplanation": "设施使某人能够完成动作。",
+          "difficultyRationale": "enable sb. to do 结构完整。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "enable access to",
+          "meaning": "使能够访问；使可以使用",
+          "example": "The card enables access to the laboratory."
+        }
+      ],
+      "relations": [
+        {
+          "type": "antonym",
+          "words": [
+            {
+              "spelling": "disable",
+              "displayText": "disable 禁用；使失去能力",
+              "meaning": "在功能开关语境中与 enable 相反"
+            }
+          ]
+        }
+      ],
+      "longSentences": [
+        {
+          "sentence": "If public data are presented clearly, they can enable citizens to judge whether a policy is working.",
+          "translation": "如果公共数据呈现得足够清楚，它们就能使公民判断一项政策是否有效。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "enable",
+          "targetSense": "使能够",
+          "targetSegment": 2,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "条件状语从句",
+              "text": "If public data are presented clearly, ",
+              "gloss": "如果公共数据呈现得清楚",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "subj",
+              "roleLabel": "主语",
+              "text": "they",
+              "gloss": "它们，即公共数据",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "pred",
+              "roleLabel": "谓语和复合宾语",
+              "text": " can enable citizens to judge whether a policy is working.",
+              "gloss": "能使公民判断政策是否有效",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "条件与宾语从句",
+              "keyword": "If 与 whether",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "If 从句给出条件；whether 从句是 judge 的宾语，表达判断内容。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "复合结构",
+              "keyword": "enable citizens to judge",
+              "refs": [
+                2
+              ],
+              "analysisText": "enable 后先接受益者 citizens，再接不定式说明他们因此能做什么。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-enable",
+        "ev-edit-b001",
+        "ev-etym-able"
+      ]
+    },
+    {
+      "wordId": "cet4-w-f41aa887a6195a11b2ae",
+      "wordOrder": 1628,
+      "spelling": "disable",
+      "variants": [],
+      "pronunciation": "/dɪsˈeɪbəl/",
+      "definitionCn": "v. 使失去能力；使伤残；禁用。",
+      "memoryMarkup": "手机通知一声接一声，你进设置把开关关掉，总算安静了。把原本 [[word:able|able]]、能工作的功能关掉，就是 disable。",
+      "etymologyMarkup": "[[morph:prefix:la:dis-:reverse_remove|dis-]]（去除、反向）+ [[morph:base:en:able:capable|able]]（有能力的）→ 使不能；禁用。",
+      "rootAffixNotes": "disable a feature 指禁用功能；描述残障人士时不应把人简化成动作结果，宜根据语境使用 disabled people 等尊重表达。",
+      "rootAffixAccumulation": "过去分词形式 [[word:disabled|disabled]] 常作形容词。",
+      "morphemes": [
+        {
+          "key": "morph:prefix:la:dis-:reverse_remove",
+          "spelling": "dis-"
+        },
+        {
+          "key": "morph:base:en:able:capable",
+          "spelling": "able"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "You can disable notifications during the examination.",
+          "translation": "考试期间你可以关闭通知。",
+          "matchedSurface": "disable",
+          "contextExplanation": "技术语境中表示禁用某项功能。",
+          "difficultyRationale": "情态动词后接原形。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "disable a feature",
+          "meaning": "禁用一项功能",
+          "example": "The administrator disabled the sharing feature."
+        }
+      ],
+      "relations": [
+        {
+          "type": "antonym",
+          "words": [
+            {
+              "spelling": "enable",
+              "displayText": "enable 启用；使能够",
+              "meaning": "在功能开关语境中与 disable 相反"
+            }
+          ]
+        },
+        {
+          "type": "derivative",
+          "words": [
+            {
+              "spelling": "disabled",
+              "displayText": "disabled 残障的；被禁用的",
+              "meaning": "disable 的过去分词形容词"
+            }
+          ]
+        }
+      ],
+      "longSentences": [
+        {
+          "sentence": "Before installing unfamiliar software, users should check whether it may disable protections that keep their devices secure.",
+          "translation": "安装陌生软件之前，用户应检查它是否可能关闭保障设备安全的防护功能。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "disable",
+          "targetSense": "禁用；使停止工作",
+          "targetSegment": 2,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "时间状语",
+              "text": "Before installing unfamiliar software, ",
+              "gloss": "安装陌生软件之前",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "subj",
+              "roleLabel": "主语和谓语",
+              "text": "users should check",
+              "gloss": "用户应检查",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "obj",
+              "roleLabel": "宾语从句",
+              "text": " whether it may disable protections that keep their devices secure.",
+              "gloss": "它是否可能关闭保障设备安全的防护",
+              "level": 1,
+              "spine": false
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "宾语从句",
+              "keyword": "check whether",
+              "refs": [
+                1,
+                2
+              ],
+              "analysisText": "whether 引导 check 的宾语从句；that 从句继续修饰 protections。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "技术义",
+              "keyword": "disable protections",
+              "refs": [
+                2
+              ],
+              "analysisText": "disable 表示让防护功能停止工作，比 delete 更强调功能被关闭。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-disable",
+        "ev-edit-b001",
+        "ev-etym-able"
+      ]
+    }
+  ]
+}

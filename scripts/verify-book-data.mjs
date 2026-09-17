@@ -8,7 +8,9 @@ if (!/^[a-z0-9][a-z0-9_-]*$/u.test(bookCode)) {
   throw new Error(`Invalid book code: ${bookCode}`);
 }
 
-const bookDir = path.join(projectRoot, "books", bookCode);
+const bookDir = process.env.CYWORD_BOOK_DIR
+  ? path.resolve(projectRoot, process.env.CYWORD_BOOK_DIR)
+  : path.join(projectRoot, "books", bookCode);
 const csvDir = path.join(bookDir, "csv");
 const manifest = JSON.parse(fs.readFileSync(path.join(bookDir, "book.json"), "utf8"));
 const csvCache = new Map();

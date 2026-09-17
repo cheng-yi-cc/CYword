@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "sharedMorphemes": 32,
+  "confirmedLegacyOccurrences": 76,
+  "heldLegacyOccurrences": 16,
+  "legacyUniqueElements": 1864,
+  "legacyBookModified": false,
+  "note": "逐词桥接，不全局改写六级 ID。其他旧构词尚未审核，不得按同字母直接复用。"
+}

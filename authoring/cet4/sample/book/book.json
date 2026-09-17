@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "code": "cet4",
+  "name": "大学英语四级（30 词样板）",
+  "targetExam": "cet4",
+  "contentScope": "stage2_sample",
+  "wordlistVersion": "cet4-2016-v1",
+  "statistics": {
+    "metadataWords": 30,
+    "uniqueWords": 30,
+    "metadataDifference": 0,
+    "rootMarkupRows": 56,
+    "trueRoots": 7,
+    "wordsWithTrueRoot": 17,
+    "soloWords": 13,
+    "multiRootWords": 2,
+    "studyGroups": 20,
+    "studyAppearances": 32,
+    "largestTrueRootGroup": 6,
+    "ordinaryExamples": 30,
+    "examExamples": 0,
+    "longSentences": 30,
+    "collocations": 30,
+    "frequencies": 0
+  },
+  "planning": {
+    "targetStudyAppearancesPerDay": 190,
+    "grouping": "true-root-or-solo",
+    "cycle": "study-study-study-review",
+    "note": "阶段 2 样板只验证分组和读取，不冻结全量学习天数。"
+  },
+  "canonicalFiles": [
+    "analysis_seen_marks.csv",
+    "books.csv",
+    "collocations.csv",
+    "exam_examples.csv",
+    "examples.csv",
+    "field_dictionary.csv",
+    "frequencies.csv",
+    "long_sentence_analysis.csv",
+    "long_sentence_segments.csv",
+    "long_sentences.csv",
+    "raw_field_inventory.csv",
+    "relation_words.csv",
+    "relations.csv",
+    "root_markup_links.csv",
+    "root_markups.csv",
+    "sentence_zones.csv",
+    "table_catalog.csv",
+    "word_markup_links.csv",
+    "words.csv"
+  ]
+}

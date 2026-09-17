@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "words": 100,
+  "existingReviewedSamples": 30,
+  "drafts": 70,
+  "readingSegments": 300,
+  "dependencies": 43,
+  "completeBook": false,
+  "morphologyReviewedWords": 30,
+  "contentStatus": "试验集可用于本地体验；70 个草稿的构词核查和二次语言复核仍待完成，不发布为正式词书。"
+}

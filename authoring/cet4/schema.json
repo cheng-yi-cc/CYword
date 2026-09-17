@@ -1,0 +1,296 @@
+{
+  "schemaVersion": 1,
+  "bookCode": "cet4",
+  "originalDictionaryEntries": 162,
+  "actualFieldCount": 173,
+  "sourceDictionarySha256": "a04d179bba008df8f8008cb98279bcc54d97065adb8d2446125519c4b4ea5fbe",
+  "tables": {
+    "analysis_seen_marks.csv": {
+      "columns": [
+        "word_id",
+        "raw_json"
+      ],
+      "primaryKey": "word_id",
+      "emptyAllowed": true
+    },
+    "books.csv": {
+      "columns": [
+        "book_id",
+        "book_code",
+        "book_name",
+        "target_exam",
+        "total_words_metadata",
+        "enumerated_unique_words",
+        "metadata_difference",
+        "root_count",
+        "purchase_status",
+        "lifecycle_status",
+        "is_active",
+        "currently_available",
+        "current_period_ends_at",
+        "final_ends_at"
+      ],
+      "primaryKey": "book_id",
+      "emptyAllowed": false
+    },
+    "collocations.csv": {
+      "columns": [
+        "word_id",
+        "collocation_id",
+        "order_index",
+        "phrase",
+        "meaning",
+        "example"
+      ],
+      "primaryKey": "collocation_id",
+      "emptyAllowed": true
+    },
+    "exam_examples.csv": {
+      "columns": [
+        "word_id",
+        "exam_example_id",
+        "order_index",
+        "sentence",
+        "translation",
+        "matched_surface",
+        "target_word_analysis",
+        "exam_context",
+        "difficulty_rationale",
+        "source_year",
+        "source_paper",
+        "source_section",
+        "source_exam_type"
+      ],
+      "primaryKey": "exam_example_id",
+      "emptyAllowed": true
+    },
+    "examples.csv": {
+      "columns": [
+        "word_id",
+        "example_id",
+        "order_index",
+        "sentence",
+        "translation",
+        "matched_surface",
+        "context_explanation",
+        "difficulty_rationale"
+      ],
+      "primaryKey": "example_id",
+      "emptyAllowed": true
+    },
+    "field_dictionary.csv": {
+      "columns": [
+        "table_file",
+        "field_name",
+        "category",
+        "data_type",
+        "source_path",
+        "description",
+        "primary_key"
+      ],
+      "primaryKey": "table_file + field_name",
+      "emptyAllowed": false
+    },
+    "frequencies.csv": {
+      "columns": [
+        "word_id",
+        "exam_type",
+        "frequency_count",
+        "per_10k_words"
+      ],
+      "primaryKey": "word_id + exam_type",
+      "emptyAllowed": true
+    },
+    "long_sentence_analysis.csv": {
+      "columns": [
+        "word_id",
+        "long_sentence_id",
+        "section_index",
+        "section_kind",
+        "item_index",
+        "dimension",
+        "keyword",
+        "refs_json",
+        "analysis_text",
+        "examples_json"
+      ],
+      "primaryKey": "long_sentence_id + section_index + item_index",
+      "emptyAllowed": true
+    },
+    "long_sentence_segments.csv": {
+      "columns": [
+        "word_id",
+        "long_sentence_id",
+        "segment_index",
+        "role",
+        "role_label",
+        "text",
+        "gloss",
+        "level",
+        "spine"
+      ],
+      "primaryKey": "long_sentence_id + segment_index",
+      "emptyAllowed": true
+    },
+    "long_sentences.csv": {
+      "columns": [
+        "word_id",
+        "long_sentence_id",
+        "order_index",
+        "sentence",
+        "translation",
+        "difficulty_band",
+        "sentence_difficulty",
+        "target_word",
+        "target_sense",
+        "source_note",
+        "reader_parse_version",
+        "reader_parse_target_ref"
+      ],
+      "primaryKey": "long_sentence_id",
+      "emptyAllowed": true
+    },
+    "raw_field_inventory.csv": {
+      "columns": [
+        "field_path",
+        "observed_types",
+        "occurrences",
+        "non_null_occurrences"
+      ],
+      "primaryKey": "field_path",
+      "emptyAllowed": true
+    },
+    "relation_words.csv": {
+      "columns": [
+        "word_id",
+        "relation_type",
+        "related_index",
+        "related_word_id",
+        "spelling",
+        "display_text",
+        "meaning"
+      ],
+      "primaryKey": "word_id + relation_type + related_index",
+      "emptyAllowed": true
+    },
+    "relations.csv": {
+      "columns": [
+        "word_id",
+        "relation_index",
+        "relation_type",
+        "related_word_count"
+      ],
+      "primaryKey": "word_id + relation_index",
+      "emptyAllowed": true
+    },
+    "root_markup_links.csv": {
+      "columns": [
+        "word_id",
+        "root_id",
+        "link_index",
+        "target_identifier",
+        "target_type",
+        "target_id"
+      ],
+      "primaryKey": "word_id + root_id + link_index",
+      "emptyAllowed": true
+    },
+    "root_markups.csv": {
+      "columns": [
+        "word_id",
+        "root_index",
+        "root_id",
+        "spelling",
+        "root_type",
+        "meaning",
+        "memory_method"
+      ],
+      "primaryKey": "word_id + root_index",
+      "emptyAllowed": true
+    },
+    "sentence_zones.csv": {
+      "columns": [
+        "word_id",
+        "book_id",
+        "status",
+        "contract_source",
+        "requires_membership",
+        "no_auto_fallback",
+        "example_count",
+        "long_sentence_count",
+        "exam_example_count"
+      ],
+      "primaryKey": "word_id",
+      "emptyAllowed": false
+    },
+    "table_catalog.csv": {
+      "columns": [
+        "table_file",
+        "row_count",
+        "primary_key",
+        "description"
+      ],
+      "primaryKey": "table_file",
+      "emptyAllowed": false
+    },
+    "word_markup_links.csv": {
+      "columns": [
+        "word_id",
+        "link_index",
+        "target_identifier",
+        "target_type",
+        "target_id"
+      ],
+      "primaryKey": "word_id + link_index",
+      "emptyAllowed": true
+    },
+    "words.csv": {
+      "columns": [
+        "word_id",
+        "book_id",
+        "book_code",
+        "book_name",
+        "day_id",
+        "day_number",
+        "order_in_day",
+        "word_order",
+        "spelling",
+        "pronunciation",
+        "definition_cn",
+        "audio_url",
+        "memory_markup",
+        "etymology_markup",
+        "root_affix_notes",
+        "root_affix_accumulation",
+        "vocabulary_id",
+        "is_completed",
+        "studied",
+        "reviewed",
+        "memorized_count",
+        "reviewed_count",
+        "sentence_zone_status",
+        "example_count",
+        "long_sentence_count",
+        "exam_example_count",
+        "frequency_count",
+        "collocation_count",
+        "root_markup_count",
+        "relation_group_count",
+        "analysis_seen_mark_count",
+        "access_allowed",
+        "access_reason",
+        "permission_type",
+        "permission_is_expired",
+        "protection_content_type",
+        "protection_exposure_weight",
+        "protection_trace_id",
+        "protection_marker_type",
+        "protection_marker_version",
+        "protection_hidden_prompt",
+        "detail_status"
+      ],
+      "primaryKey": "word_id",
+      "emptyAllowed": false
+    }
+  }
+}

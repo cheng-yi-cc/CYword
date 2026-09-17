@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CYword · 四级逐词审稿</title>
+<style>
+:root{color-scheme:light;--ink:#163e56;--muted:#526777;--blue:#126d86;--line:#ccdbe6;--paper:#fff;--wash:#edf3f8;--note:#885520;--note-bg:#fff7e9;font-family:"Segoe UI","Microsoft YaHei",sans-serif;color:var(--ink);background:var(--wash)}
+*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}button,select{cursor:pointer}button{border:1px solid var(--line);border-radius:6px;background:white;color:var(--ink);padding:9px 13px}button:hover{border-color:var(--blue);background:#f1f8fc}button:disabled{opacity:.5;cursor:not-allowed}button.primary{background:var(--blue);color:white;border-color:var(--blue)}:focus-visible{outline:3px solid #4ca4be;outline-offset:3px}a{color:var(--blue)}
+header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 30px;background:var(--ink);color:white}header h1{font-size:19px;font-weight:600;letter-spacing:.03em;margin:0}header p{font-size:12px;color:#cee0eb;margin:5px 0 0}.tools{display:flex;gap:8px;flex-wrap:wrap}header button{font-size:12px}.notice{border-bottom:1px solid var(--line);padding:12px 30px;color:var(--muted);font-size:13px;line-height:1.8;background:white}.notice strong{color:var(--ink)}
+.workspace{display:grid;grid-template-columns:270px minmax(0,1fr);max-width:1580px;margin:auto;min-height:calc(100vh - 143px)}aside{border-right:1px solid var(--line);padding:22px 16px}.search{display:block;font-size:12px;color:var(--muted);margin-bottom:7px}input,select{width:100%;padding:10px 11px;background:white;border:1px solid var(--line);border-radius:6px;color:var(--ink)}select{margin-top:8px;font-size:13px}.list-head{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin:17px 0 8px}.word-list{height:calc(100vh - 370px);min-height:200px;overflow:auto}.word-button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #dde7ee;border-radius:0;background:transparent;padding:12px 9px}.word-button[aria-current=true]{background:var(--ink);color:white;border-radius:5px}.word-button span{display:block;font-size:16px}.word-button small{display:block;font-size:10px;margin-top:5px;opacity:.72}.index-page{display:flex;gap:8px;margin-top:12px}.index-page button{flex:1;font-size:12px}
+main{min-width:0;padding:25px 35px 40px}.topline{display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:12px;color:var(--muted)}.nav{display:flex;gap:8px}.nav button{padding:7px 12px}.word-title{font-family:Georgia,"Times New Roman",serif;font-size:48px;line-height:1.1;font-weight:400;margin:24px 0 12px;overflow-wrap:anywhere}.phonetic{font-family:"Segoe UI",sans-serif;color:var(--muted);margin:0 0 13px}.definition{font-size:18px;line-height:1.8;margin:0 0 15px}.badge{display:inline-block;padding:4px 8px;border-radius:4px;background:#dcedf5;font-size:12px;color:var(--blue)}.badge.pending{color:var(--note);background:var(--note-bg)}.variant{font-size:13px;color:var(--muted);margin-left:12px}.sheet{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:30px;margin-top:28px;align-items:start}.body-copy{max-width:780px}.section{border-top:1px solid var(--line);padding:22px 0}.section h3{font-size:12px;letter-spacing:.08em;color:var(--blue);margin:0 0 13px}.section p{margin:10px 0;line-height:1.95;white-space:pre-wrap;overflow-wrap:anywhere}.memory{font-size:19px;line-height:2.05!important}.english{font-family:Georgia,"Times New Roman",serif;font-size:20px;line-height:1.7!important}.translation,.metadata{color:var(--muted);font-size:14px}.reading-parts{padding-left:20px;line-height:1.8}.reading-parts li{padding:6px 0;font-size:14px}.reading-parts small{display:inline-block;min-width:55px;color:var(--blue)}.note-panel{border-left:3px solid var(--blue);padding:4px 0 4px 20px;position:sticky;top:20px}.note-panel h3{font-size:14px;margin:0 0 6px}.note-panel label{font-size:12px;display:block;color:var(--muted);margin-top:15px}.note-panel textarea{resize:vertical;min-height:160px;width:100%;border:1px solid var(--line);border-radius:6px;margin:8px 0;padding:11px;line-height:1.7;color:var(--ink);background:white}.note-panel button{width:100%}.note-panel p{font-size:12px;line-height:1.8;color:var(--muted)}details{border-top:1px solid var(--line);padding:18px 0}summary{cursor:pointer;font-size:14px;color:var(--blue)}details p{font-size:14px;line-height:1.9;white-space:pre-wrap}.empty{padding:40px 0;color:var(--muted);line-height:1.9}.flash{font-size:12px;color:var(--blue);min-height:24px;padding-top:8px}.warning{padding:12px 15px;background:var(--note-bg);color:var(--note);font-size:13px;line-height:1.8;border-radius:5px}.source{font-size:12px;line-height:1.8;color:var(--muted);border-top:1px solid var(--line);padding-top:20px;margin-top:18px}.source a{word-break:break-all}
+@media(max-width:1100px){.sheet{grid-template-columns:1fr}.note-panel{position:static;max-width:780px}.note-panel textarea{min-height:110px}main{padding:24px}.workspace{grid-template-columns:230px minmax(0,1fr)}}
+@media(max-width:700px){header{padding:16px;align-items:flex-start;flex-direction:column;gap:12px}.notice{padding:10px 16px}.workspace{display:block}aside{border-right:0;border-bottom:1px solid var(--line);padding:16px}.word-list{height:155px;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}.word-button{padding:9px}.list-head{margin:10px 0}.index-page{margin-top:8px}main{padding:20px 18px}.word-title{font-size:40px}.definition{font-size:16px}.memory{font-size:17px}.sheet{gap:15px}.topline{align-items:flex-start}.nav{flex-shrink:0}.nav button{font-size:12px;padding:6px 8px}}
+</style>
+</head>
+<body>
+<header><div><h1>CYword / 四级逐词审稿</h1><p>原文 · 六级对照 · 逐词批注</p></div><div class="tools"><button id="export">导出审稿意见</button><button id="import">导入审稿意见</button><input id="file" type="file" accept="application/json" hidden></div></header>
+<div class="notice" id="coverage"></div>
+<div class="workspace"><aside><label class="search" for="search">查找单词、释义或拼写变体</label><input id="search" type="search" placeholder="例如 aboard / 上船" autocomplete="off"><select id="filter" aria-label="内容范围"><option value="original">已有原创正文</option><option value="all">全部词表</option><option value="pilot">100 词试验集</option><option value="missing">尚待编写</option><option value="draft">新增初稿</option><option value="sample">既有样板</option><option value="revision">我标记的需修改</option><option value="accepted">我标记的认可</option></select><div class="list-head"><span id="count"></span><span id="page"></span></div><div class="word-list" id="list" aria-label="词条列表"></div><div class="index-page"><button id="list-prev">上一页词表</button><button id="list-next">下一页词表</button></div></aside><main id="detail"></main></div>
+<script>
+/* REVIEW_DATA */
+const $ = id => document.getElementById(id);
+const STORE = 'cyword-cet4-editorial-review-v1';
+const ids = new Set(DATA.words.map(w => w.id));
+let reviews = Object.create(null), storageOk = true, page = 0, selectedId = null, filtered = [], changed = false;
+try { const stored = JSON.parse(localStorage.getItem(STORE) || '{}'); reviews = validateReviews(stored); } catch { storageOk = false; }
+const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const plain = text => String(text ?? '').replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g,(_,id,label)=>label || id.replace(/^word:/,''));
+const p = (text, cls='') => `<p class="${cls}">${esc(plain(text))}</p>`;
+function validateReviews(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) throw Error('审稿文件的内容格式不正确');
+  const result = Object.create(null);
+  for (const [id,value] of Object.entries(input)) {
+    if (!ids.has(id) || !value || !['pending','accepted','needs_revision'].includes(value.decision) || typeof value.note !== 'string') throw Error('审稿文件包含未知词条或无效批注');
+    if (value.note.length > 10000) throw Error('单条批注过长');
+    const word=DATA.words.find(w=>w.id===id);
+    if(value.decision==='accepted'&&!word.original) throw Error('尚未编写的词条不能标为认可');
+    result[id] = {decision:value.decision,note:value.note,updatedAt:typeof value.updatedAt==='string'?value.updatedAt:''};
+  }
+  return result;
+}
+function persist() { try {localStorage.setItem(STORE,JSON.stringify(reviews)); storageOk=true;}catch{storageOk=false;} }
+function saveCurrent() {
+  if(!selectedId || !$('note'))return;
+  if(!changed)return;
+  reviews[selectedId]={decision:$('decision').value,note:$('note').value,updatedAt:new Date().toISOString()};
+  persist(); changed=false;
+  if($('save-message'))$('save-message').textContent=storageOk?'已保存到当前浏览器':'浏览器未能保存，请立即导出审稿意见';
+}
+const labels={sample_reviewed:'既有完整样板',validated_draft:'新增初稿 · 待二次复核',reference_only:'参考资料 · 正文待写'};
+function applyFilter() {
+  saveCurrent();
+  const q=$('search').value.trim().toLowerCase(), f=$('filter').value;
+  filtered=DATA.words.filter(w=>{
+    const match=!q || [w.spelling,w.frozenSpelling,...w.variants,w.original?.definitionCn,w.reference.definition].filter(Boolean).join(' ').toLowerCase().includes(q);
+    return match && (f==='all'||f==='pilot'&&w.inPilot||f==='original'&&w.original||f==='missing'&&!w.original||f==='draft'&&w.status==='validated_draft'||f==='sample'&&w.status==='sample_reviewed'||f==='revision'&&reviews[w.id]?.decision==='needs_revision'||f==='accepted'&&reviews[w.id]?.decision==='accepted');
+  });
+  page=0;
+  if(!filtered.some(w=>w.id===selectedId))selectedId=filtered[0]?.id??null;
+  const selectedIndex=filtered.findIndex(w=>w.id===selectedId); if(selectedIndex>=0)page=Math.floor(selectedIndex/60);
+  renderList();renderDetail();
+}
+function renderList() {
+  $('count').textContent=`${filtered.length.toLocaleString()} 个词条`;
+  $('page').textContent=filtered.length?`${page+1} / ${Math.ceil(filtered.length/60)}`:'0 / 0';
+  $('list').replaceChildren();
+  for(const w of filtered.slice(page*60,(page+1)*60)) {
+    const b=document.createElement('button');b.className='word-button';b.setAttribute('aria-current',String(w.id===selectedId));
+    const s=document.createElement('span');s.textContent=w.spelling;
+    const hint=document.createElement('small');hint.textContent=reviews[w.id]?.decision==='needs_revision'?'已标记需修改':reviews[w.id]?.decision==='accepted'?'已认可':labels[w.status];
+    b.append(s,hint);b.onclick=()=>selectWord(w.id);$('list').append(b);
+  }
+  $('list-prev').disabled=page===0;$('list-next').disabled=(page+1)*60>=filtered.length;
+}
+function selectWord(id) {saveCurrent();selectedId=id;page=Math.floor(filtered.findIndex(w=>w.id===id)/60);renderList();renderDetail();}
+function renderDetail() {
+  const w=DATA.words.find(w=>w.id===selectedId);
+  if(!w){$('detail').innerHTML='<div class="empty">没有匹配的词条。可以清空搜索，或切换内容范围。</div>';return;}
+  const e=w.original, index=filtered.findIndex(x=>x.id===w.id), r=reviews[w.id]??{decision:'pending',note:''};
+  let content='';
+  if(e){
+    content+=`<section class="section"><h3>巧记</h3>${p(e.memoryMarkup,'memory')}</section>`;
+    content+=`<section class="section"><h3>用法与易错点</h3>${p(e.notes)}</section>`;
+    content+=`<section class="section"><h3>普通例句 / 原创</h3>${e.examples.map(x=>p(x.sentence,'english')+p(x.translation,'translation')).join('')}</section>`;
+    content+=`<section class="section"><h3>常见搭配</h3>${e.collocations.map(x=>p(x.phrase,'english')+p(x.meaning,'translation')).join('')}</section>`;
+    content+=`<section class="section"><h3>长句 / 原创</h3>${e.longSentences.map(x=>p(x.sentence,'english')+p(x.translation,'translation')+'<ol class="reading-parts">'+x.segments.map(s=>`<li><small>${esc(s.roleLabel||({subj:'主语',pred:'谓语部分',adv:'状语部分',obj:'宾语部分',attr:'修饰部分'}[s.role]||s.role))}</small>${esc(s.text)}${s.gloss?'<br>'+esc(s.gloss):''}</li>`).join('')+'</ol>'+p(x.analysis||x.analyses.map(a=>a.analysisText).join('\n\n'))).join('')}</section>`;
+    if(e.etymologyMarkup)content+=`<details><summary>构词与词根登记</summary>${p(e.etymologyMarkup)}${p(e.rootAffixAccumulation)}</details>`;
+    else content+='<div class="warning">本条构词尚未登记，未计入真正词根分组。请查看下方逐词进度；没有登记词根不代表这个词历史上不可分析。</div>';
+  }else content+='<div class="empty">这个词目前只有参考资料，原创巧记和句子还没有编写。</div>';
+  content+=`<details><summary>基础词典参考${w.reference.headword?'':' · 尚未命中'}</summary>${p(w.reference.headword+' '+w.reference.pronunciation)}${p(w.reference.definition)}${p(w.reference.issues,'metadata')}<p class="metadata">ECDICT 原始参考，音标未统一口音，释义尚未逐词筛选。<a href="https://github.com/skywind3000/ECDICT/tree/bc015ed2e24a7abef49fc6dbbb7fe32c1dadaf8b" target="_blank" rel="noreferrer">查看来源与许可</a></p></details>`;
+  const choice=w.selection;
+  if(choice)content+='<details><summary>为什么收录这个词</summary>'+p(w.source.role.includes('headword')?'考纲主词条，保留独立学习。':'考纲明确附列的词，保留独立学习。')+p(choice.inflectionReview?.reason||'基础词与派生词按所选考纲保留，不按两本书的数量差删词。')+p(choice.cet6_word_id?'六级有同词。对应只供逐项审核，不代表拆词或巧记已经核准复用。':'六级没有同词，需要新增内容。','metadata')+'</details>';
+  if(w.precedent)content+=`<details><summary>六级同词对照 / 仅作参考</summary>${p(w.precedent.definition)}${p(w.precedent.memory)}<p class="metadata">六级原文中的图片未载入；这里的拆分、词源仍需核实。</p>${p(w.precedent.etymology)}</details>`;
+  else content+='<p class="metadata">六级词书中没有对应词条。</p>';
+  $('detail').innerHTML=`<div class="topline"><span>考纲序号 ${w.order} / ${DATA.summary.totalWords}</span><div class="nav"><button id="previous" ${index<=0?'disabled':''}>← 上一个</button><button id="next" ${index>=filtered.length-1?'disabled':''}>下一个 →</button></div></div><h2 class="word-title">${esc(w.spelling)}</h2><p class="phonetic">${esc(e?.pronunciation||w.reference.pronunciation||'音标待核对')}</p><p class="definition">${esc(e?.definitionCn||'原创释义待编写，下方可展开词典参考。')}</p><span class="badge ${w.status==='sample_reviewed'?'':'pending'}">${esc(labels[w.status])}</span>${w.variants.length?'<span class="variant">同条拼写 '+esc(w.variants.join(' / '))+'</span>':''}<div class="sheet"><div class="body-copy">${content}<div class="source">考纲 PDF 第 ${esc(w.source.page)} 页 · 印刷第 ${esc(w.source.printedPage)} 页 · 第 ${esc(w.source.row)} 行、第 ${esc(w.source.column)} 列<br>稳定 ID ${esc(w.id)}${w.spelling!==w.frozenSpelling?'<br>冻结层保留 '+esc(w.frozenSpelling)+'，教学展示已恢复标准拼写。':''}${e?.referenceUrls?.map(url=>'<br><a target="_blank" rel="noreferrer" href="'+esc(url)+'">'+esc(url)+'</a>').join('')||''}</div></div><section class="note-panel"><h3>我的审稿意见</h3><p>批注随词条保存。离开前可导出一份文件，方便后续统一修改。</p><label for="decision">这条写得如何</label><select id="decision"><option value="pending">尚未审查</option><option value="accepted" ${!e?'disabled':''}>认可当前正文</option><option value="needs_revision">需要修改</option></select><label for="note">具体意见</label><textarea id="note" maxlength="10000" placeholder="例如：联想绕了一步，换成更直接的画面。"></textarea><button class="primary" id="save">保存本条意见</button><div class="flash" role="status" id="save-message"></div><p>认可只记录你的审稿判断，不会把初稿自动改成正式词库。</p></section></div>`;
+  $('decision').value=r.decision;$('note').value=r.note;changed=false;
+  $('decision').onchange=()=>changed=true;$('note').oninput=()=>changed=true;
+  $('save').onclick=()=>{changed=true;saveCurrent();renderList();};
+  $('previous').onclick=()=>selectWord(filtered[index-1].id);$('next').onclick=()=>selectWord(filtered[index+1].id);
+  if(!storageOk)$('save-message').textContent='浏览器存储不可用，请用导出保留意见。';
+}
+function downloadReviews(){saveCurrent();const blob=new Blob([JSON.stringify({schemaVersion:1,wordlistVersion:DATA.summary.wordlistVersion,exportedAt:new Date().toISOString(),reviews},null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='cet4-review-notes.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+$('export').onclick=downloadReviews;$('import').onclick=()=>$('file').click();
+$('file').onchange=async()=>{const file=$('file').files[0];if(!file)return;try{if(file.size>5_000_000)throw Error('审稿文件过大');const value=JSON.parse(await file.text());if(value.schemaVersion!==1||value.wordlistVersion!==DATA.summary.wordlistVersion)throw Error('审稿文件的词表版本不匹配');const incoming=validateReviews(value.reviews);saveCurrent();for(const[id,r]of Object.entries(incoming)){if(!reviews[id]||r.updatedAt>reviews[id].updatedAt)reviews[id]=r;}persist();applyFilter();alert(storageOk?'审稿意见已合并。':'意见已载入，但浏览器存储不可用，请导出保存。');}catch(e){alert(e.message||'无法读取文件');}finally{$('file').value='';}};
+$('search').oninput=applyFilter;$('filter').onchange=applyFilter;
+$('list-prev').onclick=()=>{page--;renderList();$('list').scrollTop=0;};$('list-next').onclick=()=>{page++;renderList();$('list').scrollTop=0;};
+addEventListener('beforeunload',saveCurrent);
+$('coverage').innerHTML=`<strong>共 ${DATA.summary.totalWords.toLocaleString()} 词</strong> · 已有原创巧记 ${DATA.summary.withOriginalMnemonic} 词（${DATA.summary.completeSampleWords} 词样板，${DATA.summary.originalDraftWords} 词新增初稿） · 其余 ${DATA.summary.remainingOriginalMnemonic.toLocaleString()} 词待写。<br>按方案保留基础词和独立派生词。当前为编写中的审稿材料，参考资料不计为完成。<br>四级与六级同词 ${DATA.summary.selection.crossbookMatches.toLocaleString()} 条，其中拼写变体匹配 ${DATA.summary.selection.variantCrossbookMatches} 条。<a href="http://127.0.0.1:5189/" target="_blank" rel="noreferrer">打开 100 词实际应用试验集</a>（需运行 npm run cet4:pilot）。`;
+applyFilter();
+</script>
+</body></html>

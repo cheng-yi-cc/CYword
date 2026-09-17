@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "wordlistVersion": "cet4-2016-v1",
+  "overrides": [{
+    "wordId": "cet4-w-504dfe3baf71f34ef8f3",
+    "frozenSpelling": "oughtto",
+    "displaySpelling": "ought to",
+    "entryKind": "phrase",
+    "reason": "冻结提取层把两个词连写；教学展示恢复标准空格，稳定 ID 和原始来源记录不变。",
+    "sourceEntryId": "cet2016-p101-r07-c1",
+    "referenceUrl": "https://dictionary.cambridge.org/dictionary/learner-english/ought",
+    "verifiedAt": "2026-09-17"
+  }]
+}

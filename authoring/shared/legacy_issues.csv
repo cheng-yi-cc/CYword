@@ -1,0 +1,17 @@
+book_code,word_id,spelling,legacy_root_id,legacy_form,decision,reason,reference_url
+cet6,df8ceae2-7fa2-4457-832b-967a8058fe41,character,0c66d304-1bc9-46cd-80e7-bd1ec3acd4ef,act,hold_for_reanalysis,character 的字母片段 act 不应按‘行动’归组；原词族另核。,https://www.etymonline.com/word/character
+cet6,6d2b4ccb-1277-4a39-9563-1d57b42b0541,characteristic,0c66d304-1bc9-46cd-80e7-bd1ec3acd4ef,act,hold_for_reanalysis,character 的字母片段 act 不应按‘行动’归组；原词族另核。,https://www.etymonline.com/word/character
+cet6,55d7cc1e-405c-4d59-aac6-e4ad5953353a,characterize,0c66d304-1bc9-46cd-80e7-bd1ec3acd4ef,act,hold_for_reanalysis,character 的字母片段 act 不应按‘行动’归组；原词族另核。,https://www.etymonline.com/word/character
+cet6,b397b4e3-0b76-4355-a59f-6b64fb87d434,faculty,f5cb694c-02a2-4dac-8f66-89d42a9a951f,cult,hold_for_reanalysis,faculty 对应拉丁语 facultas，不能因字面含 cult 就归入耕种组。,https://www.etymonline.com/word/faculty
+cet6,2e2cbf9d-2e21-4eb5-a751-c5c31dd10e07,manage,a4e83e46-65cf-4a7b-89ab-333c0afe1f00,ag,hold_for_reanalysis,manage 的历史词族与手有关，不能仅取中间 ag 归入行动组。,https://www.etymonline.com/word/manage
+cet6,bbaa98ad-99b6-464a-b30d-184ed476130f,management,a4e83e46-65cf-4a7b-89ab-333c0afe1f00,ag,hold_for_reanalysis,manage 的历史词族与手有关，不能仅取中间 ag 归入行动组。,https://www.etymonline.com/word/manage
+cet6,d57613e6-e0c7-4fbf-9e74-ee008ce4d627,manager,a4e83e46-65cf-4a7b-89ab-333c0afe1f00,ag,hold_for_reanalysis,manage 的历史词族与手有关，不能仅取中间 ag 归入行动组。,https://www.etymonline.com/word/manage
+cet6,224ddd1c-df38-4652-bb1f-618c0a65b511,port,e88a8f79-48b1-480e-9598-e29fd0fab414,port,hold_for_reanalysis,旧 port 同时混入不同来源和义项；运输、港口、门、部分、间接历史关系须逐项处理。,https://www.etymonline.com/word/portion
+cet6,a814110e-b734-4cf0-bd59-02aa4440361b,portrait,e88a8f79-48b1-480e-9598-e29fd0fab414,port,hold_for_reanalysis,旧 port 同时混入不同来源和义项；运输、港口、门、部分、间接历史关系须逐项处理。,https://www.etymonline.com/word/portion
+cet6,e1b8ac9c-b1d3-4f09-b7e0-ec2f4f71ecf8,important,e88a8f79-48b1-480e-9598-e29fd0fab414,port,hold_for_reanalysis,旧 port 同时混入不同来源和义项；运输、港口、门、部分、间接历史关系须逐项处理。,https://www.etymonline.com/word/portion
+cet6,ce483aee-71ce-4a31-8984-884061e0ec43,portion,e88a8f79-48b1-480e-9598-e29fd0fab414,port,hold_for_reanalysis,旧 port 同时混入不同来源和义项；运输、港口、门、部分、间接历史关系须逐项处理。,https://www.etymonline.com/word/portion
+cet6,4ee3682a-8537-486d-9da1-67bbccb7d35f,passport,e88a8f79-48b1-480e-9598-e29fd0fab414,port,hold_for_reanalysis,旧 port 同时混入不同来源和义项；运输、港口、门、部分、间接历史关系须逐项处理。,https://www.etymonline.com/word/portion
+cet6,05ce5c83-ee64-4fcf-8124-0938e16a133c,portfolio,e88a8f79-48b1-480e-9598-e29fd0fab414,port,hold_for_reanalysis,旧 port 同时混入不同来源和义项；运输、港口、门、部分、间接历史关系须逐项处理。,https://www.etymonline.com/word/portion
+cet6,f2771196-3e46-4df2-adfb-719cf9cb7f4a,spicy,e0932133-0083-4598-bb91-0ed6b934f13b,spic,hold_for_reanalysis,香料义不能与看的 spect 词族直接合并。,https://www.etymonline.com/word/spice
+cet6,ae2f9762-c34c-44ce-bef4-54ac341494df,spice,e0932133-0083-4598-bb91-0ed6b934f13b,spic,hold_for_reanalysis,香料义不能与看的 spect 词族直接合并。,https://www.etymonline.com/word/spice
+cet6,88cf6b53-bf61-4297-b4ac-2bf6df0f8f91,counterfeit,6cb1ddc8-ad50-4756-b33c-d91ccd72fbd2,fact,hold_for_reanalysis,历史上有关联，但表面没有 fact；先核准表面变体再登记。,https://www.etymonline.com/word/counterfeit

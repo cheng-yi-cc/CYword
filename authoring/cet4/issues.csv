@@ -1,0 +1,9 @@
+issue_id,category,source_entry_id,status,description,decision,evidence
+SCOPE-001,scope,,resolved,考纲附列词是否作为独立学习词条,用户确认独立收录；冻结6161个学习词条,2026-09-03会话明确答复；scope_decision.json
+COUNT-001,source_count,,documented,印刷主词目5418与逐行5377相差41；印刷附列2551与逐格2519相差32,保留出版统计和实际枚举两套口径；不补造差额；原因未作推断,source_verification.json；PDF第20及149页
+SPELL-001,source_spelling,cet2016-p039-r42-c1,resolved,Celsius/-cius的缩写不直接扩成学习拼写,采用核实的Celsius；原文记法保留,https://dictionary.cambridge.org/dictionary/english/celsius
+SPELL-002,source_spelling,cet2016-p084-r26-c2,resolved,jewel(l)ery机械展开会产生非标准jewelery,采用核实的jewelry及jewellery作为同一词条；保留原文,https://dictionary.cambridge.org/dictionary/english/jewelry
+SPELL-003,source_spelling,cet2016-p125-r32-c1,excluded_cet6,sober/-re原页记法存疑,该出处标为六级不收进四级；不猜测修成somber,PDF第125页视觉核对
+SCHEMA-001,schema,,resolved,旧字典162项未描述19张表实际173字段,补足字段字典和表目录自身11字段；不改六级文件,schema.json；field_policy.csv
+SCHEMA-002,schema,,resolved,旧字段字典把long_sentences.sentence同时标为主键,采用表目录声明的long_sentence_id作为主键,books/cet6/csv/table_catalog.csv
+SPELL-004,display_spelling,cet2016-p101-r07-c1,resolved_display_only,冻结层 oughtto 连写不符合标准词组拼写,教学展示恢复 ought to；冻结词表哈希、原始来源和稳定 ID 保留，后续规范导出必须消费 display_overrides.json,display_overrides.json；https://dictionary.cambridge.org/dictionary/learner-english/ought

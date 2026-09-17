@@ -1,0 +1,91 @@
+word_id,long_sentence_id,segment_index,role,role_label,text,gloss,level,spine
+cet4-w-dcc6b6de5d3f3f80ff02,cet4-w-dcc6b6de5d3f3f80ff02:long:001,0,adv,让步状语从句,"Although the alarm sounded before dawn, ",尽管警报在黎明前响起,1,false
+cet4-w-dcc6b6de5d3f3f80ff02,cet4-w-dcc6b6de5d3f3f80ff02:long:001,1,subj,主语,the guard,警卫,0,true
+cet4-w-dcc6b6de5d3f3f80ff02,cet4-w-dcc6b6de5d3f3f80ff02:long:001,2,pred,并列谓语, acted at once and led every visitor to safety.,立即行动并把所有访客带到安全地带,0,true
+cet4-w-b4e76965b5a7943279ac,cet4-w-b4e76965b5a7943279ac:long:001,0,adv,原因状语从句,"Because repeated warnings had been ignored, ",由于一再发出的警告都被忽视,1,false
+cet4-w-b4e76965b5a7943279ac,cet4-w-b4e76965b5a7943279ac:long:001,1,subj,主语,the committee,委员会,0,true
+cet4-w-b4e76965b5a7943279ac,cet4-w-b4e76965b5a7943279ac:long:001,2,pred,谓语和宾语, demanded immediate action to protect the river.,要求立即采取行动保护河流,0,true
+cet4-w-560e8b954a1a6e8c9768,cet4-w-560e8b954a1a6e8c9768:long:001,0,subj,主语中心词,Students,学生,0,true
+cet4-w-560e8b954a1a6e8c9768,cet4-w-560e8b954a1a6e8c9768:long:001,1,attr,定语从句, who stay active outside class,课外保持活跃的,1,false
+cet4-w-560e8b954a1a6e8c9768,cet4-w-560e8b954a1a6e8c9768:long:001,2,pred,谓语和宾语, often develop skills that cannot be learned from textbooks alone.,往往培养出仅靠课本无法学到的能力,0,true
+cet4-w-4ced4a567905ee623d9d,cet4-w-4ced4a567905ee623d9d:long:001,0,adv,让步状语从句,"While online activity makes information easier to share, ",网络活动虽然让信息更易分享,1,false
+cet4-w-4ced4a567905ee623d9d,cet4-w-4ced4a567905ee623d9d:long:001,1,subj,主语,it,它，即网络活动,0,true
+cet4-w-4ced4a567905ee623d9d,cet4-w-4ced4a567905ee623d9d:long:001,2,pred,谓语和宾语补足结构, can also expose careless users to unnecessary risks.,也可能使粗心用户面临不必要的风险,0,true
+cet4-w-45384c5a5727e65aeb71,cet4-w-45384c5a5727e65aeb71:long:001,0,adv,让步状语从句,"Although the actor had only a minor role, ",尽管这位演员只有一个小角色,1,false
+cet4-w-45384c5a5727e65aeb71,cet4-w-45384c5a5727e65aeb71:long:001,1,subj,主语,his calm performance,他沉稳的表演,0,true
+cet4-w-45384c5a5727e65aeb71,cet4-w-45384c5a5727e65aeb71:long:001,2,pred,谓语和双宾语式结构, gave the final scene unexpected emotional weight.,给最后一幕增添了意外的情感分量,0,true
+cet4-w-25dfe87120b7c0b3f123,cet4-w-25dfe87120b7c0b3f123:long:001,0,adv,时间状语从句,"When customers react negatively to a new service, ",当顾客对新服务作出负面反应时,1,false
+cet4-w-25dfe87120b7c0b3f123,cet4-w-25dfe87120b7c0b3f123:long:001,1,subj,主语,managers,管理者,0,true
+cet4-w-25dfe87120b7c0b3f123,cet4-w-25dfe87120b7c0b3f123:long:001,2,pred,谓语和时间顺序, should examine the cause before changing the entire plan.,应在改变整个计划前查明原因,0,true
+cet4-w-4336a9e7fc5d08328b8e,cet4-w-4336a9e7fc5d08328b8e:long:001,0,adv,方式状语,"By comparing several sources, ",通过比较多个来源,1,false
+cet4-w-4336a9e7fc5d08328b8e,cet4-w-4336a9e7fc5d08328b8e:long:001,1,pred,主句主干,readers are better able to recognize claims,读者能更好地识别各种说法,0,true
+cet4-w-4336a9e7fc5d08328b8e,cet4-w-4336a9e7fc5d08328b8e:long:001,2,attr,定语从句, that lack reliable evidence.,缺乏可靠证据的,1,false
+cet4-w-798668299e6f528c3725,cet4-w-798668299e6f528c3725:long:001,0,subj,扩展主语,A student's ability to question familiar ideas,学生质疑熟悉观点的能力,0,true
+cet4-w-798668299e6f528c3725,cet4-w-798668299e6f528c3725:long:001,1,pred,比较谓语, often matters more than the number of facts,往往比事实的数量更重要,0,true
+cet4-w-798668299e6f528c3725,cet4-w-798668299e6f528c3725:long:001,2,attr,定语从句, that can be memorized.,能够被记住的,1,false
+cet4-w-c87b5d351d670ef64440,cet4-w-c87b5d351d670ef64440:long:001,0,adv,条件状语从句,"If public data are presented clearly, ",如果公共数据呈现得清楚,1,false
+cet4-w-c87b5d351d670ef64440,cet4-w-c87b5d351d670ef64440:long:001,1,subj,主语,they,它们，即公共数据,0,true
+cet4-w-c87b5d351d670ef64440,cet4-w-c87b5d351d670ef64440:long:001,2,pred,谓语和复合宾语, can enable citizens to judge whether a policy is working.,能使公民判断政策是否有效,0,true
+cet4-w-f41aa887a6195a11b2ae,cet4-w-f41aa887a6195a11b2ae:long:001,0,adv,时间状语,"Before installing unfamiliar software, ",安装陌生软件之前,1,false
+cet4-w-f41aa887a6195a11b2ae,cet4-w-f41aa887a6195a11b2ae:long:001,1,subj,主语和谓语,users should check,用户应检查,0,true
+cet4-w-f41aa887a6195a11b2ae,cet4-w-f41aa887a6195a11b2ae:long:001,2,obj,宾语从句, whether it may disable protections that keep their devices secure.,它是否可能关闭保障设备安全的防护,1,false
+cet4-w-8bcbba84a7d7eab25b03,cet4-w-8bcbba84a7d7eab25b03:long:001,0,adv,让步状语从句,"Although the old station now offers disabled access, ",尽管老车站现已提供无障碍通行设施,1,false
+cet4-w-8bcbba84a7d7eab25b03,cet4-w-8bcbba84a7d7eab25b03:long:001,1,subj,主语,several platforms,几个站台,0,true
+cet4-w-8bcbba84a7d7eab25b03,cet4-w-8bcbba84a7d7eab25b03:long:001,2,pred,谓语, still cannot be reached without assistance.,仍无法在无人协助的情况下到达,0,true
+cet4-w-43ac0394e915760d27a8,cet4-w-43ac0394e915760d27a8:long:001,0,adv,时间条件从句,"When a country imports more energy than it produces, ",当一国进口的能源多于其生产量时,1,false
+cet4-w-43ac0394e915760d27a8,cet4-w-43ac0394e915760d27a8:long:001,1,subj,主语,sudden price rises abroad,国外价格突然上涨,0,true
+cet4-w-43ac0394e915760d27a8,cet4-w-43ac0394e915760d27a8:long:001,2,pred,谓语和宾语, can quickly affect local households.,会迅速影响本国家庭,0,true
+cet4-w-8c8d138547024805cf9e,cet4-w-8c8d138547024805cf9e:long:001,0,subj,主语中心词,Small firms,小企业,0,true
+cet4-w-8c8d138547024805cf9e,cet4-w-8c8d138547024805cf9e:long:001,1,attr,定语从句, that export their products online,在网上出口产品的,1,false
+cet4-w-8c8d138547024805cf9e,cet4-w-8c8d138547024805cf9e:long:001,2,pred,谓语和方式状语, can reach distant customers without opening offices in every market.,无需在各市场设办事处便能接触远方顾客,0,true
+cet4-w-d3fb2c3206cf3fc68ee3,cet4-w-d3fb2c3206cf3fc68ee3:long:001,0,subj,主语,The report,这份报告,0,true
+cet4-w-d3fb2c3206cf3fc68ee3,cet4-w-d3fb2c3206cf3fc68ee3:long:001,1,attr,非限制性定语从句,", which was based on interviews with local families,",它以对当地家庭的访谈为依据,1,false
+cet4-w-d3fb2c3206cf3fc68ee3,cet4-w-d3fb2c3206cf3fc68ee3:long:001,2,pred,谓语和宾语, challenged several claims made by the developer.,质疑了开发商提出的几项说法,0,true
+cet4-w-f51c719af127ab336448,cet4-w-f51c719af127ab336448:long:001,0,adv,伴随变化状语从句,"As cities expand beyond their old centres, ",随着城市扩展到旧中心区之外,1,false
+cet4-w-f51c719af127ab336448,cet4-w-f51c719af127ab336448:long:001,1,subj,主语,affordable public transport,价格可负担的公共交通,0,true
+cet4-w-f51c719af127ab336448,cet4-w-f51c719af127ab336448:long:001,2,pred,系表结构及后置修饰, becomes essential for workers who live far from their jobs.,对住得离工作很远的劳动者变得至关重要,0,true
+cet4-w-385010cccc39746e3da1,cet4-w-385010cccc39746e3da1:long:001,0,subj,主句引导,Research suggests,研究表明,0,true
+cet4-w-385010cccc39746e3da1,cet4-w-385010cccc39746e3da1:long:001,1,obj,宾语从句主干, that employees are more willing to share ideas,员工更愿意分享想法,1,false
+cet4-w-385010cccc39746e3da1,cet4-w-385010cccc39746e3da1:long:001,2,adv,条件时间从句, when managers support reasonable experiments and accept occasional failure.,当管理者支持合理尝试并接受偶尔失败时,2,false
+cet4-w-88452520399cf5c4e49e,cet4-w-88452520399cf5c4e49e:long:001,0,adv,时间状语从句,"Before the school reopened, ",学校重新开放前,1,false
+cet4-w-88452520399cf5c4e49e,cet4-w-88452520399cf5c4e49e:long:001,1,pred,主句主干,experts inspected every classroom,专家检查了每间教室,0,true
+cet4-w-88452520399cf5c4e49e,cet4-w-88452520399cf5c4e49e:long:001,2,adv,目的状语, to ensure that damaged wiring had been replaced safely.,以确保受损线路已被安全更换,1,false
+cet4-w-9cba42e078093d550bf2,cet4-w-9cba42e078093d550bf2:long:001,0,subj,主句主语,A debate,一场辩论,0,true
+cet4-w-9cba42e078093d550bf2,cet4-w-9cba42e078093d550bf2:long:001,1,pred,主句系表结构, becomes useful only,只有在某种条件下才会变得有益,0,true
+cet4-w-9cba42e078093d550bf2,cet4-w-9cba42e078093d550bf2:long:001,2,adv,条件时间从句," when participants respect evidence, listen carefully, and admit when their own arguments are weak.",当参与者重视证据、认真倾听并承认自身论点薄弱之处时,1,false
+cet4-w-7b27c3e81299f870cb00,cet4-w-7b27c3e81299f870cb00:long:001,0,adv,让步状语从句,"Although analysts expect prices to fall gradually, ",尽管分析人士预计价格会逐步下降,1,false
+cet4-w-7b27c3e81299f870cb00,cet4-w-7b27c3e81299f870cb00:long:001,1,subj,主句主语,families,各个家庭,0,true
+cet4-w-7b27c3e81299f870cb00,cet4-w-7b27c3e81299f870cb00:long:001,2,pred,主句谓语和时间从句, may not feel the benefit until their monthly bills actually decrease.,可能要等月度账单实际减少时才感到好处,0,true
+cet4-w-f262db840d22de476630,cet4-w-f262db840d22de476630:long:001,0,adv,对象状语,"For graduates entering a changing labour market, ",对进入变化中劳动力市场的毕业生而言,1,false
+cet4-w-f262db840d22de476630,cet4-w-f262db840d22de476630:long:001,1,subj,主语,the prospect of repeated retraining,反复再培训的前景,0,true
+cet4-w-f262db840d22de476630,cet4-w-f262db840d22de476630:long:001,2,pred,系表结构, can seem both demanding and hopeful.,可能显得既艰难又有希望,0,true
+cet4-w-196eea6931afa61926c6,cet4-w-196eea6931afa61926c6:long:001,0,adv,原因状语从句,"Because the airport lies far outside the city, ",由于机场远在城外,1,false
+cet4-w-196eea6931afa61926c6,cet4-w-196eea6931afa61926c6:long:001,1,subj,带定语从句的主语,travelers who arrive late,很晚抵达的旅客,0,true
+cet4-w-196eea6931afa61926c6,cet4-w-196eea6931afa61926c6:long:001,2,pred,比较谓语, often spend more on taxis than on flights.,花在出租车上的钱往往多于机票,0,true
+cet4-w-50a30d1bad42f8113242,cet4-w-50a30d1bad42f8113242:long:001,0,adv,时间状语从句,"While the lecturer was drawing a timeline on the blackboard, ",讲师在黑板上画时间线时,1,false
+cet4-w-50a30d1bad42f8113242,cet4-w-50a30d1bad42f8113242:long:001,1,subj,主语,students in the back row,后排学生,0,true
+cet4-w-50a30d1bad42f8113242,cet4-w-50a30d1bad42f8113242:long:001,2,pred,谓语和宾语, compared it with their notes.,把它同自己的笔记作了比较,0,true
+cet4-w-aef3be74ca48b7eb3d7b,cet4-w-aef3be74ca48b7eb3d7b:long:001,0,subj,主语中心词,A classroom,一个课堂,0,true
+cet4-w-aef3be74ca48b7eb3d7b,cet4-w-aef3be74ca48b7eb3d7b:long:001,1,attr,介词前置定语从句, in which students feel safe to ask questions,学生能够安心提问的,1,false
+cet4-w-aef3be74ca48b7eb3d7b,cet4-w-aef3be74ca48b7eb3d7b:long:001,2,pred,谓语和宾语, creates better conditions for genuine learning.,为真正的学习创造更好条件,0,true
+cet4-w-ef0a124f24fcdea9f25a,cet4-w-ef0a124f24fcdea9f25a:long:001,0,adv,让步状语从句,"Although the newspaper now reaches most readers online, ",尽管这家报纸如今通过网络触达多数读者,1,false
+cet4-w-ef0a124f24fcdea9f25a,cet4-w-ef0a124f24fcdea9f25a:long:001,1,subj,主语,it,它，即这家报纸或报社,0,true
+cet4-w-ef0a124f24fcdea9f25a,cet4-w-ef0a124f24fcdea9f25a:long:001,2,pred,谓语和后置修饰, still prints a weekend edition for people who prefer paper.,仍为偏爱纸质阅读的人印刷周末版,0,true
+cet4-w-da4d2d00a9e5fb8106e9,cet4-w-da4d2d00a9e5fb8106e9:long:001,0,subj,主语,The scientist,这位科学家,0,true
+cet4-w-da4d2d00a9e5fb8106e9,cet4-w-da4d2d00a9e5fb8106e9:long:001,1,attr,非限制性定语从句,", who was already well-known for her climate research,",她早已因气候研究而闻名,1,false
+cet4-w-da4d2d00a9e5fb8106e9,cet4-w-da4d2d00a9e5fb8106e9:long:001,2,pred,谓语和目的补充, used the award to support younger researchers.,用奖金支持更年轻的研究人员,0,true
+cet4-w-ddf68ca6cd54aa5da878,cet4-w-ddf68ca6cd54aa5da878:long:001,0,adv,原因状语从句,"Because color can influence how people judge a product, ",因为颜色会影响人们如何判断产品,1,false
+cet4-w-ddf68ca6cd54aa5da878,cet4-w-ddf68ca6cd54aa5da878:long:001,1,subj,主语,designers,设计师,0,true
+cet4-w-ddf68ca6cd54aa5da878,cet4-w-ddf68ca6cd54aa5da878:long:001,2,pred,谓语和时间顺序, test several versions before choosing the final package.,在选定最终包装前测试多个版本,0,true
+cet4-w-d84a36499767c2a3d0e3,cet4-w-d84a36499767c2a3d0e3:long:001,0,subj,主语中心词,A child,一个孩子,0,true
+cet4-w-d84a36499767c2a3d0e3,cet4-w-d84a36499767c2a3d0e3:long:001,1,attr,定语从句, who is allowed to make small choices,被允许作出小选择的,1,false
+cet4-w-d84a36499767c2a3d0e3,cet4-w-d84a36499767c2a3d0e3:long:001,2,pred,谓语和宾语从句, can gradually learn how decisions lead to consequences.,能逐渐学会决定如何带来后果,0,true
+cet4-w-eb44a3c9cc92e7b5e517,cet4-w-eb44a3c9cc92e7b5e517:long:001,0,subj,主语中心词,Companies,公司,0,true
+cet4-w-eb44a3c9cc92e7b5e517,cet4-w-eb44a3c9cc92e7b5e517:long:001,1,attr,定语从句, that manufacture medical devices,制造医疗器械的,1,false
+cet4-w-eb44a3c9cc92e7b5e517,cet4-w-eb44a3c9cc92e7b5e517:long:001,2,pred,谓语和并列宾语从句, must record where each component came from and how it was tested.,必须记录部件来源及测试方式,0,true
+cet4-w-7050d50383e85d57962a,cet4-w-7050d50383e85d57962a:long:001,0,adv,伴随变化状语从句,"As climate patterns shift, ",随着气候模式变化,1,false
+cet4-w-7050d50383e85d57962a,cet4-w-7050d50383e85d57962a:long:001,1,subj,主语,agriculture,农业,0,true
+cet4-w-7050d50383e85d57962a,cet4-w-7050d50383e85d57962a:long:001,2,pred,谓语和对照动作, must use less water while producing enough food for a growing population.,必须减少用水，同时生产足够食物供养增长中的人口,0,true
+cet4-w-593fc9aa437f4a7f8a46,cet4-w-593fc9aa437f4a7f8a46:long:001,0,adv,依据状语,"According to the survey, ",根据这项调查,1,false
+cet4-w-593fc9aa437f4a7f8a46,cet4-w-593fc9aa437f4a7f8a46:long:001,1,subj,带定语从句的主语,students who review material regularly,经常复习材料的学生,0,true
+cet4-w-593fc9aa437f4a7f8a46,cet4-w-593fc9aa437f4a7f8a46:long:001,2,pred,谓语和比较结果, feel less anxious before major examinations.,在重要考试前感到较少焦虑,0,true

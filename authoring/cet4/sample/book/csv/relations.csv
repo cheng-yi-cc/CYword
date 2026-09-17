@@ -1,0 +1,14 @@
+word_id,relation_index,relation_type,related_word_count
+cet4-w-dcc6b6de5d3f3f80ff02,0,derivative,3
+cet4-w-b4e76965b5a7943279ac,0,derivative,1
+cet4-w-560e8b954a1a6e8c9768,0,derivative,1
+cet4-w-4ced4a567905ee623d9d,0,derivative,1
+cet4-w-45384c5a5727e65aeb71,0,derivative,1
+cet4-w-4336a9e7fc5d08328b8e,0,derivative,3
+cet4-w-798668299e6f528c3725,0,derivative,1
+cet4-w-c87b5d351d670ef64440,0,antonym,1
+cet4-w-f41aa887a6195a11b2ae,0,antonym,1
+cet4-w-f41aa887a6195a11b2ae,1,derivative,1
+cet4-w-8bcbba84a7d7eab25b03,0,derivative,1
+cet4-w-43ac0394e915760d27a8,0,antonym,1
+cet4-w-8c8d138547024805cf9e,0,antonym,1

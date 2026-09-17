@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "wordlistVersion": "cet4-2016-v1",
+  "expectedWords": 100,
+  "contentStatus": "editorial_trial",
+  "officialBook": false,
+  "scope": "30 个构词已核查样板加 70 个已有原创初稿，补齐阅读片段释义并显式登记前置词；供实际应用检查。",
+  "morphologyPolicy": "只用已登记、有证据的构词元素。其余词先以完整词形和熟词对照学习，暂不声明历史拆分，未登记不等于不存在词根。",
+  "review": "试验集可用于本地体验；70 个草稿的构词核查和二次语言复核仍待完成，不发布为正式词书。",
+  "sampleDependencies": {"action":"act","active":"act","activity":"active","actor":"act","react":"act","ability":"able","enable":"able","disable":"able","disabled":"disable","export":"import"}
+}

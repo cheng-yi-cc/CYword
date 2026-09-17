@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "status": "scope_decision_needed",
+  "applied": false,
+  "sourceSha256": "0ac448e58090e7d69604595107183a396cc26cd5157d2a8c512d565649d22a2f",
+  "affectedWords": 10,
+  "affectedExistingRootGroups": 5,
+  "wordsRequiringNewSoloGroup": [
+    "portion",
+    "spicy",
+    "spice"
+  ],
+  "scopeQuestion": "是否把这些六级旧条目的正文和词根归组也纳入本轮修订？修订后需重编排课并处理原有学习进度的兼容。",
+  "corrections": [
+    {
+      "book_code": "cet6",
+      "word_id": "df8ceae2-7fa2-4457-832b-967a8058fe41",
+      "spelling": "character",
+      "legacy_root_id": "0c66d304-1bc9-46cd-80e7-bd1ec3acd4ef",
+      "legacy_form": "act",
+      "decision": "hold_for_reanalysis",
+      "reason": "character 的字母片段 act 不应按‘行动’归组；原词族另核。",
+      "reference_url": "https://www.etymonline.com/word/character",
+      "action": "remove_incorrect_group_membership",
+      "remainingRootForms": [
+        "char"
+      ]
+    },
+    {
+      "book_code": "cet6",
+      "word_id": "6d2b4ccb-1277-4a39-9563-1d57b42b0541",
+      "spelling": "characteristic",
+      "legacy_root_id": "0c66d304-1bc9-46cd-80e7-bd1ec3acd4ef",
+      "legacy_form": "act",
+      "decision": "hold_for_reanalysis",
+      "reason": "character 的字母片段 act 不应按‘行动’归组；原词族另核。",
+      "reference_url": "https://www.etymonline.com/word/character",
+      "action": "remove_incorrect_group_membership",
+      "remainingRootForms": [
+        "char"
+      ]
+    },
+    {
+      "book_code": "cet6",
+      "word_id": "55d7cc1e-405c-4d59-aac6-e4ad5953353a",
+      "spelling": "characterize",
+      "legacy_root_id": "0c66d304-1bc9-46cd-80e7-bd1ec3acd4ef",
+      "legacy_form": "act",
+      "decision": "hold_for_reanalysis",
+      "reason": "character 的字母片段 act 不应按‘行动’归组；原词族另核。",
+      "reference_url": "https://www.etymonline.com/word/character",
+      "action": "remove_incorrect_group_membership",
+      "remainingRootForms": [
+        "char"
+      ]
+    },
+    {
+      "book_code": "cet6",
+      "word_id": "b397b4e3-0b76-4355-a59f-6b64fb87d434",
+      "spelling": "faculty",
+      "legacy_root_id": "f5cb694c-02a2-4dac-8f66-89d42a9a951f",
+      "legacy_form": "cult",
+      "decision": "hold_for_reanalysis",
+      "reason": "faculty 对应拉丁语 facultas，不能因字面含 cult 就归入耕种组。",
+      "reference_url": "https://www.etymonline.com/word/faculty",
+      "action": "remove_incorrect_group_membership",
+      "remainingRootForms": [
+        "fa",
+        "fac"
+      ]
+    },
+    {
+      "book_code": "cet6",
+      "word_id": "2e2cbf9d-2e21-4eb5-a751-c5c31dd10e07",
+      "spelling": "manage",
+      "legacy_root_id": "a4e83e46-65cf-4a7b-89ab-333c0afe1f00",
+      "legacy_form": "ag",
+      "decision": "hold_for_reanalysis",
+      "reason": "manage 的历史词族与手有关，不能仅取中间 ag 归入行动组。",
+      "reference_url": "https://www.etymonline.com/word/manage",
+      "action": "remove_incorrect_group_membership",
+      "remainingRootForms": [
+        "man"
+      ]
+    },
+    {
+      "book_code": "cet6",
+      "word_id": "bbaa98ad-99b6-464a-b30d-184ed476130f",
+      "spelling": "management",
+      "legacy_root_id": "a4e83e46-65cf-4a7b-89ab-333c0afe1f00",
+      "legacy_form": "ag",
+      "decision": "hold_for_reanalysis",
+      "reason": "manage 的历史词族与手有关，不能仅取中间 ag 归入行动组。",
+      "reference_url": "https://www.etymonline.com/word/manage",
+      "action": "remove_incorrect_group_membership",
+      "remainingRootForms": [
+        "man"
+      ]
+    },
+    {
+      "book_code": "cet6",
+      "word_id": "d57613e6-e0c7-4fbf-9e74-ee008ce4d627",
+      "spelling": "manager",
+      "legacy_root_id": "a4e83e46-65cf-4a7b-89ab-333c0afe1f00",
+      "legacy_form": "ag",
+      "decision": "hold_for_reanalysis",
+      "reason": "manage 的历史词族与手有关，不能仅取中间 ag 归入行动组。",
+      "reference_url": "https://www.etymonline.com/word/manage",
+      "action": "remove_incorrect_group_membership",
+      "remainingRootForms": [
+        "man"
+      ]
+    },
+    {
+      "book_code": "cet6",
+      "word_id": "ce483aee-71ce-4a31-8984-884061e0ec43",
+      "spelling": "portion",
+      "legacy_root_id": "e88a8f79-48b1-480e-9598-e29fd0fab414",
+      "legacy_form": "port",
+      "decision": "hold_for_reanalysis",
+      "reason": "旧 port 同时混入不同来源和义项；运输、港口、门、部分、间接历史关系须逐项处理。",
+      "reference_url": "https://www.etymonline.com/word/portion",
+      "action": "remove_incorrect_group_membership",
+      "remainingRootForms": []
+    },
+    {
+      "book_code": "cet6",
+      "word_id": "f2771196-3e46-4df2-adfb-719cf9cb7f4a",
+      "spelling": "spicy",
+      "legacy_root_id": "e0932133-0083-4598-bb91-0ed6b934f13b",
+      "legacy_form": "spic",
+      "decision": "hold_for_reanalysis",
+      "reason": "香料义不能与看的 spect 词族直接合并。",
+      "reference_url": "https://www.etymonline.com/word/spice",
+      "action": "remove_incorrect_group_membership",
+      "remainingRootForms": []
+    },
+    {
+      "book_code": "cet6",
+      "word_id": "ae2f9762-c34c-44ce-bef4-54ac341494df",
+      "spelling": "spice",
+      "legacy_root_id": "e0932133-0083-4598-bb91-0ed6b934f13b",
+      "legacy_form": "spic",
+      "decision": "hold_for_reanalysis",
+      "reason": "香料义不能与看的 spect 词族直接合并。",
+      "reference_url": "https://www.etymonline.com/word/spice",
+      "action": "remove_incorrect_group_membership",
+      "remainingRootForms": []
+    }
+  ]
+}

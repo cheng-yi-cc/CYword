@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "wordlistVersion": "cet4-2016-v1",
+  "updatedAt": "2026-09-17",
+  "status": "in_progress",
+  "complete": false,
+  "totalWords": 6161,
+  "completeSampleWords": 30,
+  "originalDraftWords": 105,
+  "withOriginalMnemonic": 135,
+  "remainingOriginalMnemonic": 6026,
+  "matchedDictionaryReferences": 6158,
+  "matchedCet6Precedents": 3325,
+  "canonicalCet4Published": false,
+  "pilotWords": 100,
+  "selection": {
+    "schemaVersion": 1,
+    "updatedAt": "2026-09-17",
+    "planConversationId": "6aab4728-9fc8-83ee-a584-7f3ef51a7fd9",
+    "selectionPolicy": "选定考纲范围；保留基础词、独立派生词；词形变化单独审义项；书外辅助词不计目标词数。",
+    "frozenWords": 6161,
+    "wordlistSha256": "c7f97ea24f32387df77a5559bb49abf72704492900471d0c9777be8b18295088",
+    "ecdictCommit": "bc015ed2e24a7abef49fc6dbbb7fe32c1dadaf8b",
+    "ecdictCet4Candidates": 3849,
+    "ecdictCandidateRowsMatched": 3395,
+    "ecdictCandidatesOutsideSyllabus": 454,
+    "syllabusWordsWithCet4Tag": 3383,
+    "syllabusWordsWithoutCet4Tag": 2778,
+    "cet6Words": 5166,
+    "exactCrossbookMatches": 3311,
+    "variantCrossbookMatches": 14,
+    "crossbookMatches": 3325,
+    "onlyCet4": 2836,
+    "onlyCet6": 1841,
+    "inflectionReviewCandidates": 189,
+    "inflectionSemanticReviewComplete": true,
+    "scopeChanged": false,
+    "caveat": "各来源的计数分别保存；没有取并集或为了少于六级而删词。命中六级不等于已核准复用。"
+  },
+  "limitation": "参考材料覆盖全词表；原创正文尚未覆盖全词表。新增正文为待二次复核初稿，不是可发布的完整四级词书。",
+  "batches": [
+    {
+      "batchId": "cet4-draft-a01",
+      "file": "content/a01.tsv",
+      "words": 102,
+      "status": "validated_draft"
+    },
+    {
+      "batchId": "cet4-draft-exceptions",
+      "file": "content/exceptions.tsv",
+      "words": 3,
+      "status": "validated_draft"
+    }
+  ]
+}

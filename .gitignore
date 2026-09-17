@@ -1,4 +1,5 @@
 node_modules/
+__pycache__/
 dist/
 dist-site/
 release/
@@ -11,3 +12,9 @@ outputs/
 .wrangler/
 website/worker-configuration.d.ts
 .dev.vars*
+
+# 四级审稿页可从编辑源重建，避免提交完整六级参考的重复副本。
+authoring/cet4/review/index.html
+authoring/cet4/review/originals.md
+authoring/cet4/review/cet6-source-hashes.json
+authoring/cet4/pilot/entries.json

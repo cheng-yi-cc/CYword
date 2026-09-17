@@ -1,0 +1,18 @@
+word_id,relation_type,related_index,related_word_id,spelling,display_text,meaning
+cet4-w-dcc6b6de5d3f3f80ff02,derivative,0,cet4-w-b4e76965b5a7943279ac,action,action 行动；措施,act 的名词派生词
+cet4-w-dcc6b6de5d3f3f80ff02,derivative,1,cet4-w-560e8b954a1a6e8c9768,active,active 积极的；活跃的,act 的形容词派生词
+cet4-w-dcc6b6de5d3f3f80ff02,derivative,2,cet4-w-45384c5a5727e65aeb71,actor,actor 演员,表示行动或表演者的派生词
+cet4-w-b4e76965b5a7943279ac,derivative,0,cet4-w-dcc6b6de5d3f3f80ff02,act,act 行动,对应的基础动词和名词
+cet4-w-560e8b954a1a6e8c9768,derivative,0,cet4-w-4ced4a567905ee623d9d,activity,activity 活动,active 对应的名词派生词
+cet4-w-4ced4a567905ee623d9d,derivative,0,cet4-w-560e8b954a1a6e8c9768,active,active 活跃的,activity 对应的形容词
+cet4-w-45384c5a5727e65aeb71,derivative,0,cet4-w-dcc6b6de5d3f3f80ff02,act,act 表演；行动,actor 的基础词
+cet4-w-4336a9e7fc5d08328b8e,derivative,0,cet4-w-798668299e6f528c3725,ability,ability 能力,able 对应的名词
+cet4-w-4336a9e7fc5d08328b8e,derivative,1,cet4-w-c87b5d351d670ef64440,enable,enable 使能够,en- 加 able 构成的动词
+cet4-w-4336a9e7fc5d08328b8e,derivative,2,cet4-w-f41aa887a6195a11b2ae,disable,disable 使失去能力；禁用,dis- 加 able 构成的动词
+cet4-w-798668299e6f528c3725,derivative,0,cet4-w-4336a9e7fc5d08328b8e,able,able 能够的,ability 对应的形容词
+cet4-w-c87b5d351d670ef64440,antonym,0,cet4-w-f41aa887a6195a11b2ae,disable,disable 禁用；使失去能力,在功能开关语境中与 enable 相反
+cet4-w-f41aa887a6195a11b2ae,antonym,0,cet4-w-c87b5d351d670ef64440,enable,enable 启用；使能够,在功能开关语境中与 disable 相反
+cet4-w-f41aa887a6195a11b2ae,derivative,0,cet4-w-8bcbba84a7d7eab25b03,disabled,disabled 残障的；被禁用的,disable 的过去分词形容词
+cet4-w-8bcbba84a7d7eab25b03,derivative,0,cet4-w-f41aa887a6195a11b2ae,disable,disable 使失去能力；禁用,disabled 的基础动词
+cet4-w-43ac0394e915760d27a8,antonym,0,cet4-w-8c8d138547024805cf9e,export,export 出口,贸易流向与 import 相反
+cet4-w-8c8d138547024805cf9e,antonym,0,cet4-w-43ac0394e915760d27a8,import,import 进口,贸易流向与 export 相反

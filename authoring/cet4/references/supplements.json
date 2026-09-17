@@ -1,0 +1,11 @@
+{
+  "verifiedAt": "2026-09-17",
+  "items": [
+    {"spelling":"microwavable","urls":["https://dictionary.cambridge.org/us/pronunciation/english/microwavable","https://www.btb.termiumplus.gc.ca/tpv2alpha/alpha-eng.html?codom2nd_wet=1&i=&index=alt&lang=eng&srchtxt=MICROWAVABLE"],"claim":"核对 microwavable 音标及微波炉适用义；中文释义与句子另行编写。"},
+    {"spelling":"oughtto","urls":["https://dictionary.cambridge.org/dictionary/learner-english/ought"],"claim":"核对 ought to 分写、ought 发音及应该/合理预期义；教学展示恢复空格，不改变冻结 ID。"},
+    {"spelling":"résumé","urls":["https://dictionary.cambridge.org/us/pronunciation/english/resume","https://www.dictionary.com/browse/resume"],"claim":"核对 résumé 名词音标和简历义，与 resume 动词分别处理。"},
+    {"spelling":"abandon","urls":["https://www.etymonline.com/word/abandon"],"claim":"来源为法语 abandonner，与 à bandon 有关；不把 -d、-on 当独立英语动词后缀。"},
+    {"spelling":"dessert","urls":["https://www.etymonline.com/word/dessert"],"claim":"来自法语清理餐桌的相关表达；六级中 sert=放置只作待纠正参考，不迁入四级词根。"},
+    {"spelling":"passport","urls":["https://www.etymonline.com/word/passport"],"claim":"历史结构涉及 pass 与港口 port，不将此 port 当作运送词根参与分组。"}
+  ]
+}

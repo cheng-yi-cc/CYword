@@ -1,0 +1,2 @@
+book_id,book_code,book_name,target_exam,total_words_metadata,enumerated_unique_words,metadata_difference,root_count,purchase_status,lifecycle_status,is_active,currently_available,current_period_ends_at,final_ends_at
+cyword-cet4,cet4,大学英语四级（30 词样板）,cet4,30,30,0,32,not_applicable,stage2_sample,false,false,,

@@ -1,15 +1,20 @@
 import fs from "node:fs";
 import path from "node:path";
 import { parse } from "csv-parse/sync";
+import { validateDependencies } from "./cet4/dependency-graph.mjs";
 
 const projectRoot = process.cwd();
 const bookCode = process.env.CYWORD_BOOK ?? process.argv[2] ?? "cet6";
 if (!/^[a-z0-9][a-z0-9_-]*$/u.test(bookCode)) {
   throw new Error(`Invalid book code: ${bookCode}`);
 }
-const bookDir = path.join(projectRoot, "books", bookCode);
+const bookDir = process.env.CYWORD_BOOK_DIR
+  ? path.resolve(projectRoot, process.env.CYWORD_BOOK_DIR)
+  : path.join(projectRoot, "books", bookCode);
 const csvDir = path.join(bookDir, "csv");
-const outDir = path.join(projectRoot, "data");
+const outDir = process.env.CYWORD_DATA_DIR
+  ? path.resolve(projectRoot, process.env.CYWORD_DATA_DIR)
+  : path.join(projectRoot, "data");
 const wordOutDir = path.join(outDir, "words");
 const bookManifest = JSON.parse(fs.readFileSync(path.join(bookDir, "book.json"), "utf8"));
 
@@ -137,7 +142,15 @@ const wordDeps = [];
 const wordIncomingDeps = new Map();
 wordsRaw.forEach((w) => wordIncomingDeps.set(w.word_id, new Set()));
 
-for (const w of wordsRaw) {
+if (bookManifest.dependencies) {
+  const declared = bookManifest.dependencies.map((edge) => ({word_id:edge.wordId,prerequisite_word_id:edge.prerequisiteWordId}));
+  validateDependencies(wordsRaw.map(w=>w.word_id), declared);
+  for (const edge of declared) {
+    wordDeps.push({sourceWordId:edge.word_id,targetWordId:edge.prerequisite_word_id});
+    wordIncomingDeps.get(edge.word_id).add(edge.prerequisite_word_id);
+  }
+}
+for (const w of bookManifest.dependencies ? [] : wordsRaw) {
   const combined = `${w.memory_markup || ""}\n${w.etymology_markup || ""}`;
   const foundPrereqs = new Set();
 
@@ -216,7 +229,15 @@ function sortWordsInGroup(wordIds) {
   return sorted;
 }
 
-const trueRootRows = rootsRaw.filter((row) => row.root_type === "root" && row.root_id);
+const allTrueRootRows = rootsRaw.filter((row) => row.root_type === "root" && row.root_id);
+const minimumRootWords = bookManifest.planning?.minimumWordsPerRootStudyGroup ?? 1;
+if (!Number.isInteger(minimumRootWords) || minimumRootWords < 1) throw new Error('Invalid root study minimum');
+const rootWordSets = new Map();
+for (const row of allTrueRootRows) {
+  if (!rootWordSets.has(row.root_id)) rootWordSets.set(row.root_id, new Set());
+  rootWordSets.get(row.root_id).add(row.word_id);
+}
+const trueRootRows = allTrueRootRows.filter(row => rootWordSets.get(row.root_id).size >= minimumRootWords);
 const trueRootsById = indexMany(trueRootRows, "root_id");
 const wordsWithTrueRoots = new Set(trueRootRows.map((row) => row.word_id));
 
@@ -344,6 +365,12 @@ const summaryWords = Object.fromEntries(
   ]),
 );
 
+const generatedDataDir = path.resolve(projectRoot, "data");
+const workRoot = path.resolve(projectRoot, ".work");
+const workRelative = path.relative(workRoot, outDir);
+if (outDir !== generatedDataDir && (!workRelative || workRelative.startsWith("..") || path.isAbsolute(workRelative))) {
+  throw new Error(`Refusing to replace a directory outside data/ or a .work/ subdirectory: ${outDir}`);
+}
 fs.rmSync(outDir, { recursive: true, force: true });
 fs.mkdirSync(wordOutDir, { recursive: true });
 

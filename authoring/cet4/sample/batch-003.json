@@ -1,0 +1,1023 @@
+{
+  "batchId": "cet4-s2-b003",
+  "stage": 2,
+  "status": "reviewed",
+  "reviewer": "codex_second_pass",
+  "reviewedAt": "2026-09-17",
+  "entries": [
+    {
+      "wordId": "cet4-w-196eea6931afa61926c6",
+      "wordOrder": 174,
+      "spelling": "airport",
+      "variants": [],
+      "pronunciation": "/ˈeəpɔːt/",
+      "definitionCn": "n. 机场；航空站。",
+      "memoryMarkup": "船有港口，飞机也要有个停靠、上下客的地方。把 [[morph:base:en:air:air|air]] 空中与 [[morph:base:en:port:harbor|port]] 港口连起来，机场就好记了。这里的 port 是港口词基。",
+      "etymologyMarkup": "[[morph:base:en:air:air|air]]（空中）+ [[morph:base:en:port:harbor|port]]（港口）→ 飞机起降和旅客集散的机场。",
+      "rootAffixNotes": "这里的 port 是“港口、出入口”词基，不与 [[word:report|report]] 中表示“运送”的拉丁词根合并。",
+      "rootAffixAccumulation": "透明复合词先辨认两个完整词基，再理解整体用途。",
+      "morphemes": [
+        {
+          "key": "morph:base:en:air:air",
+          "spelling": "air"
+        },
+        {
+          "key": "morph:base:en:port:harbor",
+          "spelling": "port"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "A shuttle bus connects the airport with the city centre.",
+          "translation": "一辆摆渡车连接机场和市中心。",
+          "matchedSurface": "airport",
+          "contextExplanation": "airport 指旅客到达或离开的交通设施。",
+          "difficultyRationale": "connect A with B 是常见搭配。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "international airport",
+          "meaning": "国际机场",
+          "example": "The new railway ends beside the international airport."
+        }
+      ],
+      "relations": [],
+      "longSentences": [
+        {
+          "sentence": "Because the airport lies far outside the city, travelers who arrive late often spend more on taxis than on flights.",
+          "translation": "由于机场远在城外，深夜抵达的旅客花在出租车上的钱往往比花在机票上的还多。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "airport",
+          "targetSense": "机场",
+          "targetSegment": 0,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "原因状语从句",
+              "text": "Because the airport lies far outside the city, ",
+              "gloss": "由于机场远在城外",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "subj",
+              "roleLabel": "带定语从句的主语",
+              "text": "travelers who arrive late",
+              "gloss": "很晚抵达的旅客",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "pred",
+              "roleLabel": "比较谓语",
+              "text": " often spend more on taxis than on flights.",
+              "gloss": "花在出租车上的钱往往多于机票",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "因果与比较",
+              "keyword": "Because 与 more ... than",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "Because 从句解释费用差异的原因；主句用 more ... than 比较两类花费。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "复合词",
+              "keyword": "the airport",
+              "refs": [
+                0
+              ],
+              "analysisText": "airport 在原因从句中是主语，lies 表示它所处的位置。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-airport",
+        "ev-edit-b003",
+        "ev-etym-airport"
+      ]
+    },
+    {
+      "wordId": "cet4-w-50a30d1bad42f8113242",
+      "wordOrder": 595,
+      "spelling": "blackboard",
+      "variants": [],
+      "pronunciation": "/ˈblækbɔːd/",
+      "definitionCn": "n. 黑板。",
+      "memoryMarkup": "老师擦掉上一节课的板书，黑底上又响起粉笔声。[[morph:base:en:black:black|black]] 加 [[morph:base:en:board:flat_board|board]]，先用黑色的板子记 blackboard，后来绿色的粉笔板也照样这么叫。",
+      "etymologyMarkup": "[[morph:base:en:black:black|black]]（黑色的）+ [[morph:base:en:board:flat_board|board]]（板）→ 黑板。",
+      "rootAffixNotes": "这是透明复合词。现代教室里的板面未必是黑色，但固定词义仍是“黑板”。",
+      "rootAffixAccumulation": "复合词的历史名称可能保留，即使实物颜色后来发生变化。",
+      "morphemes": [
+        {
+          "key": "morph:base:en:black:black",
+          "spelling": "black"
+        },
+        {
+          "key": "morph:base:en:board:flat_board",
+          "spelling": "board"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "The teacher drew a simple map on the blackboard.",
+          "translation": "老师在黑板上画了一幅简单的地图。",
+          "matchedSurface": "blackboard",
+          "contextExplanation": "on the blackboard 表示书写发生的表面。",
+          "difficultyRationale": "一般过去时和地点介词清晰。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "write on the blackboard",
+          "meaning": "在黑板上写",
+          "example": "Please write the final answer on the blackboard."
+        }
+      ],
+      "relations": [],
+      "longSentences": [
+        {
+          "sentence": "While the lecturer was drawing a timeline on the blackboard, students in the back row compared it with their notes.",
+          "translation": "讲师在黑板上画时间线时，后排学生把它同自己的笔记作了比较。",
+          "difficultyBand": "四级中等",
+          "sentenceDifficulty": "cet4_standard",
+          "targetSurface": "blackboard",
+          "targetSense": "黑板",
+          "targetSegment": 0,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "时间状语从句",
+              "text": "While the lecturer was drawing a timeline on the blackboard, ",
+              "gloss": "讲师在黑板上画时间线时",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "subj",
+              "roleLabel": "主语",
+              "text": "students in the back row",
+              "gloss": "后排学生",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "pred",
+              "roleLabel": "谓语和宾语",
+              "text": " compared it with their notes.",
+              "gloss": "把它同自己的笔记作了比较",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "同时发生",
+              "keyword": "While",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "While 从句与主句描述两个同时进行的动作；主句 it 回指 timeline。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "介词位置",
+              "keyword": "on the blackboard",
+              "refs": [
+                0
+              ],
+              "analysisText": "把黑板视为书写表面时用介词 on。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-blackboard",
+        "ev-edit-b003",
+        "ev-etym-blackboard"
+      ]
+    },
+    {
+      "wordId": "cet4-w-aef3be74ca48b7eb3d7b",
+      "wordOrder": 957,
+      "spelling": "classroom",
+      "variants": [],
+      "pronunciation": "/ˈklɑːsruːm/",
+      "definitionCn": "n. 教室；课堂环境。",
+      "memoryMarkup": "铃响以后，一个 [[morph:base:en:class:class_group|class]] 班的同学挤进同一间 [[morph:base:en:room:enclosed_space|room]]。把上课的人和上课的房间接起来，就是 classroom。",
+      "etymologyMarkup": "[[morph:base:en:class:class_group|class]]（班级、课）+ [[morph:base:en:room:enclosed_space|room]]（房间）→ 教室。",
+      "rootAffixNotes": "classroom 既可指具体教室，也可概括课堂教学环境，如 classroom discussion。",
+      "rootAffixAccumulation": "两个完整词基直接组合，重音通常落在第一个成分。",
+      "morphemes": [
+        {
+          "key": "morph:base:en:class:class_group",
+          "spelling": "class"
+        },
+        {
+          "key": "morph:base:en:room:enclosed_space",
+          "spelling": "room"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "Each classroom has large windows and movable desks.",
+          "translation": "每间教室都有大窗户和可移动的课桌。",
+          "matchedSurface": "classroom",
+          "contextExplanation": "classroom 指具体教学房间。",
+          "difficultyRationale": "一般现在时描述设施。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "classroom discussion",
+          "meaning": "课堂讨论",
+          "example": "The article led to a lively classroom discussion."
+        }
+      ],
+      "relations": [],
+      "longSentences": [
+        {
+          "sentence": "A classroom in which students feel safe to ask questions creates better conditions for genuine learning.",
+          "translation": "一个让学生能够安心提问的课堂，会为真正的学习创造更好的条件。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "classroom",
+          "targetSense": "课堂环境",
+          "targetSegment": 0,
+          "segments": [
+            {
+              "role": "subj",
+              "roleLabel": "主语中心词",
+              "text": "A classroom",
+              "gloss": "一个课堂",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "attr",
+              "roleLabel": "介词前置定语从句",
+              "text": " in which students feel safe to ask questions",
+              "gloss": "学生能够安心提问的",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "pred",
+              "roleLabel": "谓语和宾语",
+              "text": " creates better conditions for genuine learning.",
+              "gloss": "为真正的学习创造更好条件",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "介词前置",
+              "keyword": "in which",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "in which 相当于 where，定语从句修饰 classroom；主句谓语是 creates。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "抽象延伸",
+              "keyword": "A classroom",
+              "refs": [
+                0
+              ],
+              "analysisText": "这里的 classroom 不只是一间房，也包含学生能否安心提问的课堂环境。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-classroom",
+        "ev-edit-b003",
+        "ev-etym-classroom"
+      ]
+    },
+    {
+      "wordId": "cet4-w-ef0a124f24fcdea9f25a",
+      "wordOrder": 3695,
+      "spelling": "newspaper",
+      "variants": [],
+      "pronunciation": "/ˈnjuːzpeɪpə(r)/",
+      "definitionCn": "n. 报纸；报社。",
+      "memoryMarkup": "早餐桌上摊着一张纸，昨天的球赛和今天的天气都印在上面。[[morph:base:en:news:news|news]] 消息加 [[morph:base:en:paper:paper_publication|paper]] 纸，就是 newspaper。别把 news 末尾的 s 丢了。",
+      "etymologyMarkup": "[[morph:base:en:news:news|news]]（新闻）+ [[morph:base:en:paper:paper_publication|paper]]（纸、报纸）→ 报纸。",
+      "rootAffixNotes": "newspaper 可指一份报纸、报纸这种媒介，也可在语境中转指报社。",
+      "rootAffixAccumulation": "复合词里的 news 虽以 s 结尾，但在这里不是普通复数形式。",
+      "morphemes": [
+        {
+          "key": "morph:base:en:news:news",
+          "spelling": "news"
+        },
+        {
+          "key": "morph:base:en:paper:paper_publication",
+          "spelling": "paper"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "She reads the local newspaper on her way to work.",
+          "translation": "她上班路上读当地报纸。",
+          "matchedSurface": "newspaper",
+          "contextExplanation": "newspaper 指具体报纸。",
+          "difficultyRationale": "on one's way to 是常见时间地点表达。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "a local newspaper",
+          "meaning": "地方报纸",
+          "example": "A local newspaper first reported the discovery."
+        }
+      ],
+      "relations": [],
+      "longSentences": [
+        {
+          "sentence": "Although the newspaper now reaches most readers online, it still prints a weekend edition for people who prefer paper.",
+          "translation": "尽管这家报纸如今主要通过网络触达读者，它仍为偏爱纸质阅读的人印刷周末版。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "newspaper",
+          "targetSense": "报纸；报社",
+          "targetSegment": 0,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "让步状语从句",
+              "text": "Although the newspaper now reaches most readers online, ",
+              "gloss": "尽管这家报纸如今通过网络触达多数读者",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "subj",
+              "roleLabel": "主语",
+              "text": "it",
+              "gloss": "它，即这家报纸或报社",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "pred",
+              "roleLabel": "谓语和后置修饰",
+              "text": " still prints a weekend edition for people who prefer paper.",
+              "gloss": "仍为偏爱纸质阅读的人印刷周末版",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "让步与指代",
+              "keyword": "Although ... it",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "Although 对比数字发行与纸质发行；it 回指 newspaper，who 从句修饰 people。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "机构转喻",
+              "keyword": "the newspaper",
+              "refs": [
+                0
+              ],
+              "analysisText": "能 reach readers、prints an edition 的是报社机构，因此 newspaper 在此兼有机构义。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-newspaper",
+        "ev-edit-b003",
+        "ev-etym-newspaper"
+      ]
+    },
+    {
+      "wordId": "cet4-w-da4d2d00a9e5fb8106e9",
+      "wordOrder": 6023,
+      "spelling": "well-known",
+      "variants": [],
+      "pronunciation": "/ˌwel ˈnəʊn/",
+      "definitionCn": "adj. 众所周知的；著名的；为人熟知的。",
+      "memoryMarkup": "你只说出他的名字，桌上的人就都点头了。一个人被大家知道得很充分，就是 well-known，著名的。[[morph:base:en:well:well_adverb|well]] 在这里有“很、充分”的意思。",
+      "etymologyMarkup": "[[morph:base:en:well:well_adverb|well]]（很好地）+ [[morph:base:en:known:known|known]]（为人所知的）→ 广为人知的。",
+      "rootAffixNotes": "作前置定语时通常保留连字符，如 a well-known writer；位于系动词后也常写 well known。冻结词表按考纲形式保留连字符。",
+      "rootAffixAccumulation": "连字符帮助读者把 well 和 known 识别为共同修饰后续名词的整体。",
+      "morphemes": [
+        {
+          "key": "morph:base:en:well:well_adverb",
+          "spelling": "well"
+        },
+        {
+          "key": "morph:base:en:known:known",
+          "spelling": "known"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "The town is well-known for its autumn music festival.",
+          "translation": "这座城镇因秋季音乐节而闻名。",
+          "matchedSurface": "well-known",
+          "contextExplanation": "be well-known for 表示因某事而出名。",
+          "difficultyRationale": "系表结构配原因介词 for。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "be well-known for",
+          "meaning": "因……而闻名",
+          "example": "The region is well-known for its tea."
+        }
+      ],
+      "relations": [],
+      "longSentences": [
+        {
+          "sentence": "The scientist, who was already well-known for her climate research, used the award to support younger researchers.",
+          "translation": "这位早已因气候研究而闻名的科学家，用奖金支持了更年轻的研究人员。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "well-known",
+          "targetSense": "著名的",
+          "targetSegment": 1,
+          "segments": [
+            {
+              "role": "subj",
+              "roleLabel": "主语",
+              "text": "The scientist",
+              "gloss": "这位科学家",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "attr",
+              "roleLabel": "非限制性定语从句",
+              "text": ", who was already well-known for her climate research,",
+              "gloss": "她早已因气候研究而闻名",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "pred",
+              "roleLabel": "谓语和目的补充",
+              "text": " used the award to support younger researchers.",
+              "gloss": "用奖金支持更年轻的研究人员",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "插入定语",
+              "keyword": "who",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "逗号中的 who 从句补充科学家的背景；主干是 The scientist used the award。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "原因搭配",
+              "keyword": "well-known for",
+              "refs": [
+                1
+              ],
+              "analysisText": "for 引出她出名的原因 climate research。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-well-known",
+        "ev-edit-b003",
+        "ev-etym-well-known"
+      ]
+    },
+    {
+      "wordId": "cet4-w-ddf68ca6cd54aa5da878",
+      "wordOrder": 1025,
+      "spelling": "color",
+      "variants": [
+        "colour"
+      ],
+      "pronunciation": "/ˈkʌlə(r)/",
+      "definitionCn": "n. 颜色；色彩；气色。v. 给……着色；影响。",
+      "memoryMarkup": "在画图软件里点开 Color，面前立刻弹出一整盘颜色。把这个按钮和调色盘一起记住；看到英式拼写 colour，多一个 u，颜色没变。",
+      "etymologyMarkup": "color 是美式拼写，colour 是英式拼写。两者属于同一学习词条，本样板不按相似字母强拆词根。",
+      "rootAffixNotes": "该词采用整体记忆，不创建真正词根。应用展示规范拼写 color，并在说明中保留变体 colour。",
+      "rootAffixAccumulation": "同一文本应尽量保持英式或美式拼写体系一致。",
+      "morphemes": [],
+      "examples": [
+        {
+          "sentence": "Warm colors can make a small room feel more welcoming.",
+          "translation": "暖色能让小房间显得更温馨。",
+          "matchedSurface": "colors",
+          "contextExplanation": "color 用复数表示多种色彩。",
+          "difficultyRationale": "make + 宾语 + 形容词是典型宾补结构。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "bright color",
+          "meaning": "鲜艳的颜色",
+          "example": "A bright color can draw attention to the sign."
+        }
+      ],
+      "relations": [],
+      "longSentences": [
+        {
+          "sentence": "Because color can influence how people judge a product, designers test several versions before choosing the final package.",
+          "translation": "因为颜色会影响人们对产品的判断，设计师会先测试几个版本，再选定最终包装。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "color",
+          "targetSense": "颜色；色彩",
+          "targetSegment": 0,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "原因状语从句",
+              "text": "Because color can influence how people judge a product, ",
+              "gloss": "因为颜色会影响人们如何判断产品",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "subj",
+              "roleLabel": "主语",
+              "text": "designers",
+              "gloss": "设计师",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "pred",
+              "roleLabel": "谓语和时间顺序",
+              "text": " test several versions before choosing the final package.",
+              "gloss": "在选定最终包装前测试多个版本",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "原因与宾语从句",
+              "keyword": "Because 与 how",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "Because 从句给出设计测试的原因；how 从句是 influence 的影响内容。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "不可数概念",
+              "keyword": "color can influence",
+              "refs": [
+                0
+              ],
+              "analysisText": "color 在这里概括色彩因素，按不可数概念作从句主语。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-color",
+        "ev-edit-b003",
+        "ev-etym-color"
+      ]
+    },
+    {
+      "wordId": "cet4-w-d84a36499767c2a3d0e3",
+      "wordOrder": 902,
+      "spelling": "child",
+      "variants": [],
+      "pronunciation": "/tʃaɪld/",
+      "definitionCn": "n. 儿童；孩子；子女。",
+      "memoryMarkup": "游乐园入口分了两列，Adult 走成人通道，Child 走儿童通道。先把 child 和那个背着小书包的孩子连起来。几个孩子要写 children，不能直接添 s。",
+      "etymologyMarkup": "child 是古英语传承词，现代英语里没有适合按字母切开的可生产词根词缀结构。",
+      "rootAffixNotes": "该词采用整体记忆，不创建真正词根。复数是不规则形式 children，不是 childs。",
+      "rootAffixAccumulation": "childhood 中可把 child 识别为完整词基，但本词本身不强拆。",
+      "morphemes": [],
+      "examples": [
+        {
+          "sentence": "Every child needs time to play and explore.",
+          "translation": "每个孩子都需要玩耍和探索的时间。",
+          "matchedSurface": "child",
+          "contextExplanation": "every 后接单数名词 child。",
+          "difficultyRationale": "不定式说明 time 的用途。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "a young child",
+          "meaning": "年幼的孩子",
+          "example": "A young child may ask the same question many times."
+        }
+      ],
+      "relations": [],
+      "longSentences": [
+        {
+          "sentence": "A child who is allowed to make small choices can gradually learn how decisions lead to consequences.",
+          "translation": "一个被允许作出小选择的孩子，可以逐渐学会决定如何带来后果。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "child",
+          "targetSense": "孩子；儿童",
+          "targetSegment": 0,
+          "segments": [
+            {
+              "role": "subj",
+              "roleLabel": "主语中心词",
+              "text": "A child",
+              "gloss": "一个孩子",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "attr",
+              "roleLabel": "定语从句",
+              "text": " who is allowed to make small choices",
+              "gloss": "被允许作出小选择的",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "pred",
+              "roleLabel": "谓语和宾语从句",
+              "text": " can gradually learn how decisions lead to consequences.",
+              "gloss": "能逐渐学会决定如何带来后果",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "双从句",
+              "keyword": "who 与 how",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "who 从句修饰 child；how 从句说明 learn 的内容。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "单数主语",
+              "keyword": "A child",
+              "refs": [
+                0
+              ],
+              "analysisText": "A child 代表任意一个孩子，后面的谓语由情态动词 can 引出。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-child",
+        "ev-edit-b003",
+        "ev-etym-child"
+      ]
+    },
+    {
+      "wordId": "cet4-w-eb44a3c9cc92e7b5e517",
+      "wordOrder": 3367,
+      "spelling": "manufacture",
+      "variants": [],
+      "pronunciation": "/ˌmænjuˈfæktʃə(r)/",
+      "definitionCn": "v. 制造；加工；捏造。n. 制造；生产。",
+      "memoryMarkup": "看一双手把零件装成小车，再把画面换成整条生产线。[[morph:root:la:manu:hand|manu]] 是手，[[morph:root:la:fact:make_do|fact]] 是做。manufacture 从这个制作的画面记到制造、生产。",
+      "etymologyMarkup": "[[morph:root:la:manu:hand|manu]]（手）+ [[morph:root:la:fact:make_do|fact]]（做、制作）+ [[morph:suffix:la:-ure:result_process_noun|-ure]] → 制造；现代可指用机器批量生产。",
+      "rootAffixNotes": "manufacture goods 表示制造商品；引申义 manufacture evidence 表示捏造证据。该词含两个真正词根，排课时会在两个根组中出现。",
+      "rootAffixAccumulation": "manu 见于 manual；fact/fac 见于 factory、factor 等词，但具体构词仍需逐词核实。",
+      "morphemes": [
+        {
+          "key": "morph:root:la:manu:hand",
+          "spelling": "manu"
+        },
+        {
+          "key": "morph:root:la:fact:make_do",
+          "spelling": "fact"
+        },
+        {
+          "key": "morph:suffix:la:-ure:result_process_noun",
+          "spelling": "-ure"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "The plant manufactures parts for electric buses.",
+          "translation": "这家工厂为电动公交车制造零部件。",
+          "matchedSurface": "manufactures",
+          "contextExplanation": "manufacture 表示工业生产。",
+          "difficultyRationale": "for 引出零部件用途。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "manufacture goods",
+          "meaning": "制造商品",
+          "example": "The company manufactures goods from recycled metal."
+        }
+      ],
+      "relations": [],
+      "longSentences": [
+        {
+          "sentence": "Companies that manufacture medical devices must record where each component came from and how it was tested.",
+          "translation": "制造医疗器械的公司必须记录每个部件来自哪里，以及它是如何接受测试的。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "manufacture",
+          "targetSense": "制造",
+          "targetSegment": 1,
+          "segments": [
+            {
+              "role": "subj",
+              "roleLabel": "主语中心词",
+              "text": "Companies",
+              "gloss": "公司",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "attr",
+              "roleLabel": "定语从句",
+              "text": " that manufacture medical devices",
+              "gloss": "制造医疗器械的",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "pred",
+              "roleLabel": "谓语和并列宾语从句",
+              "text": " must record where each component came from and how it was tested.",
+              "gloss": "必须记录部件来源及测试方式",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "并列疑问从句",
+              "keyword": "where ... and how",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "that 从句限定 companies；where 与 how 引导两个并列的 record 宾语从句。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "生产义",
+              "keyword": "manufacture medical devices",
+              "refs": [
+                1
+              ],
+              "analysisText": "manufacture 强调按工业流程制造产品，比一般的 make 更正式。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-manufacture",
+        "ev-edit-b003",
+        "ev-etym-manufacture"
+      ]
+    },
+    {
+      "wordId": "cet4-w-7050d50383e85d57962a",
+      "wordOrder": 163,
+      "spelling": "agriculture",
+      "variants": [],
+      "pronunciation": "/ˈæɡrɪkʌltʃə(r)/",
+      "definitionCn": "n. 农业；农学；农耕。",
+      "memoryMarkup": "一块田，春天翻土播种，秋天弯腰收粮。[[morph:root:la:agr:field|agri]] 是田地，[[morph:root:la:cult:cultivate|cult]] 是耕作，把这整件事合起来，就是 agriculture，农业。",
+      "etymologyMarkup": "[[morph:root:la:agr:field|agri]]（田地）+ [[morph:root:la:cult:cultivate|cult]]（耕种、培育）+ [[morph:suffix:la:-ure:result_process_noun|-ure]] → 农业。",
+      "rootAffixNotes": "agriculture 通常作不可数名词。该词包含 agr 与 cult 两个真正词根，不能只因看到 culture 就把它解释成现代“文化”。",
+      "rootAffixAccumulation": "agri- 与田地相关；cult 在这里保留耕种、培育义。",
+      "morphemes": [
+        {
+          "key": "morph:root:la:agr:field",
+          "spelling": "agri"
+        },
+        {
+          "key": "morph:root:la:cult:cultivate",
+          "spelling": "cult"
+        },
+        {
+          "key": "morph:suffix:la:-ure:result_process_noun",
+          "spelling": "-ure"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "Agriculture remains the main source of income in the region.",
+          "translation": "农业仍是该地区的主要收入来源。",
+          "matchedSurface": "Agriculture",
+          "contextExplanation": "agriculture 概括整个产业，作不可数名词。",
+          "difficultyRationale": "remain 后接名词表语。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "modern agriculture",
+          "meaning": "现代农业",
+          "example": "Modern agriculture depends on both science and local knowledge."
+        }
+      ],
+      "relations": [],
+      "longSentences": [
+        {
+          "sentence": "As climate patterns shift, agriculture must use less water while producing enough food for a growing population.",
+          "translation": "随着气候模式变化，农业必须在减少用水的同时，为不断增长的人口生产足够的食物。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "agriculture",
+          "targetSense": "农业",
+          "targetSegment": 1,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "伴随变化状语从句",
+              "text": "As climate patterns shift, ",
+              "gloss": "随着气候模式变化",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "subj",
+              "roleLabel": "主语",
+              "text": "agriculture",
+              "gloss": "农业",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "pred",
+              "roleLabel": "谓语和对照动作",
+              "text": " must use less water while producing enough food for a growing population.",
+              "gloss": "必须减少用水，同时生产足够食物供养增长中的人口",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "同步动作",
+              "keyword": "As 与 while doing",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "As 描述外部变化；while producing 表示农业需要同时完成的另一项任务。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "产业主语",
+              "keyword": "agriculture must",
+              "refs": [
+                1,
+                2
+              ],
+              "analysisText": "agriculture 作为产业概念拟人化作主语，实际指农业生产体系。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-agriculture",
+        "ev-edit-b003",
+        "ev-etym-agriculture"
+      ]
+    },
+    {
+      "wordId": "cet4-w-593fc9aa437f4a7f8a46",
+      "wordOrder": 41,
+      "spelling": "according to",
+      "variants": [],
+      "pronunciation": "/əˈkɔːdɪŋ tə/",
+      "definitionCn": "prep. 根据；按照；据……所说。",
+      "memoryMarkup": "你说下午会下雨，同学问你怎么知道的，你指指天气预报。according to 后面就接这样的消息来源，according to the forecast，根据预报。整块记，不必拆成零散字母。",
+      "etymologyMarkup": "according to 已形成固定介词短语，现代学习中按整体用法掌握，不把 according 的字母片段强拆成排课词根。",
+      "rootAffixNotes": "该短语采用整体记忆，不创建真正词根。according to me 通常不自然；表达个人观点更常用 in my opinion。",
+      "rootAffixAccumulation": "句首使用时，短语后的介词宾语说明信息或判断的依据。",
+      "morphemes": [],
+      "examples": [
+        {
+          "sentence": "According to the timetable, the last bus leaves at eleven.",
+          "translation": "根据时刻表，末班车十一点发车。",
+          "matchedSurface": "According to",
+          "contextExplanation": "according to 后接信息来源 timetable。",
+          "difficultyRationale": "句首介词短语与主句边界清楚。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "according to the report",
+          "meaning": "根据报告",
+          "example": "According to the report, air quality improved last year."
+        }
+      ],
+      "relations": [],
+      "longSentences": [
+        {
+          "sentence": "According to the survey, students who review material regularly feel less anxious before major examinations.",
+          "translation": "根据这项调查，经常复习材料的学生在重要考试前感到的焦虑较少。",
+          "difficultyBand": "四级中等",
+          "sentenceDifficulty": "cet4_standard",
+          "targetSurface": "According to",
+          "targetSense": "根据；据……所示",
+          "targetSegment": 0,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "依据状语",
+              "text": "According to the survey, ",
+              "gloss": "根据这项调查",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "subj",
+              "roleLabel": "带定语从句的主语",
+              "text": "students who review material regularly",
+              "gloss": "经常复习材料的学生",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "pred",
+              "roleLabel": "谓语和比较结果",
+              "text": " feel less anxious before major examinations.",
+              "gloss": "在重要考试前感到较少焦虑",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "依据与定语",
+              "keyword": "According to 与 who",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "句首短语说明结论来源；who 从句限定 students，主句谓语是 feel。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "介词短语",
+              "keyword": "According to the survey",
+              "refs": [
+                0
+              ],
+              "analysisText": "according to 后接调查这一信息来源，不表达说话者自己的主观观点。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-according-to",
+        "ev-edit-b003",
+        "ev-etym-according-to"
+      ]
+    }
+  ]
+}

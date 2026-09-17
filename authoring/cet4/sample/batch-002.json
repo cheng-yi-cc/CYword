@@ -1,0 +1,1074 @@
+{
+  "batchId": "cet4-s2-b002",
+  "stage": 2,
+  "status": "reviewed",
+  "reviewer": "codex_second_pass",
+  "reviewedAt": "2026-09-17",
+  "entries": [
+    {
+      "wordId": "cet4-w-8bcbba84a7d7eab25b03",
+      "wordOrder": 1629,
+      "spelling": "disabled",
+      "variants": [],
+      "pronunciation": "/dɪsˈeɪbəld/",
+      "definitionCn": "adj. 残障的；被禁用的；失去功能的。",
+      "memoryMarkup": "开关关掉以后，按钮变灰，旁边写着 disabled。[[word:disable|disable]] 是关闭的动作，disabled 是已经不能使用的状态。说到人时，这个词还表示残障的。",
+      "etymologyMarkup": "[[morph:prefix:la:dis-:reverse_remove|dis-]] + [[morph:base:en:able:capable|able]] + [[morph:suffix:en:-ed:resulting_state|-ed]] → 处于能力受限或功能被关闭的状态。",
+      "rootAffixNotes": "disabled access 指无障碍通行设施；disabled account 指被禁用的账户。谈及人时应采用尊重且符合当事人偏好的表达。",
+      "rootAffixAccumulation": "disable 是动作，disabled 更常描述动作造成的状态。",
+      "morphemes": [
+        {
+          "key": "morph:prefix:la:dis-:reverse_remove",
+          "spelling": "dis-"
+        },
+        {
+          "key": "morph:base:en:able:capable",
+          "spelling": "able"
+        },
+        {
+          "key": "morph:suffix:en:-ed:resulting_state",
+          "spelling": "-ed"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "The entrance includes a wide ramp for disabled visitors.",
+          "translation": "入口处设有一条供残障访客使用的宽坡道。",
+          "matchedSurface": "disabled",
+          "contextExplanation": "disabled 修饰 visitors，语境同时强调无障碍设施。",
+          "difficultyRationale": "介词短语说明坡道服务对象。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "disabled access",
+          "meaning": "无障碍通道；残障人士通行设施",
+          "example": "The museum improved disabled access at its main entrance."
+        }
+      ],
+      "relations": [
+        {
+          "type": "derivative",
+          "words": [
+            {
+              "spelling": "disable",
+              "displayText": "disable 使失去能力；禁用",
+              "meaning": "disabled 的基础动词"
+            }
+          ]
+        }
+      ],
+      "longSentences": [
+        {
+          "sentence": "Although the old station now offers disabled access, several platforms still cannot be reached without assistance.",
+          "translation": "尽管这座老车站现在提供无障碍通行设施，仍有几个站台无法在无人协助的情况下到达。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "disabled",
+          "targetSense": "为残障人士设置的",
+          "targetSegment": 0,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "让步状语从句",
+              "text": "Although the old station now offers disabled access, ",
+              "gloss": "尽管老车站现已提供无障碍通行设施",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "subj",
+              "roleLabel": "主语",
+              "text": "several platforms",
+              "gloss": "几个站台",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "pred",
+              "roleLabel": "谓语",
+              "text": " still cannot be reached without assistance.",
+              "gloss": "仍无法在无人协助的情况下到达",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "让步与被动",
+              "keyword": "Although 与 be reached",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "Although 引出已有改善，主句用被动语态指出仍然存在的通行问题。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "固定搭配",
+              "keyword": "disabled access",
+              "refs": [
+                0
+              ],
+              "analysisText": "disabled access 在公共设施语境中指供残障人士使用的通行条件，不表示通道本身坏了。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-disabled",
+        "ev-edit-b002",
+        "ev-etym-able"
+      ]
+    },
+    {
+      "wordId": "cet4-w-43ac0394e915760d27a8",
+      "wordOrder": 2828,
+      "spelling": "import",
+      "variants": [],
+      "pronunciation": "n. /ˈɪmpɔːt/; v. /ɪmˈpɔːt/",
+      "definitionCn": "v. 进口；引入。n. 进口商品；进口。",
+      "memoryMarkup": "站在本国海关里看，一箱箱咖啡豆正从国外运进来。[[morph:prefix:la:in-:inward|im-]] 指向内，[[morph:root:la:port:carry|port]] 是运送，合起来就是进口。",
+      "etymologyMarkup": "[[morph:prefix:la:in-:inward|im-]]（向内）+ [[morph:root:la:port:carry|port]]（运送）→ 进口、引入。",
+      "rootAffixNotes": "名词通常首音节重读，动词通常第二音节重读。import goods from a country 表示从某国进口商品。",
+      "rootAffixAccumulation": "与 [[word:export|export]] 形成“运入/运出”对照。",
+      "morphemes": [
+        {
+          "key": "morph:prefix:la:in-:inward",
+          "spelling": "im-"
+        },
+        {
+          "key": "morph:root:la:port:carry",
+          "spelling": "port"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "The company imports coffee from several African countries.",
+          "translation": "这家公司从几个非洲国家进口咖啡。",
+          "matchedSurface": "imports",
+          "contextExplanation": "import 作动词，from 引出来源地。",
+          "difficultyRationale": "一般现在时描述常规贸易。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "import goods from",
+          "meaning": "从……进口商品",
+          "example": "The shop imports handmade goods from Peru."
+        }
+      ],
+      "relations": [
+        {
+          "type": "antonym",
+          "words": [
+            {
+              "spelling": "export",
+              "displayText": "export 出口",
+              "meaning": "贸易流向与 import 相反"
+            }
+          ]
+        }
+      ],
+      "longSentences": [
+        {
+          "sentence": "When a country imports more energy than it produces, sudden price rises abroad can quickly affect local households.",
+          "translation": "当一个国家进口的能源多于本国产量时，国外价格突然上涨会迅速影响本国家庭。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "imports",
+          "targetSense": "进口",
+          "targetSegment": 0,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "时间条件从句",
+              "text": "When a country imports more energy than it produces, ",
+              "gloss": "当一国进口的能源多于其生产量时",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "subj",
+              "roleLabel": "主语",
+              "text": "sudden price rises abroad",
+              "gloss": "国外价格突然上涨",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "pred",
+              "roleLabel": "谓语和宾语",
+              "text": " can quickly affect local households.",
+              "gloss": "会迅速影响本国家庭",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "比较从句",
+              "keyword": "more ... than",
+              "refs": [
+                0
+              ],
+              "analysisText": "When 从句内部用 more ... than 比较进口量与本国产量，it 指 a country。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "贸易义",
+              "keyword": "imports energy",
+              "refs": [
+                0
+              ],
+              "analysisText": "import 后直接接被运入本国的商品或资源；from 可在需要时补充来源。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-import",
+        "ev-edit-b002",
+        "ev-etym-port"
+      ]
+    },
+    {
+      "wordId": "cet4-w-8c8d138547024805cf9e",
+      "wordOrder": 2089,
+      "spelling": "export",
+      "variants": [],
+      "pronunciation": "n. /ˈekspɔːt/; v. /ɪkˈspɔːt/",
+      "definitionCn": "v. 出口；输出。n. 出口商品；出口。",
+      "memoryMarkup": "这一回，海关里的卡车装着本国的茶叶，正往国外开。[[morph:prefix:la:ex-:outward|ex-]] 指向外，[[morph:root:la:port:carry|port]] 是运送，export 就是出口，方向与 [[word:import|import]] 相反。",
+      "etymologyMarkup": "[[morph:prefix:la:ex-:outward|ex-]]（向外）+ [[morph:root:la:port:carry|port]]（运送）→ 出口、输出。",
+      "rootAffixNotes": "名词通常首音节重读，动词通常第二音节重读。export products to a market 表示向某市场出口产品。",
+      "rootAffixAccumulation": "与 [[word:import|import]] 形成方向相反的词根对照。",
+      "morphemes": [
+        {
+          "key": "morph:prefix:la:ex-:outward",
+          "spelling": "ex-"
+        },
+        {
+          "key": "morph:root:la:port:carry",
+          "spelling": "port"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "Local farms export fresh fruit to nearby markets.",
+          "translation": "当地农场向附近市场出口新鲜水果。",
+          "matchedSurface": "export",
+          "contextExplanation": "export 作动词，to 引出目的市场。",
+          "difficultyRationale": "主谓宾和方向介词结构直接。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "export products to",
+          "meaning": "向……出口产品",
+          "example": "The factory exports medical products to Europe."
+        }
+      ],
+      "relations": [
+        {
+          "type": "antonym",
+          "words": [
+            {
+              "spelling": "import",
+              "displayText": "import 进口",
+              "meaning": "贸易流向与 export 相反"
+            }
+          ]
+        }
+      ],
+      "longSentences": [
+        {
+          "sentence": "Small firms that export their products online can reach distant customers without opening offices in every market.",
+          "translation": "在网上出口产品的小企业无需在每个市场设立办事处，也能接触到远方顾客。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "export",
+          "targetSense": "出口",
+          "targetSegment": 1,
+          "segments": [
+            {
+              "role": "subj",
+              "roleLabel": "主语中心词",
+              "text": "Small firms",
+              "gloss": "小企业",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "attr",
+              "roleLabel": "定语从句",
+              "text": " that export their products online",
+              "gloss": "在网上出口产品的",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "pred",
+              "roleLabel": "谓语和方式状语",
+              "text": " can reach distant customers without opening offices in every market.",
+              "gloss": "无需在各市场设办事处便能接触远方顾客",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "定语与方式",
+              "keyword": "that 与 without doing",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "that 从句限定 firms；without opening 表示实现主句结果时不需要采取的做法。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "及物用法",
+              "keyword": "export their products",
+              "refs": [
+                1
+              ],
+              "analysisText": "export 在这里是及物动词，直接接受出口对象 products。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-export",
+        "ev-edit-b002",
+        "ev-etym-port"
+      ]
+    },
+    {
+      "wordId": "cet4-w-d3fb2c3206cf3fc68ee3",
+      "wordOrder": 4636,
+      "spelling": "report",
+      "variants": [],
+      "pronunciation": "/rɪˈpɔːt/",
+      "definitionCn": "n. 报告；报道；传闻。v. 报告；报道；举报。",
+      "memoryMarkup": "记者带着采访本出门，回来把现场见闻讲给编辑听。消息被“带回来”了，[[morph:prefix:la:re-:back_again|re-]] 的回与 [[morph:root:la:port:carry|port]] 的运送，就这样接成 report，报道或报告。",
+      "etymologyMarkup": "[[morph:prefix:la:re-:back_again|re-]]（回）+ [[morph:root:la:port:carry|port]]（运送）→ 把信息带回并报告。",
+      "rootAffixNotes": "report on/about 指报告某主题；report that 后接报道内容；名词 report 也可指正式文件。",
+      "rootAffixAccumulation": "同根词 [[word:import|import]]、[[word:export|export]]、[[word:transport|transport]] 共同保留“运送”意象。",
+      "morphemes": [
+        {
+          "key": "morph:prefix:la:re-:back_again",
+          "spelling": "re-"
+        },
+        {
+          "key": "morph:root:la:port:carry",
+          "spelling": "port"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "The report explains why the bridge needs urgent repairs.",
+          "translation": "这份报告解释了这座桥为何需要紧急维修。",
+          "matchedSurface": "report",
+          "contextExplanation": "report 作可数名词，指正式说明文件。",
+          "difficultyRationale": "why 从句作 explains 的宾语。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "publish a report on",
+          "meaning": "发布关于……的报告",
+          "example": "The university published a report on student housing."
+        }
+      ],
+      "relations": [],
+      "longSentences": [
+        {
+          "sentence": "The report, which was based on interviews with local families, challenged several claims made by the developer.",
+          "translation": "这份以当地家庭访谈为依据的报告，对开发商提出的几项说法提出了质疑。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "report",
+          "targetSense": "报告",
+          "targetSegment": 0,
+          "segments": [
+            {
+              "role": "subj",
+              "roleLabel": "主语",
+              "text": "The report",
+              "gloss": "这份报告",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "attr",
+              "roleLabel": "非限制性定语从句",
+              "text": ", which was based on interviews with local families,",
+              "gloss": "它以对当地家庭的访谈为依据",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "pred",
+              "roleLabel": "谓语和宾语",
+              "text": " challenged several claims made by the developer.",
+              "gloss": "质疑了开发商提出的几项说法",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "插入定语",
+              "keyword": "which",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "去掉逗号中的 which 从句，主干仍是 The report challenged several claims。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "文件义",
+              "keyword": "The report",
+              "refs": [
+                0
+              ],
+              "analysisText": "冠词 the 和后续研究依据表明 report 是一份具体报告，不是“传闻”。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-report",
+        "ev-edit-b002",
+        "ev-etym-port"
+      ]
+    },
+    {
+      "wordId": "cet4-w-f51c719af127ab336448",
+      "wordOrder": 5726,
+      "spelling": "transport",
+      "variants": [],
+      "pronunciation": "n. /ˈtrænspɔːt/; v. /trænˈspɔːt/",
+      "definitionCn": "n. 交通运输；交通工具。v. 运输；运送。",
+      "memoryMarkup": "搬家车在这头装上桌椅，穿过半座城，再到新家卸下来。[[morph:prefix:la:trans-:across|trans-]] 的跨越加 [[morph:root:la:port:carry|port]] 的运送，记住 transport 把东西从一处送到另一处。",
+      "etymologyMarkup": "[[morph:prefix:la:trans-:across|trans-]]（跨越）+ [[morph:root:la:port:carry|port]]（运送）→ 运输。",
+      "rootAffixNotes": "public transport 指公共交通；transport goods by road 表示通过公路运输货物。",
+      "rootAffixAccumulation": "trans- 强调跨越边界或位置变化。",
+      "morphemes": [
+        {
+          "key": "morph:prefix:la:trans-:across",
+          "spelling": "trans-"
+        },
+        {
+          "key": "morph:root:la:port:carry",
+          "spelling": "port"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "Buses transport workers between the town and the factory.",
+          "translation": "公交车在城镇和工厂之间运送工人。",
+          "matchedSurface": "transport",
+          "contextExplanation": "transport 作动词，between 说明两端。",
+          "difficultyRationale": "主谓宾结构配地点范围。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "public transport",
+          "meaning": "公共交通",
+          "example": "Reliable public transport reduces traffic in the city centre."
+        }
+      ],
+      "relations": [],
+      "longSentences": [
+        {
+          "sentence": "As cities expand beyond their old centres, affordable public transport becomes essential for workers who live far from their jobs.",
+          "translation": "随着城市扩展到旧中心区之外，价格可负担的公共交通对住得离工作地点很远的劳动者变得至关重要。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "transport",
+          "targetSense": "公共交通",
+          "targetSegment": 1,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "伴随变化状语从句",
+              "text": "As cities expand beyond their old centres, ",
+              "gloss": "随着城市扩展到旧中心区之外",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "subj",
+              "roleLabel": "主语",
+              "text": "affordable public transport",
+              "gloss": "价格可负担的公共交通",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "pred",
+              "roleLabel": "系表结构及后置修饰",
+              "text": " becomes essential for workers who live far from their jobs.",
+              "gloss": "对住得离工作很远的劳动者变得至关重要",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "变化关系",
+              "keyword": "As ... becomes",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "As 表示两种变化同步发生；who 从句限定哪些 workers。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "不可数名词",
+              "keyword": "public transport",
+              "refs": [
+                1
+              ],
+              "analysisText": "transport 在 public transport 中表示交通运输系统，通常按不可数概念使用。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-transport",
+        "ev-edit-b002",
+        "ev-etym-port"
+      ]
+    },
+    {
+      "wordId": "cet4-w-385010cccc39746e3da1",
+      "wordOrder": 5425,
+      "spelling": "support",
+      "variants": [],
+      "pronunciation": "/səˈpɔːt/",
+      "definitionCn": "v. 支持；支撑；供养。n. 支持；支撑物；帮助。",
+      "memoryMarkup": "书架眼看要倒，你从下面一把托住。[[morph:prefix:la:sub-:under_support|sup-]] 在下，[[morph:root:la:port:carry|port]] 承载，先记支撑。朋友遇到难处，你帮他撑一把，也是 support。",
+      "etymologyMarkup": "[[morph:prefix:la:sub-:under_support|sup-]]（在下，sub- 的同化形式）+ [[morph:root:la:port:carry|port]]（承载）→ 支撑，继而表示支持。",
+      "rootAffixNotes": "support an idea 表示赞同观点；support a family 表示供养家庭；support 作名词通常不可数。",
+      "rootAffixAccumulation": "sup- 是 sub- 在 p 前发生同化后的表面形式。",
+      "morphemes": [
+        {
+          "key": "morph:prefix:la:sub-:under_support",
+          "spelling": "sup-"
+        },
+        {
+          "key": "morph:root:la:port:carry",
+          "spelling": "port"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "Several local businesses supported the community festival.",
+          "translation": "几家当地企业支持了社区节庆活动。",
+          "matchedSurface": "supported",
+          "contextExplanation": "support 表示提供资源或帮助。",
+          "difficultyRationale": "一般过去时，宾语明确。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "provide support for",
+          "meaning": "为……提供支持",
+          "example": "The programme provides support for first-year students."
+        }
+      ],
+      "relations": [],
+      "longSentences": [
+        {
+          "sentence": "Research suggests that employees are more willing to share ideas when managers support reasonable experiments and accept occasional failure.",
+          "translation": "研究表明，当管理者支持合理尝试并接受偶尔的失败时，员工更愿意分享想法。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "support",
+          "targetSense": "支持",
+          "targetSegment": 2,
+          "segments": [
+            {
+              "role": "subj",
+              "roleLabel": "主句引导",
+              "text": "Research suggests",
+              "gloss": "研究表明",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "obj",
+              "roleLabel": "宾语从句主干",
+              "text": " that employees are more willing to share ideas",
+              "gloss": "员工更愿意分享想法",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "adv",
+              "roleLabel": "条件时间从句",
+              "text": " when managers support reasonable experiments and accept occasional failure.",
+              "gloss": "当管理者支持合理尝试并接受偶尔失败时",
+              "level": 2,
+              "spine": false
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "从句嵌套",
+              "keyword": "suggests that ... when",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "that 从句是 suggests 的内容；when 从句说明员工更愿分享想法的条件。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "及物动词",
+              "keyword": "support experiments",
+              "refs": [
+                2
+              ],
+              "analysisText": "support 直接接 experiments，表示认可并提供条件，而不是物理支撑。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-support",
+        "ev-edit-b002",
+        "ev-etym-port"
+      ]
+    },
+    {
+      "wordId": "cet4-w-88452520399cf5c4e49e",
+      "wordOrder": 2942,
+      "spelling": "inspect",
+      "variants": [],
+      "pronunciation": "/ɪnˈspekt/",
+      "definitionCn": "v. 检查；视察；检验。",
+      "memoryMarkup": "买二手手机时，光看屏幕亮了可不够，还得翻过来查接口、开相机试一试。[[morph:prefix:la:in-:inward|in-]] 向里，[[morph:root:la:spect:look|spect]] 看，inspect 就是这样仔细检查。",
+      "etymologyMarkup": "[[morph:prefix:la:in-:inward|in-]]（向内）+ [[morph:root:la:spect:look|spect]]（看、观察）→ 仔细检查。",
+      "rootAffixNotes": "inspect 强调有目的、较仔细或正式的检查，常见宾语有 equipment、building、documents。",
+      "rootAffixAccumulation": "同根词 [[word:respect|respect]]、[[word:expect|expect]]、[[word:prospect|prospect]]。",
+      "morphemes": [
+        {
+          "key": "morph:prefix:la:in-:inward",
+          "spelling": "in-"
+        },
+        {
+          "key": "morph:root:la:spect:look",
+          "spelling": "spect"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "Engineers inspected the roof after the storm.",
+          "translation": "暴风雨过后，工程师检查了屋顶。",
+          "matchedSurface": "inspected",
+          "contextExplanation": "inspect 表示专业人员进行仔细检查。",
+          "difficultyRationale": "after 短语交代时间。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "inspect equipment",
+          "meaning": "检查设备",
+          "example": "Technicians inspect the equipment every month."
+        }
+      ],
+      "relations": [],
+      "longSentences": [
+        {
+          "sentence": "Before the school reopened, experts inspected every classroom to ensure that damaged wiring had been replaced safely.",
+          "translation": "学校重新开放前，专家检查了每间教室，以确保受损线路已被安全更换。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "inspected",
+          "targetSense": "检查；检验",
+          "targetSegment": 1,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "时间状语从句",
+              "text": "Before the school reopened, ",
+              "gloss": "学校重新开放前",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "pred",
+              "roleLabel": "主句主干",
+              "text": "experts inspected every classroom",
+              "gloss": "专家检查了每间教室",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "adv",
+              "roleLabel": "目的状语",
+              "text": " to ensure that damaged wiring had been replaced safely.",
+              "gloss": "以确保受损线路已被安全更换",
+              "level": 1,
+              "spine": false
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "目的与时序",
+              "keyword": "Before 与 to ensure",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "Before 说明检查发生的时间；to ensure 说明检查的目的，that 从句是 ensure 的内容。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "正式检查",
+              "keyword": "inspected every classroom",
+              "refs": [
+                1
+              ],
+              "analysisText": "inspect 强调系统、仔细地查看是否存在安全问题，比 look at 更正式。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-inspect",
+        "ev-edit-b002",
+        "ev-etym-spect"
+      ]
+    },
+    {
+      "wordId": "cet4-w-9cba42e078093d550bf2",
+      "wordOrder": 4675,
+      "spelling": "respect",
+      "variants": [],
+      "pronunciation": "/rɪˈspekt/",
+      "definitionCn": "n. 尊重；方面；敬意。v. 尊重；遵守。",
+      "memoryMarkup": "对方还没说完，你把伸出去准备打断的手收回来，认真听他把话讲完。用“再看一眼、认真对待”的画面记 respect 的尊重，[[morph:root:la:spect:look|spect]] 在这组词里表示看。",
+      "etymologyMarkup": "[[morph:prefix:la:re-:back_again|re-]]（回、再次）+ [[morph:root:la:spect:look|spect]]（看）→ 回看、重视，继而表示尊重。",
+      "rootAffixNotes": "respect sb. for sth. 表示因某事尊重某人；with respect to 表示关于；respect rules 表示遵守规则。",
+      "rootAffixAccumulation": "词源联想帮助连接含义，但现代 respect 不能逐字翻成“再看”。",
+      "morphemes": [
+        {
+          "key": "morph:prefix:la:re-:back_again",
+          "spelling": "re-"
+        },
+        {
+          "key": "morph:root:la:spect:look",
+          "spelling": "spect"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "Good leaders respect people who disagree with them.",
+          "translation": "优秀的领导者尊重与自己意见不同的人。",
+          "matchedSurface": "respect",
+          "contextExplanation": "respect 作动词，宾语是 people。",
+          "difficultyRationale": "who 从句修饰 people。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "show respect for",
+          "meaning": "对……表示尊重",
+          "example": "Visitors should show respect for local customs."
+        }
+      ],
+      "relations": [],
+      "longSentences": [
+        {
+          "sentence": "A debate becomes useful only when participants respect evidence, listen carefully, and admit when their own arguments are weak.",
+          "translation": "只有当参与者尊重证据、认真倾听，并承认自己的论点何时站不住脚时，辩论才会变得有益。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "respect",
+          "targetSense": "尊重；重视",
+          "targetSegment": 2,
+          "segments": [
+            {
+              "role": "subj",
+              "roleLabel": "主句主语",
+              "text": "A debate",
+              "gloss": "一场辩论",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "pred",
+              "roleLabel": "主句系表结构",
+              "text": " becomes useful only",
+              "gloss": "只有在某种条件下才会变得有益",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "adv",
+              "roleLabel": "条件时间从句",
+              "text": " when participants respect evidence, listen carefully, and admit when their own arguments are weak.",
+              "gloss": "当参与者重视证据、认真倾听并承认自身论点薄弱之处时",
+              "level": 1,
+              "spine": false
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "only when",
+              "keyword": "only when",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "only 限定 when 从句提出的条件；从句内 respect、listen、admit 三个动词并列。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "抽象宾语",
+              "keyword": "respect evidence",
+              "refs": [
+                2
+              ],
+              "analysisText": "respect 的宾语是 evidence，表示认真对待证据，而非对人表达敬意。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-respect",
+        "ev-edit-b002",
+        "ev-etym-spect"
+      ]
+    },
+    {
+      "wordId": "cet4-w-7b27c3e81299f870cb00",
+      "wordOrder": 2064,
+      "spelling": "expect",
+      "variants": [],
+      "pronunciation": "/ɪkˈspekt/",
+      "definitionCn": "v. 预料；期待；要求。",
+      "memoryMarkup": "说好六点见面，你五点五十九分就开始盯着门口。人还没来，心里已经觉得他快到了，这份等待中的预期就是 expect。",
+      "etymologyMarkup": "[[morph:prefix:la:ex-:outward|ex-]]（向外）+ [[morph:root:la:spect:look|pect]]（spect 的表面变体，看）→ 向外等候、预期。",
+      "rootAffixNotes": "expect to do、expect sb. to do、expect that 都很常见；expect 表示认为某事很可能发生，不一定带愉快情绪。",
+      "rootAffixAccumulation": "pect 不另立词根 ID，它与 [[word:inspect|inspect]] 中的 spect 同源。",
+      "morphemes": [
+        {
+          "key": "morph:prefix:la:ex-:outward",
+          "spelling": "ex-"
+        },
+        {
+          "key": "morph:root:la:spect:look",
+          "spelling": "pect"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "We expect the train to arrive before noon.",
+          "translation": "我们预计火车会在中午前到达。",
+          "matchedSurface": "expect",
+          "contextExplanation": "expect sb./sth. to do 表示预料某对象会做某事。",
+          "difficultyRationale": "复合宾语结构典型。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "expect somebody to do something",
+          "meaning": "预料或要求某人做某事",
+          "example": "The coach expects every player to arrive on time."
+        }
+      ],
+      "relations": [],
+      "longSentences": [
+        {
+          "sentence": "Although analysts expect prices to fall gradually, families may not feel the benefit until their monthly bills actually decrease.",
+          "translation": "尽管分析人士预计价格会逐步下降，家庭可能要等到月度账单真正减少时才会感受到好处。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "expect",
+          "targetSense": "预料",
+          "targetSegment": 0,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "让步状语从句",
+              "text": "Although analysts expect prices to fall gradually, ",
+              "gloss": "尽管分析人士预计价格会逐步下降",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "subj",
+              "roleLabel": "主句主语",
+              "text": "families",
+              "gloss": "各个家庭",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "pred",
+              "roleLabel": "主句谓语和时间从句",
+              "text": " may not feel the benefit until their monthly bills actually decrease.",
+              "gloss": "可能要等月度账单实际减少时才感到好处",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "让步与时间",
+              "keyword": "Although 与 not ... until",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "Although 对比预测与实际感受；not ... until 表示直到某个条件出现才发生。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "复合宾语",
+              "keyword": "expect prices to fall",
+              "refs": [
+                0
+              ],
+              "analysisText": "prices 是 expect 的宾语，to fall 说明预计价格将发生的变化。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-expect",
+        "ev-edit-b002",
+        "ev-etym-spect"
+      ]
+    },
+    {
+      "wordId": "cet4-w-f262db840d22de476630",
+      "wordOrder": 4371,
+      "spelling": "prospect",
+      "variants": [],
+      "pronunciation": "n. /ˈprɒspekt/; v. /prəˈspekt/",
+      "definitionCn": "n. 可能性；前景；景象。v. 勘探；寻找。",
+      "memoryMarkup": "山路还没走完，拐过弯却已经能望见远处的村子。[[morph:prefix:la:pro-:forward|pro-]] 向前，[[morph:root:la:spect:look|spect]] 看。用这幅“看见前面有什么”的画面，记前景、可能性。",
+      "etymologyMarkup": "[[morph:prefix:la:pro-:forward|pro-]]（向前）+ [[morph:root:la:spect:look|spect]]（看）→ 展望、前景；动词发展出勘探义。",
+      "rootAffixNotes": "the prospect of doing 表示做某事的可能性；job prospects 常用复数，表示就业前景。",
+      "rootAffixAccumulation": "名词和动词重音不同；四级语境中更常见名词义。",
+      "morphemes": [
+        {
+          "key": "morph:prefix:la:pro-:forward",
+          "spelling": "pro-"
+        },
+        {
+          "key": "morph:root:la:spect:look",
+          "spelling": "spect"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "The prospect of working abroad excited her.",
+          "translation": "到国外工作的可能性让她很兴奋。",
+          "matchedSurface": "prospect",
+          "contextExplanation": "the prospect of doing 表示某事可能发生。",
+          "difficultyRationale": "动名词短语作 of 的宾语。"
+        }
+      ],
+      "collocations": [
+        {
+          "phrase": "career prospects",
+          "meaning": "职业前景",
+          "example": "The course improved his career prospects."
+        }
+      ],
+      "relations": [],
+      "longSentences": [
+        {
+          "sentence": "For graduates entering a changing labour market, the prospect of repeated retraining can seem both demanding and hopeful.",
+          "translation": "对进入不断变化的劳动力市场的毕业生而言，反复接受再培训的前景可能既令人压力很大，也给人希望。",
+          "difficultyBand": "四级中高",
+          "sentenceDifficulty": "cet4_upper",
+          "targetSurface": "prospect",
+          "targetSense": "前景；可能性",
+          "targetSegment": 1,
+          "segments": [
+            {
+              "role": "adv",
+              "roleLabel": "对象状语",
+              "text": "For graduates entering a changing labour market, ",
+              "gloss": "对进入变化中劳动力市场的毕业生而言",
+              "level": 1,
+              "spine": false
+            },
+            {
+              "role": "subj",
+              "roleLabel": "主语",
+              "text": "the prospect of repeated retraining",
+              "gloss": "反复再培训的前景",
+              "level": 0,
+              "spine": true
+            },
+            {
+              "role": "pred",
+              "roleLabel": "系表结构",
+              "text": " can seem both demanding and hopeful.",
+              "gloss": "可能显得既艰难又有希望",
+              "level": 0,
+              "spine": true
+            }
+          ],
+          "analyses": [
+            {
+              "sectionKind": "structure",
+              "dimension": "分词修饰",
+              "keyword": "graduates entering",
+              "refs": [
+                0,
+                1,
+                2
+              ],
+              "analysisText": "entering 短语后置修饰 graduates；主句核心是 prospect can seem ...。"
+            },
+            {
+              "sectionKind": "target",
+              "dimension": "of 结构",
+              "keyword": "the prospect of",
+              "refs": [
+                1
+              ],
+              "analysisText": "of repeated retraining 说明具体是哪种可能前景；prospect 在这里不是眼前景色。"
+            }
+          ]
+        }
+      ],
+      "evidenceRefs": [
+        "ev-lex-prospect",
+        "ev-edit-b002",
+        "ev-etym-spect"
+      ]
+    }
+  ]
+}

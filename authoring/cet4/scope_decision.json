@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "bookCode": "cet4",
+  "wordlistVersion": "cet4-2016-v1",
+  "confirmed": true,
+  "confirmedAt": "2026-09-03T19:27:35+08:00",
+  "confirmationSource": "用户在本会话明确同意将考纲附列词独立收录，冻结为6161个学习词条。",
+  "includeListedRelated": true,
+  "expectedLearningEntries": 6161,
+  "headwordBackedEntries": 4069,
+  "relatedOnlyEntries": 2092,
+  "expectedWordlistSha256": "c7f97ea24f32387df77a5559bb49abf72704492900471d0c9777be8b18295088",
+  "notes": "这是编辑词表范围的冻结，不表示释义、构词和例句已经完成；阶段2及后续教学内容尚未启动。"
+}

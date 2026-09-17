@@ -1,0 +1,31 @@
+word_id,example_id,order_index,sentence,translation,matched_surface,context_explanation,difficulty_rationale
+cet4-w-dcc6b6de5d3f3f80ff02,cet4-w-dcc6b6de5d3f3f80ff02:example:001,0,We must act before the small leak becomes a serious problem.,我们必须在小泄漏变成严重问题之前采取行动。,act,情境是及时处理风险，act 表示采取行动。,before 引导时间从句，句意清楚。
+cet4-w-b4e76965b5a7943279ac,cet4-w-b4e76965b5a7943279ac:example:001,0,Quick action prevented the fire from spreading upstairs.,迅速采取行动阻止了火势向楼上蔓延。,action,action 表示应对火情的实际行动。,prevent ... from doing 是四级常见结构。
+cet4-w-560e8b954a1a6e8c9768,cet4-w-560e8b954a1a6e8c9768:example:001,0,She remains active in several student clubs.,她仍积极参加几个学生社团。,active,active 描写持续参与社团活动。,remain 加形容词作表语。
+cet4-w-4ced4a567905ee623d9d,cet4-w-4ced4a567905ee623d9d:example:001,0,Reading is a quiet activity that can reduce stress.,阅读是一项能够减轻压力的安静活动。,activity,activity 是可数名词，指阅读这一活动。,that 从句修饰 activity。
+cet4-w-45384c5a5727e65aeb71,cet4-w-45384c5a5727e65aeb71:example:001,0,The young actor learned every line before the first rehearsal.,这位年轻演员在第一次排练前就记住了所有台词。,actor,actor 指参加戏剧表演的人。,before 引导时间短语，词义直接。
+cet4-w-25dfe87120b7c0b3f123,cet4-w-25dfe87120b7c0b3f123:example:001,0,People react differently to sudden changes.,人们对突如其来的变化反应不同。,react,react to 表示对变化作出反应。,副词 differently 说明反应方式。
+cet4-w-4336a9e7fc5d08328b8e,cet4-w-4336a9e7fc5d08328b8e:example:001,0,"With a clear map, we were able to find the village before dark.",有了清晰的地图，我们得以在天黑前找到那个村庄。,able,were able to 表示在特定条件下成功做到。,介词短语先交代条件。
+cet4-w-798668299e6f528c3725,cet4-w-798668299e6f528c3725:example:001,0,Her ability to explain difficult ideas impressed the interviewers.,她解释复杂观点的能力给面试官留下了深刻印象。,ability,ability 后用不定式说明具体能力。,to explain 作后置说明。
+cet4-w-c87b5d351d670ef64440,cet4-w-c87b5d351d670ef64440:example:001,0,The new ramp enables wheelchair users to enter the library independently.,新坡道使轮椅使用者能够独立进入图书馆。,enables,设施使某人能够完成动作。,enable sb. to do 结构完整。
+cet4-w-f41aa887a6195a11b2ae,cet4-w-f41aa887a6195a11b2ae:example:001,0,You can disable notifications during the examination.,考试期间你可以关闭通知。,disable,技术语境中表示禁用某项功能。,情态动词后接原形。
+cet4-w-8bcbba84a7d7eab25b03,cet4-w-8bcbba84a7d7eab25b03:example:001,0,The entrance includes a wide ramp for disabled visitors.,入口处设有一条供残障访客使用的宽坡道。,disabled,disabled 修饰 visitors，语境同时强调无障碍设施。,介词短语说明坡道服务对象。
+cet4-w-43ac0394e915760d27a8,cet4-w-43ac0394e915760d27a8:example:001,0,The company imports coffee from several African countries.,这家公司从几个非洲国家进口咖啡。,imports,import 作动词，from 引出来源地。,一般现在时描述常规贸易。
+cet4-w-8c8d138547024805cf9e,cet4-w-8c8d138547024805cf9e:example:001,0,Local farms export fresh fruit to nearby markets.,当地农场向附近市场出口新鲜水果。,export,export 作动词，to 引出目的市场。,主谓宾和方向介词结构直接。
+cet4-w-d3fb2c3206cf3fc68ee3,cet4-w-d3fb2c3206cf3fc68ee3:example:001,0,The report explains why the bridge needs urgent repairs.,这份报告解释了这座桥为何需要紧急维修。,report,report 作可数名词，指正式说明文件。,why 从句作 explains 的宾语。
+cet4-w-f51c719af127ab336448,cet4-w-f51c719af127ab336448:example:001,0,Buses transport workers between the town and the factory.,公交车在城镇和工厂之间运送工人。,transport,transport 作动词，between 说明两端。,主谓宾结构配地点范围。
+cet4-w-385010cccc39746e3da1,cet4-w-385010cccc39746e3da1:example:001,0,Several local businesses supported the community festival.,几家当地企业支持了社区节庆活动。,supported,support 表示提供资源或帮助。,一般过去时，宾语明确。
+cet4-w-88452520399cf5c4e49e,cet4-w-88452520399cf5c4e49e:example:001,0,Engineers inspected the roof after the storm.,暴风雨过后，工程师检查了屋顶。,inspected,inspect 表示专业人员进行仔细检查。,after 短语交代时间。
+cet4-w-9cba42e078093d550bf2,cet4-w-9cba42e078093d550bf2:example:001,0,Good leaders respect people who disagree with them.,优秀的领导者尊重与自己意见不同的人。,respect,respect 作动词，宾语是 people。,who 从句修饰 people。
+cet4-w-7b27c3e81299f870cb00,cet4-w-7b27c3e81299f870cb00:example:001,0,We expect the train to arrive before noon.,我们预计火车会在中午前到达。,expect,expect sb./sth. to do 表示预料某对象会做某事。,复合宾语结构典型。
+cet4-w-f262db840d22de476630,cet4-w-f262db840d22de476630:example:001,0,The prospect of working abroad excited her.,到国外工作的可能性让她很兴奋。,prospect,the prospect of doing 表示某事可能发生。,动名词短语作 of 的宾语。
+cet4-w-196eea6931afa61926c6,cet4-w-196eea6931afa61926c6:example:001,0,A shuttle bus connects the airport with the city centre.,一辆摆渡车连接机场和市中心。,airport,airport 指旅客到达或离开的交通设施。,connect A with B 是常见搭配。
+cet4-w-50a30d1bad42f8113242,cet4-w-50a30d1bad42f8113242:example:001,0,The teacher drew a simple map on the blackboard.,老师在黑板上画了一幅简单的地图。,blackboard,on the blackboard 表示书写发生的表面。,一般过去时和地点介词清晰。
+cet4-w-aef3be74ca48b7eb3d7b,cet4-w-aef3be74ca48b7eb3d7b:example:001,0,Each classroom has large windows and movable desks.,每间教室都有大窗户和可移动的课桌。,classroom,classroom 指具体教学房间。,一般现在时描述设施。
+cet4-w-ef0a124f24fcdea9f25a,cet4-w-ef0a124f24fcdea9f25a:example:001,0,She reads the local newspaper on her way to work.,她上班路上读当地报纸。,newspaper,newspaper 指具体报纸。,on one's way to 是常见时间地点表达。
+cet4-w-da4d2d00a9e5fb8106e9,cet4-w-da4d2d00a9e5fb8106e9:example:001,0,The town is well-known for its autumn music festival.,这座城镇因秋季音乐节而闻名。,well-known,be well-known for 表示因某事而出名。,系表结构配原因介词 for。
+cet4-w-ddf68ca6cd54aa5da878,cet4-w-ddf68ca6cd54aa5da878:example:001,0,Warm colors can make a small room feel more welcoming.,暖色能让小房间显得更温馨。,colors,color 用复数表示多种色彩。,make + 宾语 + 形容词是典型宾补结构。
+cet4-w-d84a36499767c2a3d0e3,cet4-w-d84a36499767c2a3d0e3:example:001,0,Every child needs time to play and explore.,每个孩子都需要玩耍和探索的时间。,child,every 后接单数名词 child。,不定式说明 time 的用途。
+cet4-w-eb44a3c9cc92e7b5e517,cet4-w-eb44a3c9cc92e7b5e517:example:001,0,The plant manufactures parts for electric buses.,这家工厂为电动公交车制造零部件。,manufactures,manufacture 表示工业生产。,for 引出零部件用途。
+cet4-w-7050d50383e85d57962a,cet4-w-7050d50383e85d57962a:example:001,0,Agriculture remains the main source of income in the region.,农业仍是该地区的主要收入来源。,Agriculture,agriculture 概括整个产业，作不可数名词。,remain 后接名词表语。
+cet4-w-593fc9aa437f4a7f8a46,cet4-w-593fc9aa437f4a7f8a46:example:001,0,"According to the timetable, the last bus leaves at eleven.",根据时刻表，末班车十一点发车。,According to,according to 后接信息来源 timetable。,句首介词短语与主句边界清楚。

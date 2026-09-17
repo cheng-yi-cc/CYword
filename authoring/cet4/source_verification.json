@@ -1,0 +1,658 @@
+{
+  "sourceSha256": "9166d3c03b7bc43abd9d9df91bd2ef8085b4419286f1e5ca100dea68f3cfd1f1",
+  "sourceLedgerSha256": "c811d5a04f5e473edbf56e9db2ddca847ae17b5c73c83b8cc35506b005187d97",
+  "extractor": "pdfplumber",
+  "extractorVersion": "0.11.9",
+  "independentParser": "pypdf",
+  "independentParserVersion": "6.10.0",
+  "comparedAlphabet": "ASCII letters, é, printed star and PDF fullwidth-G hyphen glyph",
+  "matchedPages": 129,
+  "pages": [
+    {
+      "pdf_page": 21,
+      "sequence_equal": true,
+      "compared_characters": 580
+    },
+    {
+      "pdf_page": 22,
+      "sequence_equal": true,
+      "compared_characters": 713
+    },
+    {
+      "pdf_page": 23,
+      "sequence_equal": true,
+      "compared_characters": 505
+    },
+    {
+      "pdf_page": 24,
+      "sequence_equal": true,
+      "compared_characters": 443
+    },
+    {
+      "pdf_page": 25,
+      "sequence_equal": true,
+      "compared_characters": 488
+    },
+    {
+      "pdf_page": 26,
+      "sequence_equal": true,
+      "compared_characters": 582
+    },
+    {
+      "pdf_page": 27,
+      "sequence_equal": true,
+      "compared_characters": 470
+    },
+    {
+      "pdf_page": 28,
+      "sequence_equal": true,
+      "compared_characters": 564
+    },
+    {
+      "pdf_page": 29,
+      "sequence_equal": true,
+      "compared_characters": 506
+    },
+    {
+      "pdf_page": 30,
+      "sequence_equal": true,
+      "compared_characters": 290
+    },
+    {
+      "pdf_page": 31,
+      "sequence_equal": true,
+      "compared_characters": 272
+    },
+    {
+      "pdf_page": 32,
+      "sequence_equal": true,
+      "compared_characters": 380
+    },
+    {
+      "pdf_page": 33,
+      "sequence_equal": true,
+      "compared_characters": 355
+    },
+    {
+      "pdf_page": 34,
+      "sequence_equal": true,
+      "compared_characters": 266
+    },
+    {
+      "pdf_page": 35,
+      "sequence_equal": true,
+      "compared_characters": 261
+    },
+    {
+      "pdf_page": 36,
+      "sequence_equal": true,
+      "compared_characters": 339
+    },
+    {
+      "pdf_page": 37,
+      "sequence_equal": true,
+      "compared_characters": 324
+    },
+    {
+      "pdf_page": 38,
+      "sequence_equal": true,
+      "compared_characters": 327
+    },
+    {
+      "pdf_page": 39,
+      "sequence_equal": true,
+      "compared_characters": 336
+    },
+    {
+      "pdf_page": 40,
+      "sequence_equal": true,
+      "compared_characters": 458
+    },
+    {
+      "pdf_page": 41,
+      "sequence_equal": true,
+      "compared_characters": 375
+    },
+    {
+      "pdf_page": 42,
+      "sequence_equal": true,
+      "compared_characters": 391
+    },
+    {
+      "pdf_page": 43,
+      "sequence_equal": true,
+      "compared_characters": 382
+    },
+    {
+      "pdf_page": 44,
+      "sequence_equal": true,
+      "compared_characters": 650
+    },
+    {
+      "pdf_page": 45,
+      "sequence_equal": true,
+      "compared_characters": 782
+    },
+    {
+      "pdf_page": 46,
+      "sequence_equal": true,
+      "compared_characters": 718
+    },
+    {
+      "pdf_page": 47,
+      "sequence_equal": true,
+      "compared_characters": 820
+    },
+    {
+      "pdf_page": 48,
+      "sequence_equal": true,
+      "compared_characters": 498
+    },
+    {
+      "pdf_page": 49,
+      "sequence_equal": true,
+      "compared_characters": 383
+    },
+    {
+      "pdf_page": 50,
+      "sequence_equal": true,
+      "compared_characters": 378
+    },
+    {
+      "pdf_page": 51,
+      "sequence_equal": true,
+      "compared_characters": 345
+    },
+    {
+      "pdf_page": 52,
+      "sequence_equal": true,
+      "compared_characters": 459
+    },
+    {
+      "pdf_page": 53,
+      "sequence_equal": true,
+      "compared_characters": 638
+    },
+    {
+      "pdf_page": 54,
+      "sequence_equal": true,
+      "compared_characters": 662
+    },
+    {
+      "pdf_page": 55,
+      "sequence_equal": true,
+      "compared_characters": 526
+    },
+    {
+      "pdf_page": 56,
+      "sequence_equal": true,
+      "compared_characters": 589
+    },
+    {
+      "pdf_page": 57,
+      "sequence_equal": true,
+      "compared_characters": 508
+    },
+    {
+      "pdf_page": 58,
+      "sequence_equal": true,
+      "compared_characters": 351
+    },
+    {
+      "pdf_page": 59,
+      "sequence_equal": true,
+      "compared_characters": 356
+    },
+    {
+      "pdf_page": 60,
+      "sequence_equal": true,
+      "compared_characters": 570
+    },
+    {
+      "pdf_page": 61,
+      "sequence_equal": true,
+      "compared_characters": 631
+    },
+    {
+      "pdf_page": 62,
+      "sequence_equal": true,
+      "compared_characters": 590
+    },
+    {
+      "pdf_page": 63,
+      "sequence_equal": true,
+      "compared_characters": 561
+    },
+    {
+      "pdf_page": 64,
+      "sequence_equal": true,
+      "compared_characters": 668
+    },
+    {
+      "pdf_page": 65,
+      "sequence_equal": true,
+      "compared_characters": 439
+    },
+    {
+      "pdf_page": 66,
+      "sequence_equal": true,
+      "compared_characters": 428
+    },
+    {
+      "pdf_page": 67,
+      "sequence_equal": true,
+      "compared_characters": 340
+    },
+    {
+      "pdf_page": 68,
+      "sequence_equal": true,
+      "compared_characters": 305
+    },
+    {
+      "pdf_page": 69,
+      "sequence_equal": true,
+      "compared_characters": 425
+    },
+    {
+      "pdf_page": 70,
+      "sequence_equal": true,
+      "compared_characters": 442
+    },
+    {
+      "pdf_page": 71,
+      "sequence_equal": true,
+      "compared_characters": 371
+    },
+    {
+      "pdf_page": 72,
+      "sequence_equal": true,
+      "compared_characters": 371
+    },
+    {
+      "pdf_page": 73,
+      "sequence_equal": true,
+      "compared_characters": 451
+    },
+    {
+      "pdf_page": 74,
+      "sequence_equal": true,
+      "compared_characters": 288
+    },
+    {
+      "pdf_page": 75,
+      "sequence_equal": true,
+      "compared_characters": 375
+    },
+    {
+      "pdf_page": 76,
+      "sequence_equal": true,
+      "compared_characters": 406
+    },
+    {
+      "pdf_page": 77,
+      "sequence_equal": true,
+      "compared_characters": 383
+    },
+    {
+      "pdf_page": 78,
+      "sequence_equal": true,
+      "compared_characters": 410
+    },
+    {
+      "pdf_page": 79,
+      "sequence_equal": true,
+      "compared_characters": 631
+    },
+    {
+      "pdf_page": 80,
+      "sequence_equal": true,
+      "compared_characters": 675
+    },
+    {
+      "pdf_page": 81,
+      "sequence_equal": true,
+      "compared_characters": 713
+    },
+    {
+      "pdf_page": 82,
+      "sequence_equal": true,
+      "compared_characters": 710
+    },
+    {
+      "pdf_page": 83,
+      "sequence_equal": true,
+      "compared_characters": 728
+    },
+    {
+      "pdf_page": 84,
+      "sequence_equal": true,
+      "compared_characters": 287
+    },
+    {
+      "pdf_page": 85,
+      "sequence_equal": true,
+      "compared_characters": 277
+    },
+    {
+      "pdf_page": 86,
+      "sequence_equal": true,
+      "compared_characters": 310
+    },
+    {
+      "pdf_page": 87,
+      "sequence_equal": true,
+      "compared_characters": 406
+    },
+    {
+      "pdf_page": 88,
+      "sequence_equal": true,
+      "compared_characters": 392
+    },
+    {
+      "pdf_page": 89,
+      "sequence_equal": true,
+      "compared_characters": 370
+    },
+    {
+      "pdf_page": 90,
+      "sequence_equal": true,
+      "compared_characters": 442
+    },
+    {
+      "pdf_page": 91,
+      "sequence_equal": true,
+      "compared_characters": 496
+    },
+    {
+      "pdf_page": 92,
+      "sequence_equal": true,
+      "compared_characters": 453
+    },
+    {
+      "pdf_page": 93,
+      "sequence_equal": true,
+      "compared_characters": 500
+    },
+    {
+      "pdf_page": 94,
+      "sequence_equal": true,
+      "compared_characters": 512
+    },
+    {
+      "pdf_page": 95,
+      "sequence_equal": true,
+      "compared_characters": 419
+    },
+    {
+      "pdf_page": 96,
+      "sequence_equal": true,
+      "compared_characters": 493
+    },
+    {
+      "pdf_page": 97,
+      "sequence_equal": true,
+      "compared_characters": 421
+    },
+    {
+      "pdf_page": 98,
+      "sequence_equal": true,
+      "compared_characters": 456
+    },
+    {
+      "pdf_page": 99,
+      "sequence_equal": true,
+      "compared_characters": 548
+    },
+    {
+      "pdf_page": 100,
+      "sequence_equal": true,
+      "compared_characters": 486
+    },
+    {
+      "pdf_page": 101,
+      "sequence_equal": true,
+      "compared_characters": 368
+    },
+    {
+      "pdf_page": 102,
+      "sequence_equal": true,
+      "compared_characters": 330
+    },
+    {
+      "pdf_page": 103,
+      "sequence_equal": true,
+      "compared_characters": 440
+    },
+    {
+      "pdf_page": 104,
+      "sequence_equal": true,
+      "compared_characters": 355
+    },
+    {
+      "pdf_page": 105,
+      "sequence_equal": true,
+      "compared_characters": 646
+    },
+    {
+      "pdf_page": 106,
+      "sequence_equal": true,
+      "compared_characters": 371
+    },
+    {
+      "pdf_page": 107,
+      "sequence_equal": true,
+      "compared_characters": 406
+    },
+    {
+      "pdf_page": 108,
+      "sequence_equal": true,
+      "compared_characters": 519
+    },
+    {
+      "pdf_page": 109,
+      "sequence_equal": true,
+      "compared_characters": 680
+    },
+    {
+      "pdf_page": 110,
+      "sequence_equal": true,
+      "compared_characters": 635
+    },
+    {
+      "pdf_page": 111,
+      "sequence_equal": true,
+      "compared_characters": 607
+    },
+    {
+      "pdf_page": 112,
+      "sequence_equal": true,
+      "compared_characters": 442
+    },
+    {
+      "pdf_page": 113,
+      "sequence_equal": true,
+      "compared_characters": 451
+    },
+    {
+      "pdf_page": 114,
+      "sequence_equal": true,
+      "compared_characters": 693
+    },
+    {
+      "pdf_page": 115,
+      "sequence_equal": true,
+      "compared_characters": 616
+    },
+    {
+      "pdf_page": 116,
+      "sequence_equal": true,
+      "compared_characters": 725
+    },
+    {
+      "pdf_page": 117,
+      "sequence_equal": true,
+      "compared_characters": 466
+    },
+    {
+      "pdf_page": 118,
+      "sequence_equal": true,
+      "compared_characters": 300
+    },
+    {
+      "pdf_page": 119,
+      "sequence_equal": true,
+      "compared_characters": 421
+    },
+    {
+      "pdf_page": 120,
+      "sequence_equal": true,
+      "compared_characters": 438
+    },
+    {
+      "pdf_page": 121,
+      "sequence_equal": true,
+      "compared_characters": 501
+    },
+    {
+      "pdf_page": 122,
+      "sequence_equal": true,
+      "compared_characters": 332
+    },
+    {
+      "pdf_page": 123,
+      "sequence_equal": true,
+      "compared_characters": 393
+    },
+    {
+      "pdf_page": 124,
+      "sequence_equal": true,
+      "compared_characters": 376
+    },
+    {
+      "pdf_page": 125,
+      "sequence_equal": true,
+      "compared_characters": 344
+    },
+    {
+      "pdf_page": 126,
+      "sequence_equal": true,
+      "compared_characters": 411
+    },
+    {
+      "pdf_page": 127,
+      "sequence_equal": true,
+      "compared_characters": 545
+    },
+    {
+      "pdf_page": 128,
+      "sequence_equal": true,
+      "compared_characters": 392
+    },
+    {
+      "pdf_page": 129,
+      "sequence_equal": true,
+      "compared_characters": 395
+    },
+    {
+      "pdf_page": 130,
+      "sequence_equal": true,
+      "compared_characters": 358
+    },
+    {
+      "pdf_page": 131,
+      "sequence_equal": true,
+      "compared_characters": 559
+    },
+    {
+      "pdf_page": 132,
+      "sequence_equal": true,
+      "compared_characters": 504
+    },
+    {
+      "pdf_page": 133,
+      "sequence_equal": true,
+      "compared_characters": 475
+    },
+    {
+      "pdf_page": 134,
+      "sequence_equal": true,
+      "compared_characters": 343
+    },
+    {
+      "pdf_page": 135,
+      "sequence_equal": true,
+      "compared_characters": 401
+    },
+    {
+      "pdf_page": 136,
+      "sequence_equal": true,
+      "compared_characters": 350
+    },
+    {
+      "pdf_page": 137,
+      "sequence_equal": true,
+      "compared_characters": 318
+    },
+    {
+      "pdf_page": 138,
+      "sequence_equal": true,
+      "compared_characters": 375
+    },
+    {
+      "pdf_page": 139,
+      "sequence_equal": true,
+      "compared_characters": 470
+    },
+    {
+      "pdf_page": 140,
+      "sequence_equal": true,
+      "compared_characters": 358
+    },
+    {
+      "pdf_page": 141,
+      "sequence_equal": true,
+      "compared_characters": 427
+    },
+    {
+      "pdf_page": 142,
+      "sequence_equal": true,
+      "compared_characters": 450
+    },
+    {
+      "pdf_page": 143,
+      "sequence_equal": true,
+      "compared_characters": 378
+    },
+    {
+      "pdf_page": 144,
+      "sequence_equal": true,
+      "compared_characters": 408
+    },
+    {
+      "pdf_page": 145,
+      "sequence_equal": true,
+      "compared_characters": 326
+    },
+    {
+      "pdf_page": 146,
+      "sequence_equal": true,
+      "compared_characters": 348
+    },
+    {
+      "pdf_page": 147,
+      "sequence_equal": true,
+      "compared_characters": 340
+    },
+    {
+      "pdf_page": 148,
+      "sequence_equal": true,
+      "compared_characters": 346
+    },
+    {
+      "pdf_page": 149,
+      "sequence_equal": true,
+      "compared_characters": 5
+    }
+  ],
+  "limits": "不证明词义、词源、空格和词形规范化正确；这些由原页视觉复核及规范化规则单独处理。"
+}
