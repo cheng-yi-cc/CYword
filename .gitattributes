@@ -11,3 +11,5 @@
 
 # 规范 CSV 的引号字段含有原始多行正文和有意义的行尾空格。
 books/**/*.csv text eol=lf whitespace=-trailing-space
+authoring/**/*.csv text eol=lf whitespace=-trailing-space
+authoring/**/*.tsv text eol=lf
