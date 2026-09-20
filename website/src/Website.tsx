@@ -454,8 +454,8 @@ function ReleaseNotes() {
   return <section className="information-section section-wrap" id="release-notes" aria-labelledby="release-notes-title">
     <div className="section-heading"><h2 id="release-notes-title">版本记录</h2><p>这里记录已发布的客户端改动，安装包版本以下载区为准。</p></div>
     <div className="release-notes-grid">
-      <article><span className="eyebrow">2026.09.20</span><h3>Windows 0.4.4</h3><p>新增账号间隔离的本机进度与云端同步，调整六级学习顺序与词汇掌握页面；单词详情支持重新评级和连续浏览。</p></article>
-      <article><span className="eyebrow">2026.09.20</span><h3>Android 0.1.0</h3><p>安卓首版。提供六级词书计划、三档评级、累计复习与词汇掌握，支持与 Windows 使用同一邮箱同步学习进度。</p></article>
+      <article><span className="eyebrow">2026.09.20</span><h3>Windows 0.4.5</h3><p>新增全书搜索、以音记形与以熟带生；改进学习、保存与同步，隐藏滚动条。后续更新自动下载，准备完成后点击安装。</p></article>
+      <article><span className="eyebrow">2026.09.20</span><h3>Android 0.1.1</h3><p>同步新增全书搜索与记忆增强，改进手机布局、词条加载和账号保护；沿用原签名，可覆盖安装。</p></article>
     </div>
   </section>;
 }

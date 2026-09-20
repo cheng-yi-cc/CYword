@@ -46,7 +46,7 @@
 ## 常用命令
 
 - 本地预览：`npm run dev`
-- 浏览器预览：`npm run dev:web`；手机预览：`npm run dev:mobile`（5173，默认本地编译词书、模拟登录和同步）；`CYWORD_REAL_AUTH=1` 同时切换生产认证、同步和词书，未上传增强只在默认本地模式可见
+- 浏览器预览：`npm run dev:web`；手机预览：`npm run dev:mobile`（5173，默认本地编译词书、模拟登录和同步）；`CYWORD_REAL_AUTH=1` 同时切换生产认证、同步和词书，未发布数据可在默认本地模式预览
 - 安卓安装包：`npm run android:release`；签名密钥不得提交，见安卓说明
 - 数据校验：`npm run data:verify`
 - 逐词检查：编译后运行 `npm run data:audit:pronunciation`、`npm run data:audit:meaning-bridges`；`.work/` 报告可重建，正式审核记录须保留

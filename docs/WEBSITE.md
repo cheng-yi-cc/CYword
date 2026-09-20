@@ -1,15 +1,15 @@
 # 官网说明
 
-本文描述本轮待发布源码。本轮官网、认证与发布脚本修改尚未部署，也未发布新客户端；已核验的公开客户端版本仍为 Windows 0.4.4、Android 0.1.0。下方有日期的生产记录是历史验证，不代表本轮已上线。
+官网与认证函数已于 2026-09-20 部署；当前公开客户端为 Windows 0.4.5、Android 0.1.1。发布与下载核验记录统一见 [运行手册](RUNBOOK.md)。
 
 ## 用途与入口
 
-官网面向普通用户介绍 CYword，提供功能体验、Windows 和安卓安装包与安装指南，不是应用的在线完整版。客户端尚未发布的搜索、布局和记忆增强不自动进入官网示例。
+官网面向普通用户介绍 CYword，提供功能体验、Windows 和安卓安装包与安装指南，不是应用的在线完整版。官网示例独立维护，客户端的搜索、布局和记忆增强不会自动进入示例。
 
 - 官网：<https://cyword.chengyi.me/>；Pages 备用域名：<https://cyword.pages.dev/>。
 - Windows 下载：<https://cyword.chengyi.me/downloads/latest>；Android 下载：<https://cyword.chengyi.me/downloads/android/latest>。两者从私有 R2 桶的独立原子版本指针跳转到安装包，支持断点续传，下载无需登录。
 - GitHub 仓库为私有，仅用于维护与发布流程，不作为普通用户的备用下载、源码或版本记录入口。公开版本记录放在 `/#release-notes`，只记录已发布改动。
-- Windows 版本和校验值以 `/downloads/latest.json` 为准，Android 以 `/downloads/android/latest.json` 为准；`website/src/release.ts` 只保留动态指针不可用时已核验的 Windows 0.4.4 回退信息，并在页面明确提示。Android 读取失败显示未知状态与重试入口，不填造版本或哈希。
+- Windows 版本和校验值以 `/downloads/latest.json` 为准，Android 以 `/downloads/android/latest.json` 为准；`website/src/release.ts` 只保留动态指针不可用时已核验的 Windows 0.4.5 回退信息，并在页面明确提示。Android 读取失败显示未知状态与重试入口，不填造版本或哈希。
 - 两个平台分别显示版本、文件大小、校验值及安装步骤，锚点为 `/#guide-windows`、`/#guide-android`。
 - 首屏为不保存记录的交互示例。桌面长难句沿用应用右侧竖排入口，默认收起为 52px；展开时三栏同步调整宽度，内容延迟淡入，收起时先淡出内容，动画时长与应用一致。手机标签按“单词、词根、长难句”切换。各栏独立滚动且隐藏滚动条，采用 `overscroll-behavior: contain` 阻断外层滚动穿透，发音支持播放、暂停与失败重试。
 
@@ -68,7 +68,7 @@ npm run preview:site
 
 Windows 公开入口包括 `/downloads/latest`、`/downloads/latest.json`、`/downloads/latest.yml`、内容寻址的 `/downloads/releases/<version>/<sha256>/...`，以及迁移前的版本化安装包路径。只读函数不列目录，不接受上传、删除、任意 URL 或用户指定桶名。官网页面启动时读取 `latest.json`，软件读取 `latest.yml`；两者由同一个 `releases/current.json` 决定。Android 使用独立的 `/downloads/android/latest`、`/downloads/android/latest.json` 与 `releases/android/current.json`，不会改写 Windows 自动更新清单。
 
-本轮函数兼容已经发布的 schema v1 和新生成的 schema v2 私有指针，两个版本均校验平台、版本、文件名与路径中的 SHA-256。v2 不再需要 GitHub 字段，并记录 Windows blockmap、更新清单各自的长度和 SHA-256。公开 `latest.json` 统一返回版本、日期、文件名、长度、安装包 SHA-256、下载路径及 `notesUrl: "/#release-notes"`，不透传旧 v1 中的私有 GitHub 链接。
+生产函数兼容已经发布的 schema v1 和新生成的 schema v2 私有指针，两个版本均校验平台、版本、文件名与路径中的 SHA-256。v2 不再需要 GitHub 字段，并记录 Windows blockmap、更新清单各自的长度和 SHA-256。公开 `latest.json` 统一返回版本、日期、文件名、长度、安装包 SHA-256、下载路径及 `notesUrl: "/#release-notes"`，不透传旧 v1 中的私有 GitHub 链接。
 
 首次启用新发布脚本前，必须先部署兼容 v1/v2 的下载函数，再发布 v2 指针；原有 v1 指针无需改写。函数响应头 `X-CYword-Release-Schemas: 1,2` 用于发布前检查。脚本在任何 R2 写入前向对应平台的生产 `latest.json` 发 HEAD，无法确认支持 `2` 就中止；尚无指针的错误响应也可以携带此能力头。顺序与回滚限制见 [运行手册](RUNBOOK.md)。
 
@@ -100,19 +100,19 @@ Windows 公开入口包括 `/downloads/latest`、`/downloads/latest.json`、`/do
 - `kind`：`study`、`review` 或 `bookmarks`。
 - `wordIds`：去重前不超过 5166 个规范 UUID。
 
-接口先读取版本清单，把 ID 按学习日分片分组，再顺序读取 R2 并流式返回一个 `words` 对象。学习日请求当天全部唯一单词；复习日由本机进度决定 ID。响应和错误都不缓存。请求不存在的版本返回 409，参数或非本词书 ID 返回 400，R2 故障返回 503。当前阶段接口公开可读，没有账号登录或授权防复制。
+接口先读取版本清单，把 ID 按学习日分片分组，再顺序读取 R2 并流式返回一个 `words` 对象。当前客户端优先请求当前词，再预取后面最多 4 词；复习词序由本机进度决定。接口仍兼容旧客户端的整日批量请求。响应和错误都不缓存。请求不存在的版本返回 409，参数或非本词书 ID 返回 400，R2 故障返回 503。当前阶段接口公开可读，没有账号登录或授权防复制。
 
 单词详情可选携带 `pronunciationGuide` 和 `meaningBridges`，格式以 `src/types.ts` 为准。旧数据缺少字段时客户端隐藏增强入口；旧客户端忽略额外字段。上传增强词书会生成新的内容版本，不覆盖旧分片；只有客户端代码合并或安装包升级不会更新 R2 词书。增强源数据和审核规则见[数据说明](../books/cet6/enhancements/README.md)。
 
 ## 用户认证 HTTP 协议
 
 - `POST /api/auth/send-code`：提交 `{ email }`。服务端校验邮箱格式，用一条条件 UPSERT 在 D1 中原子检查 60 秒重发冷却并写入 6 位 OTP（有效期 5 分钟），只有写入成功的请求才通过 `login@auth.cyword.chengyi.me` 调用 Resend 发信。生产环境缺少密钥时返回 503；发信失败按邮箱和本次验证码条件清理，不回显验证码。
-- `POST /api/auth/verify-code`：提交 `{ email, code }`。D1 用带有效期与次数条件的 `DELETE ... RETURNING` 原子匹配并消费验证码，同一码不能被并发成功使用两次。错误尝试由数据库累加，累计 5 次作废；成功后用邮箱唯一约束的 UPSERT 建号或更新登录时间与次数，再签发 HMAC-SHA256 JWT Token。本轮原子操作需部署新函数后生效。
+- `POST /api/auth/verify-code`：提交 `{ email, code }`。D1 用带有效期与次数条件的 `DELETE ... RETURNING` 原子匹配并消费验证码，同一码不能被并发成功使用两次。错误尝试由数据库累加，累计 5 次作废；成功后用邮箱唯一约束的 UPSERT 建号或更新登录时间与次数，再签发 HMAC-SHA256 JWT Token。原子操作已随 2026-09-20 官网函数部署生效。
 - `GET /api/auth/me`：携带 `Authorization: Bearer <token>` 请求头。服务端校验 JWT 有效性并返回用户 ID、邮箱与活跃信息。
 
 ## 进度同步 HTTP 协议
 
-2026-09-20 的既有生产记录已完成授权、建表与同步函数部署，词汇掌握演示和安卓下载入口随当次官网上线；这不包含本轮待发布改动。0.4.4 新增 `GET /api/progress` 与 `PUT /api/progress`，均需同样的 Bearer 登录令牌。GET 返回 `{ revision, progress }`，PUT 提交对应结构；修订号不一致返回 409 和最新记录，客户端合并后重试。D1 表 `learning_progress` 必须在发布函数前创建。身份隔离、限额、合并规则和部署步骤见 [安卓与同步说明](ANDROID.md)。官网展示页面不会调用该接口。
+2026-09-20 已完成授权、建表与同步函数部署，官网提供词汇掌握演示和安卓下载入口。0.4.4 新增 `GET /api/progress` 与 `PUT /api/progress`，均需同样的 Bearer 登录令牌。GET 返回 `{ revision, progress }`，PUT 提交对应结构；修订号不一致返回 409 和最新记录，客户端合并后重试。D1 表 `learning_progress` 必须在发布函数前创建。身份隔离、限额、合并规则和部署步骤见 [安卓与同步说明](ANDROID.md)。官网展示页面不会调用该接口。
 
 HEAD 示例：
 
@@ -126,9 +126,9 @@ curl.exe --fail --head 'https://cyword.chengyi.me/downloads/latest'
 
 官网沿用暖纸色、陶土橙和橄榄绿，品牌只显示 CYword，中文使用系统无衬线字体，英文单词和品牌使用 Georgia。字体、图标、样式不依赖外部 CDN。主线是“逐词巧记 → 构词成组 → 熟练度与累计复习”。
 
-- Windows 自 0.3.0 起，安装包不内置六级详情，运行时通过词书接口加载 5166 个唯一单词。Windows 0.4.4 与首个安卓客户端 0.1.0 于 2026-09-20 发布；没有 Mac 版、四级或考研词书。官网正式下载以已经核验的发布指针为准。
+- Windows 自 0.3.0 起，安装包不内置六级详情，运行时通过词书接口加载 5166 个唯一单词。当前 Windows 0.4.5 与安卓 0.1.1 于 2026-09-20 发布；没有 Mac 版、四级或考研词书。官网正式下载以已经核验的发布指针为准。
 - 计划包含 30 个学习日和 10 个累计复习日，不保证在 40 个自然日内记住全部单词。每天曝光次数以对应版本的编译排课为准，多词根组可重复出现同一词，曝光次数不等于唯一新词数，也不保证记忆效果。
-- 0.2.1 可离线学习；0.3.0 起启动和每天学习需联网。0.4.4 的进度同步依赖新接口部署，两端须使用同一邮箱。正常覆盖升级保留进度，旧文件按已登录账号归属迁移。
+- 0.2.1 可离线学习；0.3.0 起启动和每天学习需联网。进度同步接口已部署，两端须使用同一邮箱。正常覆盖升级保留进度，旧文件按已登录账号归属迁移。
 - Windows 安装包未签名，安卓 APK 使用项目私有密钥签名；页面应提示核对来源与哈希，不引导用户关闭系统防护，也不把校验一致等同于安全认证。
 - `/#privacy` 说明账号、学习记录、官网示例与服务提供方：认证接口在 D1 保存邮箱、账号标识、登录时间和短期验证码，学习记录按账号保存在设备及 D1；两个私有 R2 桶分别保存公开安装包和服务端词书分片。官网没有统计脚本或公开表单，交互示例只保留 React 内存状态，刷新即重置，不访问客户端会话、学习进度或 localStorage。发音播放会请求 `cdn.aimwords.com`；下载、账号与同步使用 Cloudflare，验证码邮件使用 Resend。
 - `/#feedback` 提供反馈与删除说明，维护者确认的公开邮箱为 `cyi907369@gmail.com`，通过 `mailto:` 链接打开邮件客户端。删除申请提示使用登录邮箱发送；这是人工申请入口，没有自助删除接口，实际收件及处理流程仍需维护者验证。退出登录、清理本机数据与删除云端数据是不同操作。
@@ -154,7 +154,9 @@ curl.exe --fail --head 'https://cyword.chengyi.me/downloads/latest'
 
 ## 词书接口验证记录
 
-2026-09-19：线上目录版本为 `4a1f385d3c008d32`；新版内置顺序仍使用该版本取词，第一天 180 个唯一词批量返回成功，巧记与规范源数据一致。本地生成的新分片未上传，线上词书指针未改变。
+2026-09-20：线上词书更新为 `90284475439a197b`，目录完整哈希与本地发布产物一致；30 个分片各抽取一个词，经生产接口返回的完整详情均与上传源一致。5166 词的两项增强审计通过，原巧记未改动。旧版本对象保留，供旧客户端继续读取。
+
+2026-09-19（历史记录）：线上目录版本为 `4a1f385d3c008d32`；新版内置顺序仍使用该版本取词，第一天 180 个唯一词批量返回成功，巧记与规范源数据一致。本地生成的新分片未上传，线上词书指针未改变。
 
 2026-09-01（历史基线）：
 

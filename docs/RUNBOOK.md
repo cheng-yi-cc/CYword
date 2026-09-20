@@ -1,6 +1,21 @@
 # 运行手册
 
-本文按本轮待发布源码说明运行与发布步骤。本轮尚未部署官网、上传 R2 或发布新客户端；已核验的公开客户端版本仍为 Windows 0.4.4、Android 0.1.0。有日期的生产记录保留为历史基线，不能据此认定本轮改动已上线。
+当前正式版本为 Windows 0.4.5、Android 0.1.1（versionCode 502），于 2026-09-20 发布；配套官网函数与增强词书已上线。具体核验结果见下方发布记录。
+
+## 2026-09-20 发布记录
+
+源代码提交为 `64d2673`，对应标签 `v0.4.5`、`android-v0.1.1`。Windows 工作流 `35515474154`、Android 工作流 `35515481499` 均成功；官网生产部署为 `15746604.cyword.pages.dev`。
+
+| 平台 | 正式文件 | 字节数 | SHA-256 |
+| --- | --- | ---: | --- |
+| Windows 0.4.5 | `CYword-Setup-0.4.5.exe` | 129160435 | `3663022f0c87080ffb5cb4e411b2af8791e58969a2218ecbbf3f5c39a6b02320` |
+| Android 0.1.1 | `CYword-Android-0.1.1.apk` | 20599591 | `d60443b82e0207a424c642777dcbba4f508ac42fdef86c56942a11c2da556b70` |
+
+两个平台的 GitHub Release 与独立 R2 指针已发布。正式域名完整下载的长度、SHA-256、HEAD、Range 和稳定入口重定向通过核对；Windows `latest.yml` 的 SHA-512 与安装器一致，blockmap 全部分块校验通过，GitHub 和官网资产一致。安卓 APK 的签名证书 SHA-256 为 `389ff03f29e59fcf25ad2c2969b132bff20e2635a0960f24afe176b1b9a578fa`，与 0.1.0 一致。
+
+词书目录版本为 `90284475439a197b`，目录完整哈希与本地发布产物一致，30 个分片各抽样一词的完整详情一致，旧版本对象保留。88 项应用测试、14 项浏览器回归、22 项本地 R2 检查和两项全书增强审计通过。官网桌面/手机冒烟验证覆盖双平台新版本记录、联系入口、隐藏滚动条和长难句收展；未登录请求 `/api/auth/me`、`/api/progress` 返回 401。
+
+验证边界：Windows DPAPI 会话迁移已实测，未运行正式 0.4.5 安装器安装验收；安卓完成 Release 构建和签名校验，未连接真机，覆盖升级、Keystore 迁移、真机音频及真实账号跨设备同步仍需设备验收。内容来源材料的待补事项保留在 [来源台账](CONTENT-SOURCES.md)。
 
 ## 环境与首次启动
 
@@ -49,7 +64,7 @@ npm run dist
 
 安装器为交互式 NSIS：首次安装可选择目录；手动运行新版安装包时会从注册表读取旧目录作为默认值，用户仍可修改。应用内更新使用同一个安装器静默覆盖旧版本，并保留 Electron `userData` 中的学习进度。
 
-下一版更新流程：启动检测到新版本即自动下载，右上角显示下载进度；完成后点击一次立即安装并重启。下载失败可点击重试，关闭应用不会自动安装。该流程需先安装包含此改动的版本，已发布的 0.4.4 仍使用原来的手动下载流程。开发模式不实际检测或安装更新。
+Windows 0.4.5 起的更新流程：启动检测到新版本即自动下载，右上角显示下载进度；完成后点击一次立即安装并重启。下载失败可点击重试，关闭应用不会自动安装。0.4.4 用户需手动触发更新或从官网下载覆盖安装；升级到 0.4.5 后具备此自动下载流程。开发模式不实际检测或安装更新。
 
 ## 标签自动构建
 
@@ -103,7 +118,7 @@ npm run upload:book-data
 1. `npm ci` 能在干净依赖环境完成。
 2. `npm run data:verify`、`npm test`、`npm run test:ui`、`npm run build:web` 全部通过；修改官网时另检查 `npm run build:site` 与 `npm run test:site:download`。
 3. 解包目录不存在 `resources/data`，安装后联网启动并读取 5166 词目录；断网时明确提示词书加载失败，且不损坏本机进度。
-4. 学习日首词可先显示，剩余词后台批量加载；累计复习返回本机提交的动态词表。
+4. 学习和复习优先显示当前词，再预取后面最多 4 词；复习词序由本机进度决定，接口兼容旧客户端整日批量请求。
 5. `release/` 中存在安装器、`latest.yml` 和对应 `.exe.blockmap`；`data/`、`dist/`、`release/` 和检查截图不提交。
 6. 对外发布前检查站内版本记录与实际已发布版本一致，确认真实反馈/删除申请渠道及 [内容来源台账](CONTENT-SOURCES.md) 的未决项；不能将占位提示或来源记录当作渠道开通、版权授权完成的证明。
 
@@ -123,9 +138,9 @@ npm run upload:book-data
 
 Resend 使用专用发信域 `auth.cyword.chengyi.me`，发件人为 `login@auth.cyword.chengyi.me`。`chengyi.me` 的权威 DNS 当前由 Cloudflare 管理；发信记录 `resend._domainkey.auth.cyword`、`rsend.auth.cyword` 和 `send.auth.cyword` 必须添加到 Cloudflare DNS，其中两个 CNAME 保持“仅 DNS”。官网 `cyword` CNAME 指向 `cyword.pages.dev` 并启用代理，不修改根域和 `www`。两个业务密钥必须存入 Pages Production 加密 Secret；不得写入 `wrangler.jsonc`、`.dev.vars*`、源码、构建目录或安装包。生产环境缺少任一密钥时认证接口返回 503，不允许回退到模拟发信或固定 JWT 密钥。
 
-本轮认证函数把 OTP 冷却与写入合为条件 UPSERT，校验以 `DELETE ... RETURNING` 原子消费，错误次数在 D1 原子累加，账号按唯一邮箱 UPSERT 更新。需部署新函数后生效；现有认证表结构不因此新增迁移。回归覆盖并发重发、同码只能成功一次及尝试次数上限，线上不要为测试重复消耗真实用户验证码。
+2026-09-20 部署的认证函数把 OTP 冷却与写入合为条件 UPSERT，校验以 `DELETE ... RETURNING` 原子消费，错误次数在 D1 原子累加，账号按唯一邮箱 UPSERT 更新。现有认证表结构不因此新增迁移。回归覆盖并发重发、同码只能成功一次及尝试次数上限，线上不要为测试重复消耗真实用户验证码。
 
-本轮页面新增 `/#release-notes`、`/#privacy` 与 `/#feedback`。公开记录仅写已发布的 Windows/Android 改动；隐私说明区分本机数据、云端记录和临时官网示例。维护者确认公开反馈与账号删除申请邮箱为 `cyi907369@gmail.com`，页面提供 `mailto:` 链接并提示删除申请使用登录邮箱发送；随下次官网部署生效。该入口用于人工收件，不是自助删除接口；实际收件及后续处理流程仍需维护者验证，不承诺未经确认的处理时限。验证码发件邮箱不作为客服渠道。
+官网提供 `/#release-notes`、`/#privacy` 与 `/#feedback`。公开记录仅写已发布的 Windows/Android 改动；隐私说明区分本机数据、云端记录和临时官网示例。维护者确认公开反馈与账号删除申请邮箱为 `cyi907369@gmail.com`，页面提供 `mailto:` 链接并提示删除申请使用登录邮箱发送，已部署生效。该入口用于人工收件，不是自助删除接口；实际收件及后续处理流程仍需维护者验证，不承诺未经确认的处理时限。验证码发件邮箱不作为客服渠道。
 
 仅向维护者的 Wrangler 提供登录授权；本机凭据保存在用户配置及 Windows 凭据管理器，不进入仓库。首次使用执行 `npx wrangler login`，之后：
 
@@ -135,19 +150,19 @@ npm run test:site:download
 npm run deploy:site
 ```
 
-2026-09-20 的既有生产记录已完成 D1 授权、`learning_progress` 建表与同步函数部署，不包含本轮待发布函数。后续新环境仍须按 [安卓与同步说明](ANDROID.md) 先建表再部署。
+2026-09-20 已完成 D1 授权、`learning_progress` 建表与同步及原子认证函数部署。后续新环境仍须按 [安卓与同步说明](ANDROID.md) 先建表再部署。
 
 部署脚本显式指定 Pages 生产分支 `main`，与当前 Git 分支无关；会上传静态页面、下载函数、词书函数和路由配置。普通提交推送不会自动更新官网代码；版本标签工作流只更新 R2 发布资产和最新版指针。不要上传纯静态 ZIP，以免遗漏函数和 R2 绑定；词书只能上传到 `BOOKS` 对应的私有 R2 桶，不得放进 Pages 静态产物。
 
-NSIS 安装包只收录 `dist/`、`electron/` 和发布用 `package.json`。邮箱和登录态位于 `userData/session.json`，0.4.4 学习进度位于 `userData/accounts/<账号哈希>/progress.json`，均不参与打包。本轮新客户端通过 Electron safeStorage 加密会话令牌；只有安装新版本后才生效。旧 `progress.json` 保留，启动时已登录账号符合归属条件才迁移。覆盖安装继续使用原有 `userData`；验证“全新用户”体验使用临时 `--user-data-dir`。
+NSIS 安装包只收录 `dist/`、`electron/` 和发布用 `package.json`。邮箱和登录态位于 `userData/session.json`，0.4.4 学习进度位于 `userData/accounts/<账号哈希>/progress.json`，均不参与打包。Windows 0.4.5 通过 Electron safeStorage 加密会话令牌，升级后迁移旧会话。旧 `progress.json` 保留，启动时已登录账号符合归属条件才迁移。覆盖安装继续使用原有 `userData`；验证“全新用户”体验使用临时 `--user-data-dir`。
 
 需要线上预览时，先构建，再执行 `npx wrangler pages deploy --cwd website --project-name cyword --branch preview --commit-dirty=true`。`--branch` 是 Pages 环境标签，不会创建 Git 分支；预览函数只读同一发布桶。确认主下载可用后才更新生产。
 
 ## 发布官网新安装包
 
-本轮发布清单从 schema v1 升到 v2，首次启用须按以下顺序：
+2026-09-20 两个平台已启用 schema v2 发布清单。新环境首次从 v1 升级时，须按以下顺序：
 
-1. 保留当前 v1 指针，先部署兼容 v1/v2 的本轮官网与下载函数，并验证旧安装包、Range 和 Windows `latest.yml` 仍可读取。
+1. 保留当前 v1 指针，先部署兼容 v1/v2 的官网与下载函数，并验证旧安装包、Range 和 Windows `latest.yml` 仍可读取。
 2. 对 Windows `/downloads/latest.json`、Android `/downloads/android/latest.json` 发 HEAD，确认响应含 `X-CYword-Release-Schemas: 1,2`。新环境暂无指针时，错误响应同样应有此能力头。
 3. 再发布新版本。`scripts/release-preflight.mjs` 在任何 R2 写入前检查对应生产入口是否声明支持 `2`，超时、重定向或缺少支持声明都中止，不绕过检查强写新指针。
 
@@ -194,7 +209,7 @@ Get-FileHash -Algorithm SHA256 -LiteralPath '.work\download-check.exe'
 
 预期 `latest.yml` 为 200 且引用 `latest.json.downloadPath` 对应的内容寻址安装包；HEAD 文件长度等于 `latest.json.sizeBytes`，Range 返回 206，续传后完整哈希等于 `latest.json.sha256`。Android 另从 `/downloads/android/latest.json` 取独立版本和路径，以相同方式核验 APK 的长度、Range 与完整哈希；不要拿 Windows 版本或校验值代替。
 
-本轮兼容函数部署后，两个公开 JSON 均应返回站内 `notesUrl`，不含 `githubDownloadUrl` 或 `repositoryUrl`。检查首页双平台版本、下载、各自安装说明、站内版本记录、隐私/反馈、FAQ 和 HTTPS 跳转；阻断 Android 版本请求时应显示失败和重试入口，不出现虚构哈希。测试文件放 `.work/`，用户确认任务结束时再清理；安装包哈希一致不代表已经完成安装运行测试。
+两个公开 JSON 均应返回站内 `notesUrl`，不含 `githubDownloadUrl` 或 `repositoryUrl`。检查首页双平台版本、下载、各自安装说明、站内版本记录、隐私/反馈、FAQ 和 HTTPS 跳转；阻断 Android 版本请求时应显示失败和重试入口，不出现虚构哈希。测试文件放 `.work/`，用户确认任务结束或要求执行 neat-freak 时清理；安装包哈希一致不代表已经完成安装运行测试。
 
 ## 下载费用与限制
 
@@ -219,6 +234,6 @@ Get-FileHash -Algorithm SHA256 -LiteralPath '.work\download-check.exe'
 | 仅部分国内线路不可达 | 跨境连通性因地区和运营商而异，可尝试续传或稍后重试；私有 GitHub 不是公开备用入口，不承诺全网稳定 |
 | 部署后页面或函数异常 | 优先回滚到仍兼容当前 v1/v2 指针的生产部署，格式降级顺序见上文；不要修改根域 DNS、删除安装包或重置用户进度 |
 | 收不到验证码 | 先确认 Pages Production 同时存在 `RESEND_API_KEY` 与 `JWT_SECRET` 加密 Secret，再检查 Resend 日志及 `auth.cyword.chengyi.me` 的 DKIM、Return-Path 和发送 CNAME；生产响应不得包含 `debugCode` 或 `simulated` |
-| 邮件验证码正确但校验失败 | 确认发送与校验请求命中同一 Production 环境和 D1 `cyword-db`，再核对验证码是否过期、已用、输错 5 次或因重发替换；本轮函数原子消费后重复验证会失败，未登录访问 `/api/auth/me` 应返回 401 |
+| 邮件验证码正确但校验失败 | 确认发送与校验请求命中同一 Production 环境和 D1 `cyword-db`，再核对验证码是否过期、已用、输错 5 次或因重发替换；函数原子消费后重复验证会失败，未登录访问 `/api/auth/me` 应返回 401 |
 
 当前生产不使用 `r2.dev` 公开地址，也不依赖第三方 GitHub 代理。部署详情和已完成验证见 [官网说明](WEBSITE.md)。
