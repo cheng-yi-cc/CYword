@@ -90,7 +90,7 @@ npm run upload:book-data
 
 ## 官网运行与部署
 
-官网和桌面端独立构建，不需要生成词书数据。`npm run dev:site` 监听 `http://127.0.0.1:5174/`；`npm run build:site` 后可用 `npm run preview:site` 在 `http://127.0.0.1:4174/` 查看产物。Vite 不模拟 R2，页面里的下载按钮仍访问正式域名。
+官网和桌面端独立构建，不需要生成词书数据。`npm run dev:site` 监听 `http://127.0.0.1:5174/`；`npm run build:site` 后可用 `npm run preview:site` 在 `http://127.0.0.1:4174/` 查看产物。Vite 不模拟 R2，通过 `/downloads/` 代理读取正式域名的发布信息和安装包。
 
 | 配置 | 约定 |
 | --- | --- |
@@ -112,7 +112,7 @@ npm run test:site:download
 npm run deploy:site
 ```
 
-部署 0.4.4 前先按 [安卓与同步说明](ANDROID.md) 完成 D1 授权和 `learning_progress` 建表；截至 2026-09-20 该项尚未完成。
+2026-09-20 已完成 D1 授权、`learning_progress` 建表与生产同步函数部署；后续新环境仍须按 [安卓与同步说明](ANDROID.md) 先建表再部署。
 
 部署脚本显式指定 Pages 生产分支 `main`，与当前 Git 分支无关；会上传静态页面、下载函数、词书函数和路由配置。普通提交推送不会自动更新官网代码；版本标签工作流只更新 R2 发布资产和最新版指针。不要上传纯静态 ZIP，以免遗漏函数和 R2 绑定；词书只能上传到 `BOOKS` 对应的私有 R2 桶，不得放进 Pages 静态产物。
 

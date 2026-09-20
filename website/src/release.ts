@@ -27,16 +27,16 @@ const repositoryUrl = "https://github.com/cheng-yi-cc/CYword";
 
 // R2 尚未发布动态指针或暂时不可用时，官网继续提供最后一个已核验版本。
 export const release: ReleaseInfo = {
-  version: "0.2.1",
-  date: "2026.08.30",
-  size: "134 MB",
-  filename: "CYword-Setup-0.2.1.exe",
-  sizeBytes: 140500489,
-  downloadUrl: "https://cyword.chengyi.me/downloads/CYword-Setup-0.2.1.exe",
-  githubDownloadUrl: `${repositoryUrl}/releases/download/v0.2.1/CYword-Setup-0.2.1.exe`,
-  notesUrl: `${repositoryUrl}/releases/tag/v0.2.1`,
+  version: "0.4.4",
+  date: "2026.09.20",
+  size: "123 MB",
+  filename: "CYword-Setup-0.4.4.exe",
+  sizeBytes: 129150572,
+  downloadUrl: "https://cyword.chengyi.me/downloads/releases/0.4.4/985ac100038fe023c23e921a4e86889d1374a2f9b5d8f2fd6f71eb6cd7ded9c0/CYword-Setup-0.4.4.exe",
+  githubDownloadUrl: `${repositoryUrl}/releases/download/v0.4.4/CYword-Setup-0.4.4.exe`,
+  notesUrl: `${repositoryUrl}/releases/tag/v0.4.4`,
   repositoryUrl,
-  sha256: "47aa16276aaf3ef7230149bd44aff16be0172b55f5a3caa930a0d7944da9b5fa",
+  sha256: "985ac100038fe023c23e921a4e86889d1374a2f9b5d8f2fd6f71eb6cd7ded9c0",
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {

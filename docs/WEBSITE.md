@@ -100,7 +100,7 @@ npm run preview:site
 
 ## 进度同步 HTTP 协议
 
-截至 2026-09-20，该接口尚待生产授权、建表与部署；官网词汇掌握演示的本地修改也尚未部署。0.4.4 新增 `GET /api/progress` 与 `PUT /api/progress`，均需同样的 Bearer 登录令牌。GET 返回 `{ revision, progress }`，PUT 提交对应结构；修订号不一致返回 409 和最新记录，客户端合并后重试。D1 表 `learning_progress` 必须在发布函数前创建。身份隔离、限额、合并规则和部署步骤见 [安卓与同步说明](ANDROID.md)。官网展示页面不会调用该接口。
+2026-09-20 已完成生产授权、建表与官网部署；词汇掌握演示和安卓下载入口同步上线。0.4.4 新增 `GET /api/progress` 与 `PUT /api/progress`，均需同样的 Bearer 登录令牌。GET 返回 `{ revision, progress }`，PUT 提交对应结构；修订号不一致返回 409 和最新记录，客户端合并后重试。D1 表 `learning_progress` 必须在发布函数前创建。身份隔离、限额、合并规则和部署步骤见 [安卓与同步说明](ANDROID.md)。官网展示页面不会调用该接口。
 
 HEAD 示例：
 
@@ -114,7 +114,7 @@ curl.exe --fail --head 'https://cyword.chengyi.me/downloads/latest'
 
 官网沿用暖纸色、陶土橙、橄榄绿和 Cy 标记，中文使用系统无衬线字体，英文单词和品牌使用 Georgia。字体、图标、样式不依赖外部 CDN。主线是“逐词巧记 → 构词成组 → 熟练度与累计复习”。
 
-- 自 0.3.0 起，安装包不内置六级详情，运行时通过词书接口加载 5166 个唯一单词。0.4.4 新增安卓客户端；没有 Mac 版、四级或考研词书。官网正式下载仍以已经核验的发布指针为准。
+- 自 0.3.0 起，安装包不内置六级详情，运行时通过词书接口加载 5166 个唯一单词。同期发布首个安卓客户端 0.1.0；没有 Mac 版、四级或考研词书。官网正式下载仍以已经核验的发布指针为准。
 - 计划包含 30 个学习日和 10 个累计复习日，不保证在 40 个自然日内记住全部单词。0.4.4 重排后的学习日为 174–185 次曝光，多词根组可重复出现同一词，不能写成 200 个唯一新词或保证记忆效果。
 - 0.2.1 可离线学习；0.3.0 起启动和每天学习需联网。0.4.4 的进度同步依赖新接口部署，两端须使用同一邮箱。正常覆盖升级保留进度，旧文件按已登录账号归属迁移。
 - Windows 安装包未签名，安卓 APK 使用项目私有密钥签名；页面应提示核对来源与哈希，不引导用户关闭系统防护，也不把校验一致等同于安全认证。
@@ -146,3 +146,7 @@ curl.exe --fail --head 'https://cyword.chengyi.me/downloads/latest'
 2026-09-01（历史基线）：
 
 生产环境已绑定私有桶 `cyword-book-data`，该次验证数据版本为 `353a5bffec631ba5`。目录接口返回 5166 词；普通学习日以一次 POST 返回 179 个唯一单词、JSON 正文 2899177 字节。最坏累计复习测试以一次 POST 返回全部 5166 个单词、JSON 正文 79332804 字节，用时约 12.7 秒，证明分片读取和流式响应没有触发 Worker 内存失败。无 `Content-Length` 的超限请求返回 413。
+
+## 安卓下载
+
+`GET/HEAD /downloads/android/latest.json` 返回安卓独立版本信息；`/downloads/android/latest` 跳转当前 APK。资产采用 `releases/android/<version>/<sha256>/CYword-Android-<version>.apk` 路径，响应类型为 `application/vnd.android.package-archive`，支持 HEAD、Range 和条件缓存。其私有指针 `releases/android/current.json` 不对外暴露。Android Release 发布后通过独立 GitHub Actions 上传原始签名 APK，再切换指针，不影响 Windows 的 `latest.yml`。

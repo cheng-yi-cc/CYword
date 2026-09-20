@@ -30,14 +30,14 @@ type DownloadAsset = {
 const currentReleaseKey = "releases/current.json";
 const repositoryUrl = "https://github.com/cheng-yi-cc/CYword";
 const fallbackRelease: PublicRelease = {
-  version: "0.2.1",
-  publishedAt: "2026-08-30T00:00:00.000Z",
-  filename: "CYword-Setup-0.2.1.exe",
-  sizeBytes: 140500489,
-  sha256: "47aa16276aaf3ef7230149bd44aff16be0172b55f5a3caa930a0d7944da9b5fa",
-  downloadPath: "/downloads/CYword-Setup-0.2.1.exe",
-  githubDownloadUrl: `${repositoryUrl}/releases/download/v0.2.1/CYword-Setup-0.2.1.exe`,
-  notesUrl: `${repositoryUrl}/releases/tag/v0.2.1`,
+  version: "0.4.4",
+  publishedAt: "2026-09-20T07:33:38.463Z",
+  filename: "CYword-Setup-0.4.4.exe",
+  sizeBytes: 129150572,
+  sha256: "985ac100038fe023c23e921a4e86889d1374a2f9b5d8f2fd6f71eb6cd7ded9c0",
+  downloadPath: "/downloads/releases/0.4.4/985ac100038fe023c23e921a4e86889d1374a2f9b5d8f2fd6f71eb6cd7ded9c0/CYword-Setup-0.4.4.exe",
+  githubDownloadUrl: `${repositoryUrl}/releases/download/v0.4.4/CYword-Setup-0.4.4.exe`,
+  notesUrl: `${repositoryUrl}/releases/tag/v0.4.4`,
   repositoryUrl,
 };
 
