@@ -1,5 +1,7 @@
 # 运行手册
 
+本文按本轮待发布源码说明运行与发布步骤。本轮尚未部署官网、上传 R2 或发布新客户端；已核验的公开客户端版本仍为 Windows 0.4.4、Android 0.1.0。有日期的生产记录保留为历史基线，不能据此认定本轮改动已上线。
+
 ## 环境与首次启动
 
 推荐 Windows 10/11、Node.js 24 LTS 和 npm，与标签构建工作流一致。进入仓库后执行：
@@ -22,10 +24,13 @@ npm run dev
 ```powershell
 npm run data:verify
 npm test
+npm run test:ui
 npm run build:web
 ```
 
 预期结果：数据校验报告 19 张表、5166 个唯一单词、0 个孤儿外键；自动测试全部通过；网页构建成功生成 `dist/`。
+
+`npm run test:ui` 先生成本地数据，再运行 `tests/ui/` 的 Playwright 回归，覆盖加载失败与旧请求、评级保存期间导航、保存失败、搜索返回、同步和退出异常。当前配置使用本机已安装的 Chrome，服务地址为 `http://127.0.0.1:5173/`；非 CI 环境可复用同端口开发服务。用例使用独立浏览器上下文和测试数据，不以真实账号进度验证；失败截图与 trace 保存到 `.work/ui-results/`，不要提交。官网另运行 `npm run build:site` 和 `npm run test:site:download`。
 
 界面冒烟使用 `npm run dev:mobile`，分别检查桌面与手机宽度：
 
@@ -48,7 +53,7 @@ npm run dist
 
 ## 标签自动构建
 
-推送形如 `v<package version>` 的标签会触发 `.github/workflows/build-tag.yml`。Windows runner 会检查标签与 `package.json` 版本一致，执行 `npm ci`、自动测试和 NSIS 打包，创建同名 GitHub Release，然后自动把同一构建的安装器、`.exe.blockmap` 和版本化 `latest.yml` 上传官网 R2。全部对象校验上传成功后，工作流最后更新 `releases/current.json`，官网和桌面更新源同时切换。
+推送形如 `v<package version>` 的标签会触发 `.github/workflows/build-tag.yml`。Windows runner 检查标签与 `package.json` 一致，执行 `npm ci`，再检查私有 GitHub Release：尚不存在时才运行测试、构建 NSIS、校验资产并创建 Release；已存在时下载原始安装器、`.exe.blockmap` 与 `latest.yml`，跳过重建并重新校验。随后把原安装器、blockmap 和改写为 R2 路径的版本化清单发布到官网 R2，全部不可变对象校验成功后才更新 `releases/current.json`，官网和桌面更新源同时切换。
 
 ```powershell
 $cyVersion = node -p "require('./package.json').version"
@@ -56,11 +61,11 @@ git tag -a "v$cyVersion" -m "CYword v$cyVersion"
 git push origin "v$cyVersion"
 ```
 
-工作流不额外上传 GitHub Actions artifact。R2 资产使用 `releases/<version>/<sha256>/` 内容寻址路径，旧版本不会被覆盖；但相同标签重跑仍会覆盖 GitHub Release 的同名资产，并可能让同一版本号对应不同二进制，因此已对外发布的版本不得重跑替换，应发布新版本号。标签示例中的版本发布后即不可重复使用；新发布须替换成未使用且与 `package.json` 一致的版本。
+工作流不额外上传 GitHub Actions artifact，也不覆盖已有 GitHub Release 资产。同标签重跑只用于沿用原件恢复尚未完成的 R2 发布，避免重新构建改变安装包字节或 `releaseDate`；已有 Release 为草稿、缺少文件、文件未上传完整或查询失败时直接中止。R2 使用 `releases/<version>/<sha256>/` 内容寻址路径，已有对象只有长度和完整 SHA-256 相同才跳过，不同则拒绝覆盖。需要修改软件时必须使用新版本和新标签。
 
 首次启用前，在 Cloudflare R2 创建 `Object Read & Write` S3 API Token，并把范围限制为 `cyword-downloads` 单桶；在 GitHub Actions Secrets 配置 `CLOUDFLARE_ACCOUNT_ID`、`CLOUDFLARE_R2_ACCESS_KEY_ID` 和 `CLOUDFLARE_R2_SECRET_ACCESS_KEY`。不要使用能管理其他桶、Workers 或账号设置的宽权限 Token。
 
-已经安装的 0.2.1 内嵌 GitHub provider，无法远程改写。迁移后的第一个新版本必须同时保留 GitHub Release，使 0.2.1 用户完成一次过渡更新；从该新版本开始，检查和下载安装包都只访问官网。若要求连这一次 GitHub 请求也没有，用户只能手动从官网安装迁移后的版本。
+已经安装的 0.2.1 内嵌 GitHub provider，无法远程改写。仓库为私有，保留 GitHub Release 不等于普通用户能访问旧更新源；这些用户应从官网下载新版并覆盖安装。0.3.0 起使用官网 `/downloads/` generic 源，禁止恢复为 GitHub provider。私有 Release 仅供维护与发布流程取原件，官网不再提供 GitHub 备用下载或将其宣传为开源项目。
 
 ## 选择另一本词书做数据验证
 
@@ -96,10 +101,11 @@ npm run upload:book-data
 ## 发布前清单
 
 1. `npm ci` 能在干净依赖环境完成。
-2. `npm run data:verify`、`npm test`、`npm run build:web` 全部通过。
+2. `npm run data:verify`、`npm test`、`npm run test:ui`、`npm run build:web` 全部通过；修改官网时另检查 `npm run build:site` 与 `npm run test:site:download`。
 3. 解包目录不存在 `resources/data`，安装后联网启动并读取 5166 词目录；断网时明确提示词书加载失败，且不损坏本机进度。
 4. 学习日首词可先显示，剩余词后台批量加载；累计复习返回本机提交的动态词表。
 5. `release/` 中存在安装器、`latest.yml` 和对应 `.exe.blockmap`；`data/`、`dist/`、`release/` 和检查截图不提交。
+6. 对外发布前检查站内版本记录与实际已发布版本一致，确认真实反馈/删除申请渠道及 [内容来源台账](CONTENT-SOURCES.md) 的未决项；不能将占位提示或来源记录当作渠道开通、版权授权完成的证明。
 
 ## 官网运行与部署
 
@@ -117,6 +123,10 @@ npm run upload:book-data
 
 Resend 使用专用发信域 `auth.cyword.chengyi.me`，发件人为 `login@auth.cyword.chengyi.me`。`chengyi.me` 的权威 DNS 当前由 Cloudflare 管理；发信记录 `resend._domainkey.auth.cyword`、`rsend.auth.cyword` 和 `send.auth.cyword` 必须添加到 Cloudflare DNS，其中两个 CNAME 保持“仅 DNS”。官网 `cyword` CNAME 指向 `cyword.pages.dev` 并启用代理，不修改根域和 `www`。两个业务密钥必须存入 Pages Production 加密 Secret；不得写入 `wrangler.jsonc`、`.dev.vars*`、源码、构建目录或安装包。生产环境缺少任一密钥时认证接口返回 503，不允许回退到模拟发信或固定 JWT 密钥。
 
+本轮认证函数把 OTP 冷却与写入合为条件 UPSERT，校验以 `DELETE ... RETURNING` 原子消费，错误次数在 D1 原子累加，账号按唯一邮箱 UPSERT 更新。需部署新函数后生效；现有认证表结构不因此新增迁移。回归覆盖并发重发、同码只能成功一次及尝试次数上限，线上不要为测试重复消耗真实用户验证码。
+
+本轮页面新增 `/#release-notes`、`/#privacy` 与 `/#feedback`。公开记录仅写已发布的 Windows/Android 改动；隐私说明区分本机数据、云端记录和临时官网示例。维护者确认公开反馈与账号删除申请邮箱为 `cyi907369@gmail.com`，页面提供 `mailto:` 链接并提示删除申请使用登录邮箱发送；随下次官网部署生效。该入口用于人工收件，不是自助删除接口；实际收件及后续处理流程仍需维护者验证，不承诺未经确认的处理时限。验证码发件邮箱不作为客服渠道。
+
 仅向维护者的 Wrangler 提供登录授权；本机凭据保存在用户配置及 Windows 凭据管理器，不进入仓库。首次使用执行 `npx wrangler login`，之后：
 
 ```powershell
@@ -125,17 +135,33 @@ npm run test:site:download
 npm run deploy:site
 ```
 
-2026-09-20 已完成 D1 授权、`learning_progress` 建表与生产同步函数部署；后续新环境仍须按 [安卓与同步说明](ANDROID.md) 先建表再部署。
+2026-09-20 的既有生产记录已完成 D1 授权、`learning_progress` 建表与同步函数部署，不包含本轮待发布函数。后续新环境仍须按 [安卓与同步说明](ANDROID.md) 先建表再部署。
 
 部署脚本显式指定 Pages 生产分支 `main`，与当前 Git 分支无关；会上传静态页面、下载函数、词书函数和路由配置。普通提交推送不会自动更新官网代码；版本标签工作流只更新 R2 发布资产和最新版指针。不要上传纯静态 ZIP，以免遗漏函数和 R2 绑定；词书只能上传到 `BOOKS` 对应的私有 R2 桶，不得放进 Pages 静态产物。
 
-NSIS 安装包只收录 `dist/`、`electron/` 和发布用 `package.json`。邮箱和登录态位于 `userData/session.json`，0.4.4 学习进度位于 `userData/accounts/<账号哈希>/progress.json`，均不参与打包。旧 `progress.json` 保留，启动时已登录账号符合归属条件才迁移。覆盖安装继续使用原有 `userData`；验证“全新用户”体验使用临时 `--user-data-dir`。
+NSIS 安装包只收录 `dist/`、`electron/` 和发布用 `package.json`。邮箱和登录态位于 `userData/session.json`，0.4.4 学习进度位于 `userData/accounts/<账号哈希>/progress.json`，均不参与打包。本轮新客户端通过 Electron safeStorage 加密会话令牌；只有安装新版本后才生效。旧 `progress.json` 保留，启动时已登录账号符合归属条件才迁移。覆盖安装继续使用原有 `userData`；验证“全新用户”体验使用临时 `--user-data-dir`。
 
 需要线上预览时，先构建，再执行 `npx wrangler pages deploy --cwd website --project-name cyword --branch preview --commit-dirty=true`。`--branch` 是 Pages 环境标签，不会创建 Git 分支；预览函数只读同一发布桶。确认主下载可用后才更新生产。
 
 ## 发布官网新安装包
 
-正常发布只需推送与 `package.json` 一致的新标签；标签工作流自动完成 GitHub Release 和 R2 发布，不需要修改 `website/src/release.ts`、重新部署官网或手工复制校验值。发布顺序固定为：GitHub Release → 内容寻址安装器 → blockmap → 版本化 `latest.yml` → `releases/current.json`。最后一步之前的任何失败都不会切换官网最新版。
+本轮发布清单从 schema v1 升到 v2，首次启用须按以下顺序：
+
+1. 保留当前 v1 指针，先部署兼容 v1/v2 的本轮官网与下载函数，并验证旧安装包、Range 和 Windows `latest.yml` 仍可读取。
+2. 对 Windows `/downloads/latest.json`、Android `/downloads/android/latest.json` 发 HEAD，确认响应含 `X-CYword-Release-Schemas: 1,2`。新环境暂无指针时，错误响应同样应有此能力头。
+3. 再发布新版本。`scripts/release-preflight.mjs` 在任何 R2 写入前检查对应生产入口是否声明支持 `2`，超时、重定向或缺少支持声明都中止，不绕过检查强写新指针。
+
+兼容函数部署完成后，常规 Windows 安装包发布只需推送与 `package.json` 一致的新标签；不必为每个安装包改写 `website/src/release.ts` 或重新部署下载函数。官网 `/#release-notes` 的文字是静态内容，新增公开版本记录仍需更新页面并部署。Windows 发布顺序固定为：私有 GitHub Release → 内容寻址安装器 → blockmap → 版本化 `latest.yml` → `releases/current.json`。最后一步之前的任何失败都不会切换最新版。Android 用独立 `android-v<version>` Release、APK 路径及 `releases/android/current.json`，不切换 Windows 指针。
+
+先做只生成本地文件的资产检查：
+
+```powershell
+npm run publish:site:release -- release --prepare-only
+# Android 原始签名 APK 的独立检查
+node scripts/publish-site-release.mjs release --android --prepare-only
+```
+
+`--prepare-only` 不访问生产兼容性接口、不上传文件，结果写入 `.work/site-release/`。它不能证明生产函数已支持新格式。
 
 本地应急发布要求已安装 AWS CLI，并通过环境变量提供同一组桶级 R2 S3 凭据：
 
@@ -147,7 +173,9 @@ $env:AWS_DEFAULT_REGION = 'auto'
 npm run publish:site:release -- release
 ```
 
-脚本先检查版本、安装包长度、SHA-256、`latest.yml` 的 SHA-512 与文件长度，再执行同样的原子发布顺序。旧内容寻址资产保留；不要删除仍可能被旧客户端引用的版本。
+脚本拒绝空文件、超大或重复键的 `latest.yml`，只接受与当前安装包一致的唯一文件项、版本、路径、SHA-512 和长度；还会解压 blockmap 并逐块核对安装器内容。生成的 v2 指针记录安装器、blockmap 与改写后的更新清单各自的校验信息。兼容性检查通过后，已有不可变对象必须长度与完整 SHA-256 相同才能复用，新增对象上传后也要重新下载流式核验，再写最后的指针。不要删除仍可能被旧客户端引用的版本。
+
+回滚官网时保留 v1/v2 读取能力；一旦任一平台已使用 v2 指针，不能直接回滚到只读 v1 的旧函数。若必须回到旧函数，应先恢复经核验且资产仍完整的该平台 v1 指针，并验证下载，再回滚；同时检查另一平台是否仍依赖 v2。
 
 ## 下载冒烟检查
 
@@ -164,7 +192,9 @@ curl.exe --fail --continue-at - --output '.work\download-check.exe' $cyUrl
 Get-FileHash -Algorithm SHA256 -LiteralPath '.work\download-check.exe'
 ```
 
-预期 `latest.yml` 为 200 且引用 `latest.json.downloadPath` 对应的内容寻址安装包；HEAD 文件长度等于 `latest.json.sizeBytes`，Range 返回 206，续传后完整哈希等于 `latest.json.sha256`。另查首页版本、主下载、GitHub 备用地址、FAQ 和 HTTPS 跳转。测试文件放 `.work/`，用户确认任务结束时再清理；安装包哈希一致不代表已经完成安装运行测试。
+预期 `latest.yml` 为 200 且引用 `latest.json.downloadPath` 对应的内容寻址安装包；HEAD 文件长度等于 `latest.json.sizeBytes`，Range 返回 206，续传后完整哈希等于 `latest.json.sha256`。Android 另从 `/downloads/android/latest.json` 取独立版本和路径，以相同方式核验 APK 的长度、Range 与完整哈希；不要拿 Windows 版本或校验值代替。
+
+本轮兼容函数部署后，两个公开 JSON 均应返回站内 `notesUrl`，不含 `githubDownloadUrl` 或 `repositoryUrl`。检查首页双平台版本、下载、各自安装说明、站内版本记录、隐私/反馈、FAQ 和 HTTPS 跳转；阻断 Android 版本请求时应显示失败和重试入口，不出现虚构哈希。测试文件放 `.work/`，用户确认任务结束时再清理；安装包哈希一致不代表已经完成安装运行测试。
 
 ## 下载费用与限制
 
@@ -181,12 +211,14 @@ Get-FileHash -Algorithm SHA256 -LiteralPath '.work\download-check.exe'
 | 每日词汇返回 409 | 客户端目录版本对应的清单已被删除；恢复该不可变版本，或重启应用重新获取当前目录 |
 | 每日词汇流中断 | 查找 `book_words_stream_failed` 日志，核对清单里的分片是否完整；不要在上传中途更新版本指针 |
 | 下载 503 | 查看 Pages Functions 日志的 `release_download_failed`；核对 `DOWNLOADS` 绑定、指针格式和桶内对象；按 `Retry-After` 稍后重试 |
+| 发布脚本提示尚不支持清单 v2 | 先部署兼容 v1/v2 的官网函数，确认生产响应能力头；脚本尚未写入 R2，不要绕过检查或先手改指针 |
+| 同标签重跑报已有资产不完整/不一致 | 核对私有 Release 原件和 R2 对象；不得覆盖已发布字节。需要改动时发布新版本，恢复传输只能沿用已核验原件 |
 | 下载 416 | Range 超过文件边界，核对长度及 ETag，删除失效断点或重新下载 |
 | 达到免费函数额度 | 当日下载可能不可用，等额度重置或由用户明确决定是否升级；不要自动开付费套餐 |
 | 本地测试缺少 R2 绑定 | 使用 `npm run test:site:download`；脚本从配置显式传入本地 `--r2`，只使用模拟存储，不加 `--remote` |
-| 仅部分国内线路不可达 | 跨境连通性因地区和运营商而异，可尝试续传、稍后重试或 GitHub 备用地址；不承诺全网稳定 |
-| 部署后页面或函数异常 | 在 Pages 项目回滚先前成功的生产部署；不要修改根域 DNS，不要删除安装包或重置用户进度 |
+| 仅部分国内线路不可达 | 跨境连通性因地区和运营商而异，可尝试续传或稍后重试；私有 GitHub 不是公开备用入口，不承诺全网稳定 |
+| 部署后页面或函数异常 | 优先回滚到仍兼容当前 v1/v2 指针的生产部署，格式降级顺序见上文；不要修改根域 DNS、删除安装包或重置用户进度 |
 | 收不到验证码 | 先确认 Pages Production 同时存在 `RESEND_API_KEY` 与 `JWT_SECRET` 加密 Secret，再检查 Resend 日志及 `auth.cyword.chengyi.me` 的 DKIM、Return-Path 和发送 CNAME；生产响应不得包含 `debugCode` 或 `simulated` |
-| 邮件验证码正确但校验失败 | 确认发送与校验请求命中同一 Production 环境和 D1 `cyword-db`，再核对验证码是否超过 5 分钟、是否因重发被新验证码替换；未登录访问 `/api/auth/me` 应返回 401 |
+| 邮件验证码正确但校验失败 | 确认发送与校验请求命中同一 Production 环境和 D1 `cyword-db`，再核对验证码是否过期、已用、输错 5 次或因重发替换；本轮函数原子消费后重复验证会失败，未登录访问 `/api/auth/me` 应返回 401 |
 
 当前生产不使用 `r2.dev` 公开地址，也不依赖第三方 GitHub 代理。部署详情和已完成验证见 [官网说明](WEBSITE.md)。

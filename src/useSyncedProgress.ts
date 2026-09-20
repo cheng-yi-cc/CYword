@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ProgressSync, type SyncStatus } from "./sync-client";
+import { ProgressSync, type SyncStatus, type FlushResult } from "./sync-client";
 import { reconcileCompletion } from "./progress";
 import type { AppProgress, Catalog, UserSession } from "./types";
 
@@ -43,8 +43,11 @@ export function useSyncedProgress(session: UserSession | null, catalog: Catalog 
   return {
     progress: state.account === session?.user.id ? state.progress : null,
     status: state.status, message: state.message,
-    save: async (next: AppProgress) => { if (!ref.current) throw new Error("进度尚未准备好"); await ref.current.save(next); },
+    save: async (next: AppProgress) => {
+      if (!ref.current || state.account !== session?.user.id || !state.progress) throw new Error("进度尚未准备好");
+      await ref.current.save(next, state.progress);
+    },
     sync: () => ref.current?.sync(),
-    flush: () => ref.current?.flush(),
+    flush: (): Promise<FlushResult> => ref.current?.flush() ?? Promise.resolve({ localSaved: false, cloudSynced: false, message: "进度尚未准备好" }),
   };
 }

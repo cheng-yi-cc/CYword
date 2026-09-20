@@ -173,8 +173,18 @@ function packStudyDays(units, target) {
     const flat = groups.flatMap(group => group.wordIds.map(wordId => `${group.id}:${wordId}`));
     const positions = new Map(flat.map((key, index) => [key, index]));
     const order = exposures.map(item => positions.get(`${item.groupId}:${item.wordId}`));
+    // 休息点仅添加展示元数据，完整保留同日互依单元、词根组与曝光顺序。
+    const segmentEnds = [];
+    let segmentSize = 0, exposureEnd = 0;
+    for (const unit of selected) {
+      exposureEnd += unit.exposures.length;
+      segmentSize += unit.exposures.length;
+      if (segmentSize >= 20) { segmentEnds.push(exposureEnd); segmentSize = 0; }
+    }
+    if (segmentEnds.at(-1) !== exposures.length) segmentEnds.push(exposures.length);
     days.unshift({ day, groupIds: groups.map(group => group.id), appearanceCount: flat.length,
       uniqueWordCount: new Set(exposures.map(item => item.wordId)).size,
+      segmentEnds,
       ...(order.some((index, i) => index !== i) ? { exposureOrder: order } : {}) });
     end = start;
   }

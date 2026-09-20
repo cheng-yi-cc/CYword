@@ -186,34 +186,18 @@ export async function requestOTP(
   await ensureAuthTables(db);
   const now = Math.floor(Date.now() / 1000);
 
-  // 1. 检查是否存在未过期的验证码并检查 60s 重发冷却
-  const existing = await db
-    .prepare("SELECT code, expires_at, created_at FROM otp_codes WHERE email = ?")
-    .bind(email)
-    .first<{ code: string; expires_at: number; created_at: number }>();
-
-  if (existing && now - existing.created_at < OTP_RESEND_COOLDOWN_SECONDS) {
-    const waitSeconds = OTP_RESEND_COOLDOWN_SECONDS - (now - existing.created_at);
-    return { success: false, error: `请求过于频繁，请等待 ${waitSeconds} 秒后重试`, rateLimited: true };
-  }
-
-  // 2. 生成新验证码
+  // 冷却检查与写入同一条语句执行，只有抢占成功的请求才发送邮件。
   const code = generateOTP();
   const expiresAt = now + OTP_EXPIRY_SECONDS;
-
-  // 3. 写入/覆盖 D1
-  await db
-    .prepare(
-      `INSERT INTO otp_codes (email, code, expires_at, attempts, created_at)
-       VALUES (?, ?, ?, 0, ?)
-       ON CONFLICT(email) DO UPDATE SET
-         code = excluded.code,
-         expires_at = excluded.expires_at,
-         attempts = 0,
-         created_at = excluded.created_at`
-    )
-    .bind(email, code, expiresAt, now)
-    .run();
+  const claimed = await db.prepare(
+    `INSERT INTO otp_codes (email, code, expires_at, attempts, created_at)
+     VALUES (?, ?, ?, 0, ?)
+     ON CONFLICT(email) DO UPDATE SET code = excluded.code, expires_at = excluded.expires_at,
+       attempts = 0, created_at = excluded.created_at
+     WHERE otp_codes.created_at <= ?
+     RETURNING email`
+  ).bind(email, code, expiresAt, now, now - OTP_RESEND_COOLDOWN_SECONDS).first<{ email: string }>();
+  if (!claimed) return { success: false, error: "请求过于频繁，请稍后重试", rateLimited: true };
 
   // 4. 发送邮件
   const sendResult = await sendEmail(email, code, resendApiKey);
@@ -235,76 +219,32 @@ export async function verifyAndAuthenticate(
   await ensureAuthTables(db);
   const now = Math.floor(Date.now() / 1000);
 
-  // 1. 查询验证码
-  const record = await db
-    .prepare("SELECT code, expires_at, attempts FROM otp_codes WHERE email = ?")
-    .bind(email)
-    .first<{ code: string; expires_at: number; attempts: number }>();
+  // 匹配、有效期、次数限制和核销必须原子执行，不能先 SELECT 再 DELETE。
+  const consumed = await db.prepare(
+    `DELETE FROM otp_codes WHERE email = ? AND code = ? AND expires_at >= ? AND attempts < ? RETURNING email`
+  ).bind(email, code.trim(), now, MAX_OTP_ATTEMPTS).first<{ email: string }>();
 
-  if (!record) {
-    return { success: false, error: "请先获取验证码" };
+  if (!consumed) {
+    // 错误尝试也在数据库内累加，避免并发请求绕过次数限制。
+    const failed = await db.prepare(
+      `UPDATE otp_codes SET attempts = attempts + 1
+       WHERE email = ? AND code != ? AND expires_at >= ? AND attempts < ? RETURNING attempts`
+    ).bind(email, code.trim(), now, MAX_OTP_ATTEMPTS).first<{ attempts: number }>();
+    if (failed) {
+      const remaining = MAX_OTP_ATTEMPTS - failed.attempts;
+      return { success: false, error: remaining > 0 ? `验证码错误，还剩 ${remaining} 次机会` : "验证码错误，已作废，请重新获取" };
+    }
+    return { success: false, error: "验证码已过期、已使用或已作废，请重新获取" };
   }
 
-  if (record.expires_at < now) {
-    await db.prepare("DELETE FROM otp_codes WHERE email = ?").bind(email).run();
-    return { success: false, error: "验证码已过期，请重新获取" };
-  }
-
-  if (record.attempts >= MAX_OTP_ATTEMPTS) {
-    await db.prepare("DELETE FROM otp_codes WHERE email = ?").bind(email).run();
-    return { success: false, error: "输错次数过多，验证码已作废，请重新获取" };
-  }
-
-  // 2. 核对验证码
-  if (record.code !== code.trim()) {
-    await db
-      .prepare("UPDATE otp_codes SET attempts = attempts + 1 WHERE email = ?")
-      .bind(email)
-      .run();
-    const remaining = MAX_OTP_ATTEMPTS - (record.attempts + 1);
-    return {
-      success: false,
-      error: remaining > 0 ? `验证码错误，还剩 ${remaining} 次机会` : "验证码错误，已作废，请重新获取",
-    };
-  }
-
-  // 3. 验证成功，删除验证码
-  await db.prepare("DELETE FROM otp_codes WHERE email = ?").bind(email).run();
-
-  // 4. 查询或创建用户
-  const existingUser = await db
-    .prepare("SELECT id, email, created_at, last_login_at, login_count FROM users WHERE email = ?")
-    .bind(email)
-    .first<{ id: string; email: string; created_at: number; last_login_at: number; login_count: number }>();
-
-  let user: AuthUser;
-  if (existingUser) {
-    const updatedCount = existingUser.login_count + 1;
-    await db
-      .prepare("UPDATE users SET last_login_at = ?, login_count = ? WHERE id = ?")
-      .bind(now, updatedCount, existingUser.id)
-      .run();
-    user = {
-      id: existingUser.id,
-      email: existingUser.email,
-      createdAt: existingUser.created_at,
-      lastLoginAt: now,
-      loginCount: updatedCount,
-    };
-  } else {
-    const newId = crypto.randomUUID();
-    await db
-      .prepare("INSERT INTO users (id, email, created_at, last_login_at, login_count) VALUES (?, ?, ?, ?, 1)")
-      .bind(newId, email, now, now)
-      .run();
-    user = {
-      id: newId,
-      email,
-      createdAt: now,
-      lastLoginAt: now,
-      loginCount: 1,
-    };
-  }
+  // 唯一邮箱约束与登录次数递增由同一 UPSERT 保证，避免创建/更新竞态。
+  const record = await db.prepare(
+    `INSERT INTO users (id, email, created_at, last_login_at, login_count) VALUES (?, ?, ?, ?, 1)
+     ON CONFLICT(email) DO UPDATE SET last_login_at = excluded.last_login_at, login_count = users.login_count + 1
+     RETURNING id, email, created_at, last_login_at, login_count`
+  ).bind(crypto.randomUUID(), email, now, now).first<{ id: string; email: string; created_at: number; last_login_at: number; login_count: number }>();
+  if (!record) throw new Error("账号保存失败，请重新登录");
+  const user: AuthUser = { id: record.id, email: record.email, createdAt: record.created_at, lastLoginAt: record.last_login_at, loginCount: record.login_count };
 
   // 5. 签发 JWT
   const token = await signJWT({ sub: user.id, email: user.email }, jwtSecret);

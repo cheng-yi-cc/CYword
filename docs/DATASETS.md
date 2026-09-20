@@ -16,6 +16,8 @@ books/
 
 `book.json` 保存稳定代码、名称、数据版本、核心统计和规范文件清单。`csv/table_catalog.csv` 是表级索引，`csv/field_dictionary.csv` 是字段级字典。二者和 CSV 一起提交；原始接口响应、会话信息、断点缓存、预览图和临时工作簿不提交。
 
+内容来源及授权材料状态见[内容来源台账](CONTENT-SOURCES.md)。当前已有采集记录和部分参考许可文件，词书正文、例句、音频及官网展示等用途的材料仍待维护者补档与核验；本轮未完成逐项权利核验，也未修改原巧记。
+
 ## 六级数据基线
 
 六级另含 `enhancements/` 音形分块和词义桥接增强，由 `book.json.pronunciationEnhancement` 与 `meaningBridgeEnhancement` 指定。两者均有 5166 词的逐词记录，独立于原 19 张规范表；以熟带生另外保存逐对审核，2180 词有候选，运行时仍按熟词范围筛选。字段、读音纠正、来源和验收范围见 [增强数据说明](../books/cet6/enhancements/README.md)。构建前同时校验增强数据，缺失、过期或还原失败会终止构建。

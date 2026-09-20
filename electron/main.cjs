@@ -1,4 +1,5 @@
-const { app, BrowserWindow, ipcMain, shell, dialog } = require("electron");
+const { app, BrowserWindow, ipcMain, shell, dialog, safeStorage, screen } = require("electron");
+const { createSessionStore } = require("./session-store.cjs");
 const { autoUpdater } = require("electron-updater");
 const fs = require("node:fs/promises");
 const path = require("node:path");
@@ -130,6 +131,7 @@ async function readJson(filePath, fallback = null) {
 
 async function registerIpc() {
   const legacySession = await readJson(sessionPath(), null);
+  const sessions = createSessionStore(sessionPath(), safeStorage);
   ipcMain.handle("catalog:read", () => fetchBookJson("/catalog"));
 
   ipcMain.handle("words:read", (_event, request) => {
@@ -168,28 +170,15 @@ async function registerIpc() {
   });
 
   ipcMain.handle("session:read", async () => {
-    return (await readJson(sessionPath(), null));
+    return sessions.read();
   });
 
   ipcMain.handle("session:write", async (_event, session) => {
-    if (!session || typeof session !== "object" || !session.token) {
-      throw new Error("用户会话格式无效");
-    }
-    const target = sessionPath();
-    const temporary = `${target}.tmp`;
-    await fs.mkdir(path.dirname(target), { recursive: true });
-    await fs.writeFile(temporary, JSON.stringify(session, null, 2), "utf8");
-    await fs.rename(temporary, target);
-    return true;
+    return sessions.write(session);
   });
 
   ipcMain.handle("session:clear", async () => {
-    try {
-      await fs.unlink(sessionPath());
-    } catch (error) {
-      if (error && error.code !== "ENOENT") throw error;
-    }
-    return true;
+    return sessions.clear();
   });
 
   ipcMain.handle("progress:read", async (_event, accountId) => {
@@ -268,11 +257,15 @@ async function registerIpc() {
 }
 
 function createWindow() {
+  const area = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea;
+  const width = Math.min(1440, area.width), height = Math.min(920, area.height);
   const window = new BrowserWindow({
-    width: 1440,
-    height: 920,
-    minWidth: 1080,
-    minHeight: 700,
+    width,
+    height,
+    x: area.x + Math.floor((area.width - width) / 2),
+    y: area.y + Math.floor((area.height - height) / 2),
+    minWidth: Math.min(760, area.width),
+    minHeight: Math.min(560, area.height),
     backgroundColor: "#f7f4ee",
     icon: path.join(__dirname, "assets", "icon.ico"),
     autoHideMenuBar: true,

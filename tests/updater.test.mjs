@@ -3,6 +3,7 @@ import test from "node:test";
 import { EventEmitter } from "node:events";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
+import { createSessionStore } from "../electron/session-store.cjs";
 
 async function updaterFixture() {
   const updater = new EventEmitter();
@@ -27,6 +28,7 @@ async function updaterFixture() {
   };
   const mocks = {
     electron,
+    "./session-store.cjs": { createSessionStore },
     "electron-updater": { autoUpdater: updater },
     "node:fs/promises": { readFile: async () => { throw Object.assign(new Error(), { code: "ENOENT" }); } },
     "node:path": { join: (...parts) => parts.join("/") },

@@ -12,6 +12,20 @@ const dependencies = extractDependencies(words);
 const catalog = JSON.parse(fs.readFileSync("data/catalog.json", "utf8"));
 const plan = buildPlan(catalog);
 
+test("study pauses preserve whole root groups and end at the final exposure", () => {
+  for (const day of plan.filter(day => day.kind === "study")) {
+    const exposures = studyExposures(day, catalog.groups);
+    assert.equal(day.segmentEnds.at(-1), exposures.length);
+    assert.ok(day.segmentEnds.every((end, index) => Number.isInteger(end) && end > (day.segmentEnds[index - 1] ?? 0)));
+    const groupSegments = new Map();
+    exposures.forEach((item, index) => {
+      const segment = day.segmentEnds.findIndex(end => index < end);
+      if (groupSegments.has(item.groupId)) assert.equal(groupSegments.get(item.groupId), segment, `pause splits ${item.groupId}`);
+      else groupSegments.set(item.groupId, segment);
+    });
+  }
+});
+
 test("full curriculum honours every required dependency, including partner roots and repeated appearances", () => {
   const incoming = new Map(words.map(word => [word.id, []]));
   for (const dep of dependencies.filter(dep => dep.kind === "required")) incoming.get(dep.sourceWordId).push(dep.targetWordId);

@@ -1,23 +1,6 @@
 type ByteRange = { offset: number; length: number };
 
-type ReleasePointer = {
-  schemaVersion: 1;
-  version: string;
-  publishedAt: string;
-  filename: string;
-  sizeBytes: number;
-  sha256: string;
-  assetPath: string;
-  blockmapPath?: string;
-  updaterMetadataPath?: string;
-  githubDownloadUrl: string;
-  notesUrl: string;
-  repositoryUrl: string;
-};
-
-type PublicRelease = Pick<ReleasePointer,
-  "version" | "publishedAt" | "filename" | "sizeBytes" | "sha256" |
-  "githubDownloadUrl" | "notesUrl" | "repositoryUrl"> & { downloadPath: string };
+import { isReleasePointer, toPublicRelease, releaseNotesUrl, type ReleasePointer, type PublicRelease } from "../../server/release-manifest";
 
 type DownloadAsset = {
   key: string;
@@ -28,7 +11,6 @@ type DownloadAsset = {
 };
 
 const currentReleaseKey = "releases/current.json";
-const repositoryUrl = "https://github.com/cheng-yi-cc/CYword";
 const fallbackRelease: PublicRelease = {
   version: "0.4.4",
   publishedAt: "2026-09-20T07:33:38.463Z",
@@ -36,9 +18,7 @@ const fallbackRelease: PublicRelease = {
   sizeBytes: 129150572,
   sha256: "985ac100038fe023c23e921a4e86889d1374a2f9b5d8f2fd6f71eb6cd7ded9c0",
   downloadPath: "/downloads/releases/0.4.4/985ac100038fe023c23e921a4e86889d1374a2f9b5d8f2fd6f71eb6cd7ded9c0/CYword-Setup-0.4.4.exe",
-  githubDownloadUrl: `${repositoryUrl}/releases/download/v0.4.4/CYword-Setup-0.4.4.exe`,
-  notesUrl: `${repositoryUrl}/releases/tag/v0.4.4`,
-  repositoryUrl,
+  notesUrl: releaseNotesUrl,
 };
 
 function readRange(value: string | null, size: number): ByteRange | "unsatisfiable" | null {
@@ -79,30 +59,6 @@ function errorResponse(request: Request, status: number, message: string, extra:
   });
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function isReleasePointer(value: unknown, android = false): value is ReleasePointer {
-  if (!isRecord(value)) return false;
-  const version = value.version;
-  const sha256 = value.sha256;
-  if (value.schemaVersion !== 1 || typeof version !== "string" || !/^\d+\.\d+\.\d+$/.test(version) ||
-      typeof sha256 !== "string" || !/^[a-f0-9]{64}$/.test(sha256)) return false;
-
-  const filename = android ? `CYword-Android-${version}.apk` : `CYword-Setup-${version}.exe`;
-  const basePath = `releases/${android ? "android/" : ""}${version}/${sha256}`;
-  const tag = `${android ? "android-v" : "v"}${version}`;
-  return value.filename === filename && Number.isSafeInteger(value.sizeBytes) && Number(value.sizeBytes) > 0 &&
-    typeof value.publishedAt === "string" && Number.isFinite(Date.parse(value.publishedAt)) &&
-    value.assetPath === `${basePath}/${filename}` &&
-    (android || (value.blockmapPath === `${basePath}/${filename}.blockmap` &&
-      value.updaterMetadataPath === `${basePath}/latest.yml`)) &&
-    value.githubDownloadUrl === `${repositoryUrl}/releases/download/${tag}/${filename}` &&
-    value.notesUrl === `${repositoryUrl}/releases/tag/${tag}` &&
-    value.repositoryUrl === repositoryUrl;
-}
-
 async function readCurrentRelease(bucket: R2Bucket, android = false): Promise<ReleasePointer | null> {
   const object = await bucket.get(android ? "releases/android/current.json" : currentReleaseKey);
   if (!object) return null;
@@ -110,20 +66,6 @@ async function readCurrentRelease(bucket: R2Bucket, android = false): Promise<Re
   const value = await object.json<unknown>();
   if (!isReleasePointer(value, android)) throw new Error("Release pointer is invalid");
   return value;
-}
-
-function toPublicRelease(pointer: ReleasePointer): PublicRelease {
-  return {
-    version: pointer.version,
-    publishedAt: pointer.publishedAt,
-    filename: pointer.filename,
-    sizeBytes: pointer.sizeBytes,
-    sha256: pointer.sha256,
-    downloadPath: `/downloads/${pointer.assetPath}`,
-    githubDownloadUrl: pointer.githubDownloadUrl,
-    notesUrl: pointer.notesUrl,
-    repositoryUrl: pointer.repositoryUrl,
-  };
 }
 
 function jsonResponse(request: Request, value: PublicRelease): Response {
@@ -243,7 +185,7 @@ async function serveObject(request: Request, bucket: R2Bucket, asset: DownloadAs
   return new Response(object.body, { status: range ? 206 : 200, headers });
 }
 
-export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
+const serveDownload: PagesFunction<Env> = async ({ request, env }) => {
   if (request.method !== "GET" && request.method !== "HEAD") {
     return errorResponse(request, 405, "Method not allowed", { Allow: "GET, HEAD" });
   }
@@ -285,4 +227,14 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     }));
     return errorResponse(request, 503, "Download temporarily unavailable; please retry later", { "Retry-After": "60" });
   }
+};
+
+export const onRequest: PagesFunction<Env> = async (context) => {
+  const response = await serveDownload(context);
+  const pathname = new URL(context.request.url).pathname;
+  if (pathname === "/downloads/latest.json" || pathname === "/downloads/android/latest.json") {
+    // Capability is independent of whether a current release has been published.
+    response.headers.set("X-CYword-Release-Schemas", "1,2");
+  }
+  return response;
 };

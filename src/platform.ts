@@ -1,9 +1,15 @@
-import { Capacitor, CapacitorHttp } from "@capacitor/core";
+import { Capacitor, CapacitorHttp, registerPlugin } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
 import { App as NativeApp } from "@capacitor/app";
 import type { AppProgress, UserSession, WordsRequest } from "./types";
 
 export const isNative = Capacitor.isNativePlatform();
+const DeviceStorage = registerPlugin<{
+  readSession(): Promise<{ value: string | null }>;
+  writeSession(options: { value: string }): Promise<void>;
+  clearSession(): Promise<void>;
+  writeProgress(options: { key: string; value: string }): Promise<void>;
+}>("DeviceStorage");
 const origin = "https://cyword.chengyi.me";
 const storage = {
   get: async (key: string) => isNative ? (await Preferences.get({ key })).value : localStorage.getItem(key),
@@ -26,11 +32,13 @@ async function json(path: string, method = "GET", data?: unknown) {
   return response.data;
 }
 const progressKey = (accountId?: string) => `cyword-progress:${accountId || "guest"}`;
+async function readSession() {
+  const raw = isNative ? (await DeviceStorage.readSession()).value : await storage.get("cyword_session");
+  return raw ? JSON.parse(raw) as UserSession : null;
+}
 
 export function installPlatform() {
-  const legacySession = storage.get("cyword_session").then((raw) => {
-    try { return raw ? JSON.parse(raw) as UserSession : null; } catch { return null; }
-  }).catch(() => null);
+  const legacySession = readSession().catch(() => null);
   if (!window.cyword) window.cyword = {
     readCatalog: () => json("/api/books/cet6/catalog"),
     readWords: (data: WordsRequest) => json("/api/books/cet6/words", "POST", data),
@@ -46,13 +54,20 @@ export function installPlatform() {
       }
       return null;
     },
-    writeProgress: async (progress: AppProgress, accountId) => { await storage.set(progressKey(accountId), JSON.stringify(progress)); return true; },
+    writeProgress: async (progress: AppProgress, accountId) => {
+      const key = progressKey(accountId), value = JSON.stringify(progress);
+      if (isNative) await DeviceStorage.writeProgress({ key, value }); else await storage.set(key, value);
+      return true;
+    },
     syncProgress: (token, payload) => request("/api/progress", payload ? "PUT" : "GET", payload, token),
     sendAuthCode: (email) => json("/api/auth/send-code", "POST", { email }),
     verifyAuthCode: (email, code) => json("/api/auth/verify-code", "POST", { email, code }),
-    readSession: async () => { const raw = await storage.get("cyword_session"); return raw ? JSON.parse(raw) as UserSession : null; },
-    writeSession: async (session) => { await storage.set("cyword_session", JSON.stringify(session)); return true; },
-    clearSession: async () => { await storage.remove("cyword_session"); return true; },
+    readSession,
+    writeSession: async (session) => {
+      if (isNative) await DeviceStorage.writeSession({ value: JSON.stringify(session) }); else await storage.set("cyword_session", JSON.stringify(session));
+      return true;
+    },
+    clearSession: async () => { if (isNative) await DeviceStorage.clearSession(); else await storage.remove("cyword_session"); return true; },
   };
   if (isNative) {
     document.documentElement.classList.add("native-app");

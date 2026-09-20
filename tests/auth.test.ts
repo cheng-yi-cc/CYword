@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { DatabaseSync } from "node:sqlite";
+import { readFileSync } from "node:fs";
+import { Miniflare, convertV4MiniflareOptions } from "miniflare";
 import {
   signJWT,
   verifyJWT,
@@ -14,87 +17,20 @@ import {
 
 const TEST_JWT_SECRET = "test-secret-key-with-at-least-32-characters";
 
-// 创建轻量级内存 SQLite 模拟 D1
-function createMockD1(): D1Database {
-  const users = new Map<string, { id: string; email: string; created_at: number; last_login_at: number; login_count: number }>();
-  const otpCodes = new Map<string, { email: string; code: string; expires_at: number; attempts: number; created_at: number }>();
-
+// Execute the actual SQL instead of reimplementing query behavior in a Map mock.
+const authSchema = readFileSync(new URL("../migrations/0001_create_auth_tables.sql", import.meta.url), "utf8");
+function createSqliteD1(): D1Database {
+  const sqlite = new DatabaseSync(":memory:");
+  sqlite.exec(authSchema);
   return {
-    async exec(_query: string) {
-      return { count: 0, duration: 0 };
-    },
     prepare(query: string) {
-      let bound: unknown[] = [];
+      let bound: Array<string | number | null> = [];
       const stmt = {
-        bind(...args: unknown[]) {
-          bound = args;
-          return stmt;
-        },
-        async first<T = unknown>(): Promise<T | null> {
-          if (query.includes("SELECT code, expires_at, created_at FROM otp_codes")) {
-            const email = bound[0] as string;
-            return (otpCodes.get(email) ?? null) as T | null;
-          }
-          if (query.includes("SELECT code, expires_at, attempts FROM otp_codes")) {
-            const email = bound[0] as string;
-            return (otpCodes.get(email) ?? null) as T | null;
-          }
-          if (query.includes("SELECT id, email, created_at, last_login_at, login_count FROM users WHERE email = ?")) {
-            const email = bound[0] as string;
-            return (users.get(email) ?? null) as T | null;
-          }
-          if (query.includes("SELECT id, email, created_at, last_login_at, login_count FROM users WHERE id = ?")) {
-            const id = bound[0] as string;
-            for (const user of users.values()) {
-              if (user.id === id) return user as T;
-            }
-            return null;
-          }
-          return null;
-        },
-        async run() {
-          if (query.includes("INSERT INTO otp_codes")) {
-            const [email, code, expiresAt, createdAt] = bound as [string, string, number, number];
-            otpCodes.set(email, { email, code, expires_at: expiresAt, attempts: 0, created_at: createdAt });
-          } else if (query.includes("DELETE FROM otp_codes")) {
-            const email = bound[0] as string;
-            const code = bound[1] as string | undefined;
-            if (code === undefined || otpCodes.get(email)?.code === code) {
-              otpCodes.delete(email);
-            }
-          } else if (query.includes("UPDATE otp_codes SET attempts = attempts + 1")) {
-            const email = bound[0] as string;
-            const item = otpCodes.get(email);
-            if (item) item.attempts += 1;
-          } else if (query.includes("INSERT INTO users")) {
-            const [id, email, createdAt, lastLoginAt] = bound as [string, string, number, number];
-            users.set(email, { id, email, created_at: createdAt, last_login_at: lastLoginAt, login_count: 1 });
-          } else if (query.includes("UPDATE users SET last_login_at = ?, login_count = ?")) {
-            const [lastLoginAt, loginCount, id] = bound as [number, number, string];
-            for (const user of users.values()) {
-              if (user.id === id) {
-                user.last_login_at = lastLoginAt;
-                user.login_count = loginCount;
-                break;
-              }
-            }
-          }
-          return { success: true, meta: {} };
-        },
-        async all() {
-          return { results: [], success: true, meta: {} };
-        },
-        async raw() {
-          return [];
-        },
-      } as unknown as D1PreparedStatement;
+        bind(...args: Array<string | number | null>) { bound = args; return stmt; },
+        async first() { const row = sqlite.prepare(query).get(...bound); return row ? { ...row } : null; },
+        async run() { const result = sqlite.prepare(query).run(...bound); return { success: true, meta: { changes: Number(result.changes) } }; },
+      };
       return stmt;
-    },
-    async batch() {
-      return [];
-    },
-    async dump() {
-      return new ArrayBuffer(0);
     },
   } as unknown as D1Database;
 }
@@ -136,7 +72,7 @@ test("JWT signing and verification works with standard Web Crypto HMAC", async (
 });
 
 test("OTP flow: request code, cooldown limit, failure limit, and auto-registration", async () => {
-  const db = createMockD1();
+  const db = createSqliteD1();
   const email = "student@university.edu";
   let otpCode = "";
   const fakeSendEmail = async (_email: string, code: string, apiKey: string) => {
@@ -156,7 +92,7 @@ test("OTP flow: request code, cooldown limit, failure limit, and auto-registrati
   assert.ok(req2.error?.includes("请求过于频繁"));
 
   // 3. 错误验证码重试扣减次数
-  const fail1 = await verifyAndAuthenticate(db, email, "000000", TEST_JWT_SECRET);
+  const fail1 = await verifyAndAuthenticate(db, email, otpCode === "000000" ? "000001" : "000000", TEST_JWT_SECRET);
   assert.equal(fail1.success, false);
   assert.ok(fail1.error?.includes("验证码错误"));
 
@@ -186,7 +122,7 @@ test("OTP email uses the CYword terracotta palette without the old tagline", () 
 });
 
 test("failed email delivery removes the unusable OTP and permits a retry", async () => {
-  const db = createMockD1();
+  const db = createSqliteD1();
   const email = "retry@example.com";
   const failed = await requestOTP(db, email, "test-resend-key", async () => ({
     success: false,
@@ -196,4 +132,32 @@ test("failed email delivery removes the unusable OTP and permits a retry", async
 
   const retried = await requestOTP(db, email, "test-resend-key", async () => ({ success: true }));
   assert.equal(retried.success, true);
+});
+
+
+test("real D1 atomically consumes OTPs and increments account login counts", async () => {
+  const mf = new Miniflare(convertV4MiniflareOptions({ modules: true, script: "export default {fetch(){return new Response('ok')}}", compatibilityDate: "2026-08-31", d1Databases: ["DB"] }));
+  try {
+    const db = await mf.getD1Database("DB");
+    for (const query of authSchema.split(";").filter((part) => part.trim())) await db.prepare(query).run();
+    const email = "concurrent@example.test";
+    let sent = 0, code = "";
+    const send = async (_email: string, value: string) => { sent++; code = value; return { success: true }; };
+    const requests = await Promise.all(Array.from({ length: 8 }, () => requestOTP(db, email, "test-key", send)));
+    assert.equal(requests.filter((result) => result.success).length, 1);
+    assert.equal(sent, 1);
+    const results = await Promise.all(Array.from({ length: 12 }, () => verifyAndAuthenticate(db, email, code, TEST_JWT_SECRET)));
+    assert.equal(results.filter((result) => result.success).length, 1);
+    const first = results.find((result) => result.success)!;
+    assert.equal(first.user?.loginCount, 1);
+    const now = Math.floor(Date.now() / 1000);
+    await db.prepare("INSERT INTO otp_codes VALUES (?, '654321', ?, 0, ?)").bind(email, now + 300, now).run();
+    const next = await verifyAndAuthenticate(db, email, "654321", TEST_JWT_SECRET);
+    assert.equal(next.user?.id, first.user?.id);
+    assert.equal(next.user?.loginCount, 2);
+    await db.prepare("INSERT INTO otp_codes VALUES (?, '654321', ?, 0, ?)").bind(email, now + 300, now).run();
+    await Promise.all(Array.from({ length: 12 }, () => verifyAndAuthenticate(db, email, "000000", TEST_JWT_SECRET)));
+    assert.equal((await db.prepare("SELECT attempts FROM otp_codes WHERE email = ?").bind(email).first<{ attempts: number }>())?.attempts, 5);
+    assert.equal((await verifyAndAuthenticate(db, email, "654321", TEST_JWT_SECRET)).success, false);
+  } finally { await mf.dispose(); }
 });

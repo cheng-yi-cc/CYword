@@ -4,10 +4,13 @@ import { createReadStream } from "node:fs";
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { load as parseYaml, dump as writeYaml, JSON_SCHEMA } from "js-yaml";
+import { isReleasePointer, releaseNotesUrl } from "../website/server/release-manifest.ts";
+import { assertReleaseSchemaSupport } from "./release-preflight.mjs";
+import { verifyBlockmap } from "./verify-blockmap.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const bucket = "cyword-downloads";
-const repositoryUrl = "https://github.com/cheng-yi-cc/CYword";
 const prepareOnly = process.argv.includes("--prepare-only");
 const android = process.argv.includes("--android");
 const positional = process.argv.slice(2).filter((argument) => !argument.startsWith("--"));
@@ -25,26 +28,6 @@ async function fileDigest(file, algorithm, encoding) {
   return hash.digest(encoding);
 }
 
-function yamlScalar(value) {
-  return value.trim().replace(/^(['"])(.*)\1$/, "$2");
-}
-
-function replaceManifestAsset(manifest, filename, assetPath) {
-  const escaped = filename.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  let urlCount = 0;
-  const rewritten = manifest.replace(
-    new RegExp(`^(\\s*(?:-\\s+)?)(url|path):(\\s*)(['"]?)${escaped}\\4\\s*$`, "gm"),
-    (line, prefix, field, spacing, quote) => {
-      if (field === "url") urlCount++;
-      return `${prefix}${field}:${spacing}${quote}${assetPath}${quote}`;
-    },
-  );
-  if (urlCount !== 1) {
-    throw new Error(`latest.yml 应且仅应包含一个 ${filename} 的 files[].url，实际为 ${urlCount}`);
-  }
-  return rewritten;
-}
-
 async function prepareRelease() {
   if (android) {
     const { versionName: version } = JSON.parse(await readFile(path.join(root, "android/version.json"), "utf8"));
@@ -55,14 +38,14 @@ async function prepareRelease() {
     if (!info.isFile() || info.size === 0) throw new Error("安卓安装包无效");
     const sha256 = await fileDigest(installer, "sha256", "hex");
     const pointer = {
-      schemaVersion: 1, version, publishedAt: new Date().toISOString(), filename,
+      schemaVersion: 2, version, publishedAt: new Date().toISOString(), filename,
       sizeBytes: info.size, sha256,
       assetPath: `releases/android/${version}/${sha256}/${filename}`,
-      githubDownloadUrl: `${repositoryUrl}/releases/download/android-v${version}/${filename}`,
-      notesUrl: `${repositoryUrl}/releases/tag/android-v${version}`, repositoryUrl,
+      notesUrl: releaseNotesUrl,
     };
     const work = path.join(root, ".work", "site-release", `android-${version}-${sha256.slice(0, 16)}`);
     await mkdir(work, { recursive: true });
+    if (!isReleasePointer(pointer, true)) throw new Error("安卓发布清单无效");
     const pointerFile = path.join(work, "current.json");
     await writeFile(pointerFile, `${JSON.stringify(pointer, null, 2)}\n`);
     return { installer, pointerFile, pointer };
@@ -80,23 +63,25 @@ async function prepareRelease() {
     stat(blockmap),
     readFile(sourceManifest, "utf8"),
   ]);
-  if (!installerStat.isFile() || !blockmapStat.isFile()) throw new Error("发布资产不是普通文件");
-
-  const manifestVersion = manifest.match(/^version:\s*(.+?)\s*$/m);
-  if (!manifestVersion || yamlScalar(manifestVersion[1]) !== version) {
-    throw new Error(`latest.yml 版本与 package.json 的 ${version} 不一致`);
+  if (!installerStat.isFile() || !blockmapStat.isFile() || installerStat.size === 0 || blockmapStat.size === 0) {
+    throw new Error("发布资产必须为非空普通文件");
   }
 
+  if (Buffer.byteLength(manifest) > 64 * 1024) throw new Error("latest.yml 超过 64 KiB");
+  // 使用 YAML 解析器拒绝重复键；不能只在整段文本中找到一个正确哈希就放行。
+  const metadata = parseYaml(manifest, { schema: JSON_SCHEMA });
+  const files = metadata && typeof metadata === "object" ? metadata.files : undefined;
+  if (metadata?.version !== version) throw new Error(`latest.yml 版本与 package.json 的 ${version} 不一致`);
+  if (!Array.isArray(files) || files.length !== 1 || files[0]?.url !== filename || metadata.path !== filename) {
+    throw new Error("latest.yml 必须只引用当前安装包，禁止额外或外部下载地址");
+  }
   const [sha256, sha512] = await Promise.all([
     fileDigest(installer, "sha256", "hex"),
     fileDigest(installer, "sha512", "base64"),
   ]);
-  const manifestSha512 = [...manifest.matchAll(/^\s*sha512:\s*(.+?)\s*$/gm)]
-    .map((match) => yamlScalar(match[1]));
-  if (!manifestSha512.includes(sha512)) throw new Error("latest.yml 的 SHA-512 与安装包不一致");
-  const manifestSizes = [...manifest.matchAll(/^\s*size:\s*(\d+)\s*$/gm)]
-    .map((match) => Number(match[1]));
-  if (!manifestSizes.includes(installerStat.size)) throw new Error("latest.yml 的文件长度与安装包不一致");
+  if (metadata.sha512 !== sha512 || files[0].sha512 !== sha512) throw new Error("latest.yml 的 SHA-512 与安装包不一致");
+  if (files[0].size !== installerStat.size) throw new Error("latest.yml 的文件长度与安装包不一致");
+  await verifyBlockmap(installer, blockmap);
 
   const baseKey = `releases/${version}/${sha256}`;
   const assetPath = `${baseKey}/${filename}`;
@@ -106,14 +91,13 @@ async function prepareRelease() {
   await mkdir(work, { recursive: true });
   const updaterMetadataFile = path.join(work, "latest.yml");
   const pointerFile = path.join(work, "current.json");
-  const rewrittenManifest = replaceManifestAsset(manifest, filename, assetPath);
+  const rewrittenManifest = writeYaml({ ...metadata, files: [{ ...files[0], url: assetPath }], path: assetPath }, { lineWidth: -1 });
   await writeFile(updaterMetadataFile, rewrittenManifest, "utf8");
 
-  const releaseDate = manifest.match(/^releaseDate:\s*(.+?)\s*$/m);
-  const parsedDate = releaseDate ? new Date(yamlScalar(releaseDate[1])) : new Date();
+  const parsedDate = metadata.releaseDate ? new Date(metadata.releaseDate) : new Date();
   const publishedAt = Number.isNaN(parsedDate.getTime()) ? new Date().toISOString() : parsedDate.toISOString();
   const pointer = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     version,
     publishedAt,
     filename,
@@ -122,10 +106,13 @@ async function prepareRelease() {
     assetPath,
     blockmapPath,
     updaterMetadataPath,
-    githubDownloadUrl: `${repositoryUrl}/releases/download/v${version}/${filename}`,
-    notesUrl: `${repositoryUrl}/releases/tag/v${version}`,
-    repositoryUrl,
+    blockmapSha256: await fileDigest(blockmap, "sha256", "hex"),
+    blockmapSizeBytes: blockmapStat.size,
+    updaterMetadataSha256: createHash("sha256").update(rewrittenManifest).digest("hex"),
+    updaterMetadataSizeBytes: Buffer.byteLength(rewrittenManifest),
+    notesUrl: releaseNotesUrl,
   };
+  if (!isReleasePointer(pointer)) throw new Error("Windows 发布清单无效");
   await writeFile(pointerFile, `${JSON.stringify(pointer, null, 2)}\n`, "utf8");
 
   return {
@@ -145,35 +132,56 @@ function run(command, args) {
   });
 }
 
-function capture(command, args) {
+function remoteMetadata(endpoint, key) {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { cwd: root, windowsHide: true, stdio: ["ignore", "pipe", "inherit"] });
-    let stdout = "";
+    const child = spawn("aws", ["s3api", "head-object", "--endpoint-url", endpoint,
+      "--bucket", bucket, "--key", key, "--output", "json"],
+    { cwd: root, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "", stderr = "";
     child.stdout.on("data", (chunk) => { stdout += chunk; });
+    child.stderr.on("data", (chunk) => { stderr += chunk; });
     child.on("error", reject);
-    child.on("exit", (code) => code === 0 ? resolve(stdout.trim()) : reject(new Error(`${command} 退出码 ${code ?? "unknown"}`)));
+    child.on("close", (code) => {
+      if (code === 0) {
+        try { resolve(JSON.parse(stdout)); } catch (error) { reject(error); }
+      } else if (/\(404\)|NoSuchKey|Not Found/.test(stderr)) resolve(null);
+      else reject(new Error(`读取 R2 对象 ${key} 失败：${stderr.trim()}`));
+    });
+  });
+}
+
+function remoteDigest(endpoint, key) {
+  return new Promise((resolve, reject) => {
+    const hash = createHash("sha256");
+    const child = spawn("aws", ["s3", "cp", `s3://${bucket}/${key}`, "-", "--endpoint-url", endpoint, "--no-progress"],
+      { cwd: root, windowsHide: true, stdio: ["ignore", "pipe", "inherit"] });
+    child.stdout.on("data", (chunk) => hash.update(chunk));
+    child.on("error", reject);
+    child.on("close", (code) => code === 0 ? resolve(hash.digest("hex")) : reject(new Error(`核验 R2 对象 ${key} 失败`)));
   });
 }
 
 async function upload(endpoint, file, key, contentType, cacheControl) {
+  const expectedSize = (await stat(file)).size;
+  const expectedHash = await fileDigest(file, "sha256", "hex");
+  if (cacheControl.includes("immutable")) {
+    const existing = await remoteMetadata(endpoint, key);
+    if (existing) {
+      if (existing.ContentLength !== expectedSize || await remoteDigest(endpoint, key) !== expectedHash) {
+        throw new Error(`禁止覆盖已发布的 R2 对象：${key}`);
+      }
+      console.log(`已核验相同资产，跳过上传：${key}`);
+      return;
+    }
+  }
   await run("aws", [
     "s3", "cp", file, `s3://${bucket}/${key}`,
-    "--endpoint-url", endpoint,
-    "--content-type", contentType,
-    "--cache-control", cacheControl,
-    "--no-progress",
+    "--endpoint-url", endpoint, "--content-type", contentType,
+    "--cache-control", cacheControl, "--no-progress",
   ]);
-  const expectedSize = (await stat(file)).size;
-  const remoteSize = Number(await capture("aws", [
-    "s3api", "head-object",
-    "--endpoint-url", endpoint,
-    "--bucket", bucket,
-    "--key", key,
-    "--query", "ContentLength",
-    "--output", "text",
-  ]));
-  if (remoteSize !== expectedSize) {
-    throw new Error(`R2 对象 ${key} 长度不符：预期 ${expectedSize}，实际 ${remoteSize}`);
+  const remote = await remoteMetadata(endpoint, key);
+  if (remote?.ContentLength !== expectedSize || await remoteDigest(endpoint, key) !== expectedHash) {
+    throw new Error(`R2 对象 ${key} 的长度或 SHA-256 不符，未确认发布成功`);
   }
 }
 
@@ -189,6 +197,8 @@ if (prepareOnly) {
   requiredEnvironment("AWS_SECRET_ACCESS_KEY");
   const endpoint = `https://${accountId}.r2.cloudflarestorage.com`;
   const immutable = "public, max-age=31536000, immutable, no-transform";
+
+  await assertReleaseSchemaSupport(android);
 
   // 内容寻址资产先全部上传；current.json 是官网和自动更新共同的唯一发布开关，必须最后写入。
   await upload(endpoint, prepared.installer, prepared.pointer.assetPath, android ? "application/vnd.android.package-archive" : "application/octet-stream", immutable);

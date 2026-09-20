@@ -76,6 +76,7 @@ export function buildPlan(catalog: Catalog): PlanDay[] {
       studyDay: study.day,
       groupIds: study.groupIds,
       exposureOrder: study.exposureOrder,
+      segmentEnds: study.segmentEnds,
       exposureKeys: studyExposures(study, catalog.groups).map((item) => item.key),
       appearanceCount: study.appearanceCount,
       uniqueWordCount: study.uniqueWordCount,

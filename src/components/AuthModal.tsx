@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import type { UserSession } from "../types";
+import type { UserSession, VerifyCodeResponse } from "../types";
 
 const EMAIL_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/u;
 
@@ -117,7 +117,7 @@ export function AuthModal({ onSuccess, notice }: AuthModalProps) {
     setMessage(null);
 
     try {
-      let result: { success: boolean; token?: string; user?: any; error?: string };
+      let result: VerifyCodeResponse;
       if (window.cyword?.verifyAuthCode) {
         result = await window.cyword.verifyAuthCode(trimmedEmail, trimmedCode);
       } else {
@@ -222,6 +222,7 @@ export function AuthModal({ onSuccess, notice }: AuthModalProps) {
 
         <div className="auth-footer">
           <small>使用同一邮箱登录，手机和电脑接着学。学习记录先保存在设备上，再自动同步到云端。</small>
+          <nav aria-label="账号与数据说明"><a href="https://cyword.chengyi.me/#privacy" target="_blank" rel="noreferrer">隐私与数据</a><a href="https://cyword.chengyi.me/#feedback" target="_blank" rel="noreferrer">反馈与删除申请</a></nav>
         </div>
       </div>
     </div>

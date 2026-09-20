@@ -24,6 +24,7 @@ export interface StudyDayPlan {
   day: number;
   groupIds: string[];
   exposureOrder?: number[];
+  segmentEnds?: number[];
   appearanceCount: number;
   uniqueWordCount: number;
 }
@@ -34,6 +35,7 @@ export interface PlanDay {
   studyDay?: number;
   groupIds: string[];
   exposureOrder?: number[];
+  segmentEnds?: number[];
   exposureKeys?: string[];
   appearanceCount: number;
   uniqueWordCount: number;

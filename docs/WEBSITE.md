@@ -1,14 +1,17 @@
 # 官网说明
 
+本文描述本轮待发布源码。本轮官网、认证与发布脚本修改尚未部署，也未发布新客户端；已核验的公开客户端版本仍为 Windows 0.4.4、Android 0.1.0。下方有日期的生产记录是历史验证，不代表本轮已上线。
+
 ## 用途与入口
 
 官网面向普通用户介绍 CYword，提供功能体验、Windows 和安卓安装包与安装指南，不是应用的在线完整版。客户端尚未发布的搜索、布局和记忆增强不自动进入官网示例。
 
 - 官网：<https://cyword.chengyi.me/>；Pages 备用域名：<https://cyword.pages.dev/>。
-- 主下载：<https://cyword.chengyi.me/downloads/latest>，从私有 R2 桶的原子版本指针跳转到当前内容寻址安装包，支持断点续传，无需访问 GitHub。
-- 备用下载：`latest.json.githubDownloadUrl` 指向当前 GitHub Release 的同一份正式安装包；官网页面不得硬编码历史版本链接。
-- 版本和校验值以 `/downloads/latest.json` 为准；`website/src/release.ts` 只保留动态指针不可用时已核验的 Windows 0.4.4 回退信息。
-- 首屏提供学习视窗示例，呈现词根词缀、核心巧记与真题例句、长难句精读三栏独立上下滑动交互，采用 `overscroll-behavior: contain` 阻断外层滚动穿透，并集成发音声波可视化与长难句语法高光联动。
+- Windows 下载：<https://cyword.chengyi.me/downloads/latest>；Android 下载：<https://cyword.chengyi.me/downloads/android/latest>。两者从私有 R2 桶的独立原子版本指针跳转到安装包，支持断点续传，下载无需登录。
+- GitHub 仓库为私有，仅用于维护与发布流程，不作为普通用户的备用下载、源码或版本记录入口。公开版本记录放在 `/#release-notes`，只记录已发布改动。
+- Windows 版本和校验值以 `/downloads/latest.json` 为准，Android 以 `/downloads/android/latest.json` 为准；`website/src/release.ts` 只保留动态指针不可用时已核验的 Windows 0.4.4 回退信息，并在页面明确提示。Android 读取失败显示未知状态与重试入口，不填造版本或哈希。
+- 两个平台分别显示版本、文件大小、校验值及安装步骤，锚点为 `/#guide-windows`、`/#guide-android`。
+- 首屏为不保存记录的交互示例。桌面长难句沿用应用右侧竖排入口，默认收起为 52px；展开时三栏同步调整宽度，内容延迟淡入，收起时先淡出内容，动画时长与应用一致。手机标签按“单词、词根、长难句”切换。各栏独立滚动且隐藏滚动条，采用 `overscroll-behavior: contain` 阻断外层滚动穿透，发音支持播放、暂停与失败重试。
 
 网站使用境外 Cloudflare 服务。国内线路受地区、运营商和跨境网络影响，不能承诺全国永久可达；境外托管适用的备案说明见[阿里云文档](https://help.aliyun.com/en/icp-filing/basic-icp-service/support/for-the-record-process-faq)。迁移后的桌面版本通过同域 `/downloads/latest.yml` 检查更新，并从 R2 下载更新资产，不再向 GitHub 查询更新。
 
@@ -28,20 +31,21 @@ npm run build:site
 npm run preview:site
 ```
 
-输出为 `dist-site/`，预览地址为 `http://127.0.0.1:4174/`，与桌面端 `dist/` 和端口 5173 分离。Vite 只预览页面，下载按钮仍访问正式域名。
+输出为 `dist-site/`，预览地址为 `http://127.0.0.1:4174/`，与桌面端 `dist/` 和端口 5173 分离。Vite 不模拟 R2，通过 `/downloads/` 代理读取正式域名的发布信息和安装包；本地预览不会发布页面或切换版本。
 
-`npm run build:site` 会生成函数类型并检查 TypeScript。`npm run test:site:download` 会构建官网，以确定性文件在本地 R2 模拟器运行集成检查，覆盖 Windows 和安卓的原子最新版指针、electron-updater 清单、blockmap、字节完整性、HEAD、Range、续传拼接、条件请求、错误码及静态首页；不读取或写入远端桶。生成类型和测试状态不提交。
+`npm run build:site` 会生成函数类型并检查 TypeScript。`npm run test:site:download` 会构建官网，以确定性文件在本地 R2 模拟器运行集成检查，覆盖旧 v1 与新 v2 发布指针、Windows 和安卓下载、公开响应不含私有仓库链接、electron-updater 清单、blockmap、字节完整性、HEAD、Range、续传拼接、条件请求、错误码及静态首页；不读取或写入远端桶。生成类型和测试状态不提交。客户端的加载、保存与退出交互回归使用 `npm run test:ui`，运行条件见 [运行手册](RUNBOOK.md)。
 
 ## 代码入口
 
 | 文件 | 职责 |
 | --- | --- |
 | `website/index.html` | 页面标题、描述和无脚本下载入口 |
-| `website/src/Website.tsx` | 官网内容、交互示例、复制下载地址及备用入口 |
+| `website/src/Website.tsx` | 官网内容、交互示例、双平台下载、站内版本记录与隐私说明 |
 | `website/src/styles.css` | 独立视觉样式、响应式布局、键盘焦点及减少动态效果 |
 | `website/src/release.ts` | 读取并校验动态最新版信息，保留不可用时的已核验回退版本 |
 | `website/public/` | 图标、抓取规则、站点地图、`_headers` 和 `_routes.json` |
 | `website/functions/downloads/[[path]].ts` | 只读 R2 下载接口 |
+| `website/server/release-manifest.ts` | v1/v2 指针校验与公开字段归一化 |
 | `website/functions/api/books/[book]/catalog.ts` | 当前词书目录接口 |
 | `website/functions/api/books/[book]/words.ts` | 每日词汇批量流式接口 |
 | `website/functions/api/auth/send-code.ts` | 发送邮箱 6 位 OTP 验证码接口 |
@@ -55,12 +59,18 @@ npm run preview:site
 | `website/vite.config.ts` | 页面开发服务与构建输出 |
 | `scripts/test-site-download.mjs` | 本地 R2 集成测试，显式传入同一配置中的绑定 |
 | `scripts/publish-site-release.mjs` | 校验构建资产，按内容寻址上传并最后切换最新版指针 |
+| `scripts/release-preflight.mjs` | 上传前确认生产下载函数支持 v2 发布指针 |
+| `scripts/verify-blockmap.mjs` | 逐块验证 blockmap 与安装器一致 |
 | `scripts/build-book-api-data.mjs` | 生成内容寻址的目录、清单和学习日分片 |
 | `scripts/upload-book-data.mjs` | 先上传不可变词书版本，最后发布当前版本指针 |
 
 ## 下载 HTTP 协议
 
-公开入口包括 `/downloads/latest`、`/downloads/latest.json`、`/downloads/latest.yml`、内容寻址的 `/downloads/releases/<version>/<sha256>/...`，以及迁移前的版本化安装包路径。只读函数不列目录，不接受上传、删除、任意 URL 或用户指定桶名。官网页面启动时读取 `latest.json`，软件读取 `latest.yml`；两者由同一个 `releases/current.json` 决定。
+Windows 公开入口包括 `/downloads/latest`、`/downloads/latest.json`、`/downloads/latest.yml`、内容寻址的 `/downloads/releases/<version>/<sha256>/...`，以及迁移前的版本化安装包路径。只读函数不列目录，不接受上传、删除、任意 URL 或用户指定桶名。官网页面启动时读取 `latest.json`，软件读取 `latest.yml`；两者由同一个 `releases/current.json` 决定。Android 使用独立的 `/downloads/android/latest`、`/downloads/android/latest.json` 与 `releases/android/current.json`，不会改写 Windows 自动更新清单。
+
+本轮函数兼容已经发布的 schema v1 和新生成的 schema v2 私有指针，两个版本均校验平台、版本、文件名与路径中的 SHA-256。v2 不再需要 GitHub 字段，并记录 Windows blockmap、更新清单各自的长度和 SHA-256。公开 `latest.json` 统一返回版本、日期、文件名、长度、安装包 SHA-256、下载路径及 `notesUrl: "/#release-notes"`，不透传旧 v1 中的私有 GitHub 链接。
+
+首次启用新发布脚本前，必须先部署兼容 v1/v2 的下载函数，再发布 v2 指针；原有 v1 指针无需改写。函数响应头 `X-CYword-Release-Schemas: 1,2` 用于发布前检查。脚本在任何 R2 写入前向对应平台的生产 `latest.json` 发 HEAD，无法确认支持 `2` 就中止；尚无指针的错误响应也可以携带此能力头。顺序与回滚限制见 [运行手册](RUNBOOK.md)。
 
 | 请求 / 条件 | 响应 |
 | --- | --- |
@@ -96,13 +106,13 @@ npm run preview:site
 
 ## 用户认证 HTTP 协议
 
-- `POST /api/auth/send-code`：提交 `{ email }`。服务端校验邮箱格式，生成 6 位数字 OTP 存入 D1（有效期 5 分钟），执行 60 秒重发冷却，并通过 `login@auth.cyword.chengyi.me` 调用 Resend 发送邮件。生产环境缺少 Key 时返回 503，发送失败时删除刚写入的验证码，不回显验证码。
-- `POST /api/auth/verify-code`：提交 `{ email, code }`。核对 D1 验证码，输错累计 5 次作废，匹配成功后核销验证码，自动建号或更新登录时间，并签发 HMAC-SHA256 JWT Token。
+- `POST /api/auth/send-code`：提交 `{ email }`。服务端校验邮箱格式，用一条条件 UPSERT 在 D1 中原子检查 60 秒重发冷却并写入 6 位 OTP（有效期 5 分钟），只有写入成功的请求才通过 `login@auth.cyword.chengyi.me` 调用 Resend 发信。生产环境缺少密钥时返回 503；发信失败按邮箱和本次验证码条件清理，不回显验证码。
+- `POST /api/auth/verify-code`：提交 `{ email, code }`。D1 用带有效期与次数条件的 `DELETE ... RETURNING` 原子匹配并消费验证码，同一码不能被并发成功使用两次。错误尝试由数据库累加，累计 5 次作废；成功后用邮箱唯一约束的 UPSERT 建号或更新登录时间与次数，再签发 HMAC-SHA256 JWT Token。本轮原子操作需部署新函数后生效。
 - `GET /api/auth/me`：携带 `Authorization: Bearer <token>` 请求头。服务端校验 JWT 有效性并返回用户 ID、邮箱与活跃信息。
 
 ## 进度同步 HTTP 协议
 
-2026-09-20 已完成生产授权、建表与官网部署；词汇掌握演示和安卓下载入口同步上线。0.4.4 新增 `GET /api/progress` 与 `PUT /api/progress`，均需同样的 Bearer 登录令牌。GET 返回 `{ revision, progress }`，PUT 提交对应结构；修订号不一致返回 409 和最新记录，客户端合并后重试。D1 表 `learning_progress` 必须在发布函数前创建。身份隔离、限额、合并规则和部署步骤见 [安卓与同步说明](ANDROID.md)。官网展示页面不会调用该接口。
+2026-09-20 的既有生产记录已完成授权、建表与同步函数部署，词汇掌握演示和安卓下载入口随当次官网上线；这不包含本轮待发布改动。0.4.4 新增 `GET /api/progress` 与 `PUT /api/progress`，均需同样的 Bearer 登录令牌。GET 返回 `{ revision, progress }`，PUT 提交对应结构；修订号不一致返回 409 和最新记录，客户端合并后重试。D1 表 `learning_progress` 必须在发布函数前创建。身份隔离、限额、合并规则和部署步骤见 [安卓与同步说明](ANDROID.md)。官网展示页面不会调用该接口。
 
 HEAD 示例：
 
@@ -114,25 +124,26 @@ curl.exe --fail --head 'https://cyword.chengyi.me/downloads/latest'
 
 ## 内容与隐私边界
 
-官网沿用暖纸色、陶土橙、橄榄绿和 Cy 标记，中文使用系统无衬线字体，英文单词和品牌使用 Georgia。字体、图标、样式不依赖外部 CDN。主线是“逐词巧记 → 构词成组 → 熟练度与累计复习”。
+官网沿用暖纸色、陶土橙和橄榄绿，品牌只显示 CYword，中文使用系统无衬线字体，英文单词和品牌使用 Georgia。字体、图标、样式不依赖外部 CDN。主线是“逐词巧记 → 构词成组 → 熟练度与累计复习”。
 
 - Windows 自 0.3.0 起，安装包不内置六级详情，运行时通过词书接口加载 5166 个唯一单词。Windows 0.4.4 与首个安卓客户端 0.1.0 于 2026-09-20 发布；没有 Mac 版、四级或考研词书。官网正式下载以已经核验的发布指针为准。
-- 计划包含 30 个学习日和 10 个累计复习日，不保证在 40 个自然日内记住全部单词。0.4.4 重排后的学习日为 174–185 次曝光，多词根组可重复出现同一词，不能写成 200 个唯一新词或保证记忆效果。
+- 计划包含 30 个学习日和 10 个累计复习日，不保证在 40 个自然日内记住全部单词。每天曝光次数以对应版本的编译排课为准，多词根组可重复出现同一词，曝光次数不等于唯一新词数，也不保证记忆效果。
 - 0.2.1 可离线学习；0.3.0 起启动和每天学习需联网。0.4.4 的进度同步依赖新接口部署，两端须使用同一邮箱。正常覆盖升级保留进度，旧文件按已登录账号归属迁移。
 - Windows 安装包未签名，安卓 APK 使用项目私有密钥签名；页面应提示核对来源与哈希，不引导用户关闭系统防护，也不把校验一致等同于安全认证。
-- 官网没有统计脚本或公开表单；认证接口在 D1 中保存用户邮箱、登录时间和短期验证码，两个私有 R2 桶分别保存公开安装包和服务端词书分片。官网交互示例仍只保留 React 内存状态，刷新即重置，不访问桌面软件的会话、学习进度或 localStorage。
-- 示例 portable、transport、porter 来自规范词书，巧记按 CSV 节选，例句为官网编写；不打包完整词书或词书远程图片。
+- `/#privacy` 说明账号、学习记录、官网示例与服务提供方：认证接口在 D1 保存邮箱、账号标识、登录时间和短期验证码，学习记录按账号保存在设备及 D1；两个私有 R2 桶分别保存公开安装包和服务端词书分片。官网没有统计脚本或公开表单，交互示例只保留 React 内存状态，刷新即重置，不访问客户端会话、学习进度或 localStorage。发音播放会请求 `cdn.aimwords.com`；下载、账号与同步使用 Cloudflare，验证码邮件使用 Resend。
+- `/#feedback` 提供反馈与删除说明，维护者确认的公开邮箱为 `cyi907369@gmail.com`，通过 `mailto:` 链接打开邮件客户端。删除申请提示使用登录邮箱发送；这是人工申请入口，没有自助删除接口，实际收件及处理流程仍需维护者验证。退出登录、清理本机数据与删除云端数据是不同操作。
+- 官网固定示例混合使用原词书节选与页面编写内容；portable、transport、porter 及部分例句、长难句来自规范词书。逐项来源见 [内容来源台账](CONTENT-SOURCES.md)，不将上游“原创”标注等同于本项目原创或授权证明。不打包完整词书或词书远程图片。
 - 2026-08-31 核对：5166 词均有 `memory_markup`，4877 词有 `etymology_markup`；12813 条构词关联中 6390 条有独立 `memory_method`。不能宣传每个构词元素都有独立巧记，也不能把所有词都说成有真正词根。
 - 谐音与画面联想属于助记，不得当作词源分析。
 
 ## 交互检查清单
 
-1. 学习视窗评级后显示自动收录/移出待巩固列表的反馈；没有手动收藏按钮。熟练度示例保留独立状态，刷新重置。词汇掌握说明必须明确只收录已学且未掌握/不清楚的词。
+1. 学习视窗明确标注交互示例、不保存记录；评级显示当前示例状态，可重新体验，刷新重置。长难句默认折叠，展开、手机标签及音频控制真实有效，不显示无法操作的上一词/下一词。词汇掌握说明必须明确只收录已学且未掌握/不清楚的词。
 2. 四天日程支持点击、左右方向键及 Home/End，焦点与选中状态一致。
 3. 手机导航选择锚点后收起；品牌和“回到顶部”指向页面顶部，页面无水平溢出。
-4. 主下载与备用地址指向已发布文件；复制失败时显示可手选地址；FAQ 和校验信息可键盘展开。
+4. Windows 与 Android 下载均指向已发布 R2 文件，分别显示对应版本、校验值与安装说明；版本记录链接留在站内。模拟 Android 读取失败，确认错误、重试及恢复状态；Windows 失败时明确提示已核验回退版本。复制失败时显示可手选地址，FAQ 和校验信息可键盘展开。
 5. 复习示例默认 2 词，全部掌握后列表为空，取消跳过后显示 3 词。
-6. 桌面、平板、手机布局和系统“减少动态效果”设置正常。
+6. 桌面、平板、手机布局、按钮对比度和系统“减少动态效果”设置正常；横纵滚动条统一隐藏，滚轮、触控和键盘仍可滚动。页脚隐私与反馈锚点可达，反馈邮件链接指向维护者确认的邮箱。
 
 ## 生产验证基线（2026-09-02，北京时间）
 
@@ -151,4 +162,4 @@ curl.exe --fail --head 'https://cyword.chengyi.me/downloads/latest'
 
 ## 安卓下载
 
-`GET/HEAD /downloads/android/latest.json` 返回安卓独立版本信息；`/downloads/android/latest` 跳转当前 APK。资产采用 `releases/android/<version>/<sha256>/CYword-Android-<version>.apk` 路径，响应类型为 `application/vnd.android.package-archive`，支持 HEAD、Range 和条件缓存。其私有指针 `releases/android/current.json` 不对外暴露。Android Release 发布后通过独立 GitHub Actions 上传原始签名 APK，再切换指针，不影响 Windows 的 `latest.yml`。
+`GET/HEAD /downloads/android/latest.json` 返回安卓独立版本信息；`/downloads/android/latest` 跳转当前 APK。资产采用 `releases/android/<version>/<sha256>/CYword-Android-<version>.apk` 路径，响应类型为 `application/vnd.android.package-archive`，支持 HEAD、Range 和条件缓存。其私有指针 `releases/android/current.json` 不对外暴露。私有仓库的 `android-v<version>` Release 作为内部原件来源，独立 GitHub Actions 上传原始签名 APK 并校验后切换指针，不影响 Windows 的 `latest.yml`。

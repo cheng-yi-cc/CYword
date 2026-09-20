@@ -63,10 +63,9 @@ await put("releases/current.json", pointerPath);
 const androidName = "CYword-Android-0.1.0.apk";
 const androidKey = `releases/android/0.1.0/${fixtureDigest}/${androidName}`;
 const androidPointer = {
-  schemaVersion: 1, version: "0.1.0", publishedAt: pointer.publishedAt,
+  schemaVersion: 2, version: "0.1.0", publishedAt: pointer.publishedAt,
   filename: androidName, sizeBytes: fixture.length, sha256: fixtureDigest, assetPath: androidKey,
-  githubDownloadUrl: `${pointer.repositoryUrl}/releases/download/android-v0.1.0/${androidName}`,
-  notesUrl: `${pointer.repositoryUrl}/releases/tag/android-v0.1.0`, repositoryUrl: pointer.repositoryUrl,
+  notesUrl: "/#release-notes",
 };
 const androidPointerPath = path.join(work, "android-current.json");
 await writeFile(androidPointerPath, JSON.stringify(androidPointer));
@@ -111,7 +110,12 @@ try {
   await check("Android pointer and redirect are independent of Windows", async () => {
     const latest = await request({}, "GET", `${origin}/downloads/android/latest.json`);
     assert.equal(latest.status, 200);
-    assert.equal((await latest.json()).downloadPath, `/downloads/${androidKey}`);
+    assert.equal(latest.headers.get("X-CYword-Release-Schemas"), "1,2");
+    const payload = await latest.json();
+    assert.equal(payload.downloadPath, `/downloads/${androidKey}`);
+    assert.equal(payload.notesUrl, "/#release-notes");
+    assert.equal(payload.githubDownloadUrl, undefined);
+    assert.equal(payload.repositoryUrl, undefined);
     const redirect = await fetch(`${origin}/downloads/android/latest`, { redirect: "manual" });
     assert.equal(redirect.status, 302);
     assert.equal(redirect.headers.get("location"), `${origin}/downloads/${androidKey}`);
@@ -151,6 +155,9 @@ try {
   await check("latest release JSON and redirect use the same atomic pointer", async () => {
     const latest = await request({}, "GET", `${origin}/downloads/latest.json`);
     assert.equal(latest.status, 200);
+    assert.equal(latest.headers.get("X-CYword-Release-Schemas"), "1,2");
+    const capability = await request({}, "HEAD", `${origin}/downloads/latest.json`);
+    assert.equal(capability.headers.get("X-CYword-Release-Schemas"), "1,2");
     assert.equal(latest.headers.get("cache-control"), "no-store");
     assert.deepEqual(await latest.json(), {
       version: pointer.version,
@@ -159,9 +166,7 @@ try {
       sizeBytes: pointer.sizeBytes,
       sha256: pointer.sha256,
       downloadPath: `/downloads/${assetKey}`,
-      githubDownloadUrl: pointer.githubDownloadUrl,
-      notesUrl: pointer.notesUrl,
-      repositoryUrl: pointer.repositoryUrl,
+      notesUrl: "/#release-notes",
     });
     const redirect = await fetch(`${origin}/downloads/latest`, { redirect: "manual" });
     assert.equal(redirect.status, 302);

@@ -1,6 +1,6 @@
 {
   "name": "cyword",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "private": true,
   "type": "module",
   "description": "词根驱动的本地英语记忆桌面应用",
@@ -31,7 +31,8 @@
     "build": "npm run data:build && npm run build:web",
     "dist": "npm run build && electron-builder --win nsis --publish never",
     "dist:unpacked": "npm run build && electron-builder --win dir",
-    "test": "npm run data:api && node --test tests/*.test.mjs tests/*.test.ts"
+    "test": "npm run data:api && node --test tests/*.test.mjs tests/*.test.ts",
+    "test:ui": "npm run data:build && playwright test"
   },
   "build": {
     "appId": "com.cyword.desktop",
@@ -86,6 +87,8 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.5.2",
+    "@noble/hashes": "^2.4.0",
+    "@playwright/test": "^1.63.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^6.1.1",
@@ -93,11 +96,12 @@
     "cross-env": "^10.1.0",
     "electron": "^44.0.0",
     "electron-builder": "^26.15.3",
+    "esbuild": "0.28.1",
+    "js-yaml": "^5.4.2",
+    "miniflare": "5.20260828.0-alpha",
     "typescript": "^7.0.2",
     "vite": "^8.2.2",
     "wait-on": "^9.1.0",
-    "wrangler": "^4.127.1",
-    "esbuild": "0.28.1",
-    "miniflare": "5.20260828.0-alpha"
+    "wrangler": "^4.127.1"
   }
 }

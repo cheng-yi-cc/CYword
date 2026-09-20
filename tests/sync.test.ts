@@ -128,3 +128,138 @@ test("network and service errors do not log out an account; late 401 cannot log 
   await opening;
   assert.equal(expired, 0);
 });
+
+test("failed local saves never publish or upload unpersisted ratings, even after reconnect", async () => {
+  let cloud = emptyProgress(), disk = emptyProgress(), failing = false, revision = 0;
+  const announced: AppProgress[] = [];
+  const sync = new ProgressSync({
+    read: async () => disk,
+    write: async (next) => { if (failing) throw new Error("disk full"); disk = structuredClone(next); },
+    change: (progress) => announced.push(structuredClone(progress)),
+    request: async (payload) => { if (payload) { cloud = structuredClone(payload.progress); revision++; } return { status: 200, data: { revision, progress: cloud } }; },
+  });
+  await sync.open();
+  failing = true;
+  await assert.rejects(sync.save(one()), /disk full/);
+  assert.equal(sync.progress.words.w1, undefined);
+  assert.equal(announced.some((progress) => Boolean(progress.words.w1)), false);
+  failing = false;
+  await sync.sync();
+  assert.equal(cloud.words.w1, undefined);
+  assert.equal(disk.words.w1, undefined);
+  const failed = await sync.flush();
+  assert.equal(failed.localSaved, false);
+  assert.equal(failed.cloudSynced, false);
+  await sync.save(one());
+  const recovered = await sync.flush();
+  assert.equal(recovered.localSaved, true);
+  assert.equal(recovered.cloudSynced, true);
+  assert.equal(cloud.words.w1.proficiency, "unclear");
+  sync.stop();
+});
+
+test("flush distinguishes durable offline progress, unsaved progress, and cloud conflicts", async () => {
+  let failWrite = false;
+  const sync = new ProgressSync({ read: async () => one(), write: async () => !failWrite, change: () => {}, request: async () => { throw new Error("offline"); } });
+  await sync.open();
+  await sync.save(two());
+  assert.deepEqual(await sync.flush(), { localSaved: true, cloudSynced: false, message: "offline" });
+  failWrite = true;
+  const changed = structuredClone(sync.progress); changed.words.w1.proficiency = "mastered";
+  await assert.rejects(sync.save(changed), /设备拒绝/);
+  assert.equal((await sync.flush()).localSaved, false);
+  sync.stop();
+  const busy = new ProgressSync({ read: async () => one(), write: async () => {}, change: () => {}, request: async () => ({ status: 409, data: { revision: 1, progress: emptyProgress() } }) });
+  await busy.open();
+  assert.deepEqual(await busy.flush(), { localSaved: true, cloudSynced: false, message: "设备正在同时学习，稍后继续同步" });
+  busy.stop();
+});
+
+test("a slower device uses a monotonic rating time after observing a faster device", async () => {
+  const future = one();
+  future.words.w1.lastSeenAt = "2035-01-01T00:00:00.000Z";
+  let cloud = future, revision = 1;
+  const sync = new ProgressSync({ read: async () => null, write: async () => {}, change: () => {}, request: async (payload) => {
+    if (payload) { cloud = structuredClone(payload.progress); revision++; }
+    return { status: 200, data: { revision, progress: structuredClone(cloud) } };
+  } });
+  await sync.open();
+  const next = structuredClone(sync.progress);
+  next.words.w1.proficiency = "mastered";
+  next.words.w1.lastSeenAt = "2026-09-20T00:00:00.000Z";
+  await sync.save(next);
+  assert.equal(sync.progress.words.w1.lastSeenAt, "2035-01-01T00:00:00.001Z");
+  assert.equal((await sync.flush()).cloudSynced, true);
+  assert.equal(cloud.words.w1.proficiency, "mastered");
+  assert.equal(cloud.words.w1.learnedAt, future.words.w1.learnedAt);
+  const laterRemote = structuredClone(cloud);
+  laterRemote.words.w1.lastSeenAt = "2036-01-01T00:00:00.000Z";
+  laterRemote.words.w1.proficiency = "unclear";
+  cloud = laterRemote;
+  await sync.sync();
+  const reassessed = structuredClone(sync.progress);
+  reassessed.words.w1.proficiency = "unmastered";
+  reassessed.words.w1.lastSeenAt = "2026-09-20T00:00:01.000Z";
+  await sync.save(reassessed);
+  assert.equal(sync.progress.words.w1.lastSeenAt, "2036-01-01T00:00:00.001Z");
+  assert.equal(mergeProgress(sync.progress, future).words.w1.proficiency, "unmastered");
+  assert.equal(validProgress(sync.progress), true);
+  sync.stop();
+});
+
+test("new and released timestamp-only clients select the same winner for skewed and concurrent ratings", () => {
+  // Released clients compare lastSeenAt, breaking equal timestamps by serialized value.
+  const legacyWinner = (a: AppProgress, b: AppProgress) => {
+    const x = a.words.w1, y = b.words.w1;
+    const compare = x.lastSeenAt.localeCompare(y.lastSeenAt);
+    return compare > 0 || (compare === 0 && JSON.stringify(x) >= JSON.stringify(y)) ? x : y;
+  };
+  for (const [aTime, bTime] of [
+    ["2035-01-01T00:00:00.000Z", "2035-01-01T00:00:00.001Z"],
+    ["2035-01-01T00:00:00.000Z", "2026-09-20T00:00:00.000Z"],
+    ["2035-01-01T00:00:00.000Z", "2035-01-01T00:00:00.000Z"],
+  ]) {
+    const a = one(), b = one();
+    a.words.w1.lastSeenAt = aTime; a.words.w1.proficiency = "mastered";
+    b.words.w1.lastSeenAt = bTime; b.words.w1.proficiency = "unmastered";
+    const expected = legacyWinner(a, b);
+    const merged = mergeProgress(a, b);
+    assert.equal(merged.words.w1.proficiency, expected.proficiency);
+    assert.equal(merged.words.w1.lastSeenAt, expected.lastSeenAt);
+    assert.deepEqual(merged, mergeProgress(b, a));
+    assert.equal(legacyWinner(merged, a).proficiency, expected.proficiency);
+    assert.equal(legacyWinner(merged, b).proficiency, expected.proficiency);
+  }
+});
+
+test("a rating based on an earlier render does not re-rate unrelated words updated by sync", async () => {
+  let cloud = mergeProgress(one(), two()), revision = 1;
+  const sync = new ProgressSync({ read: async () => cloud, write: async () => {}, change: () => {}, request: async (payload) => {
+    if (payload) { cloud = structuredClone(payload.progress); revision++; }
+    return { status: 200, data: { revision, progress: structuredClone(cloud) } };
+  } });
+  await sync.open();
+  const rendered = structuredClone(sync.progress);
+  cloud.words.w2.proficiency = "mastered";
+  cloud.words.w2.lastSeenAt = "2035-01-01T00:00:00.000Z";
+  await sync.sync();
+  const next = structuredClone(rendered); next.words.w1.proficiency = "mastered";
+  await sync.save(next, rendered);
+  assert.equal(sync.progress.words.w1.lastSeenAt, "2026-09-17T00:00:00.001Z");
+  assert.equal(sync.progress.words.w2.lastSeenAt, "2035-01-01T00:00:00.000Z");
+  assert.equal(sync.progress.words.w2.proficiency, "mastered");
+  sync.stop();
+});
+
+// A fast local clock need not be rewritten if it already follows the observed rating.
+test("a faster device preserves a new rating time ahead of the observed snapshot", async () => {
+  const sync = new ProgressSync({ read: async () => one(), write: async () => {}, change: () => {}, request: async () => { throw new Error("offline"); } });
+  await sync.open();
+  const next = structuredClone(sync.progress);
+  next.words.w1.proficiency = "mastered";
+  next.words.w1.lastSeenAt = "2035-01-01T00:00:00.000Z";
+  await sync.save(next);
+  assert.equal(sync.progress.words.w1.lastSeenAt, next.words.w1.lastSeenAt);
+  assert.equal(sync.progress.words.w1.proficiency, "mastered");
+  sync.stop();
+});

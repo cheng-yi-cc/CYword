@@ -15,6 +15,8 @@ import { marked } from "marked";
 import { wordMemoryDisplay } from "../memory-display";
 import type { Catalog, WordDetail, WordSummary } from "../types";
 import { buildPlan, studyExposures } from "../progress";
+import { AudioButton } from "./AudioButton";
+import { stopPronunciation } from "../audio";
 
 interface WordAppearance {
   day: number;
@@ -47,28 +49,6 @@ export function useWordHover() {
   return useContext(WordHoverContext);
 }
 
-function AudioPlayButton({ url }: { url?: string }) {
-  const [playing, setPlaying] = useState(false);
-  if (!url) return null;
-  const play = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      setPlaying(true);
-      const audio = new Audio(url);
-      audio.addEventListener("ended", () => setPlaying(false), { once: true });
-      audio.addEventListener("error", () => setPlaying(false), { once: true });
-      await audio.play();
-    } catch {
-      setPlaying(false);
-    }
-  };
-  return (
-    <button className="audio-button popover-audio" onClick={play}>
-      {playing ? "停止" : "播放发音"}
-    </button>
-  );
-}
-
 function PopoverCard({
   state,
   detail,
@@ -76,6 +56,8 @@ function PopoverCard({
   onMouseEnter,
   onMouseLeave,
   onClose,
+  loadFailed,
+  onRetry,
 }: {
   state: HoverState;
   detail?: WordDetail;
@@ -83,6 +65,8 @@ function PopoverCard({
   onMouseEnter: () => void;
   onMouseLeave: () => void;
   onClose: () => void;
+  loadFailed: boolean;
+  onRetry: () => void;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState<{ top: number; left: number; placement: "bottom" | "top" }>({
@@ -123,6 +107,7 @@ function PopoverCard({
   const pronunciation = detail?.pronunciation || summary?.pronunciation;
   const definition = detail?.definitionCn || summary?.definitionCn;
   const audioUrl = detail?.audioUrl;
+  useEffect(() => () => { if (audioUrl) stopPronunciation(audioUrl); }, [audioUrl]);
 
   const orderedRoots = useMemo(() => {
     if (!detail?.roots) return [];
@@ -168,7 +153,7 @@ function PopoverCard({
         <div className="popover-word-hero">
           <div className="popover-title-row">
             <h3 className="popover-spelling">{spelling}</h3>
-            <AudioPlayButton url={audioUrl} />
+            <AudioButton url={audioUrl} className="popover-audio" />
           </div>
           {pronunciation && <span className="popover-pronunciation">{pronunciation}</span>}
           <p className="popover-definition">{definition}</p>
@@ -178,7 +163,7 @@ function PopoverCard({
           <>
             {detail.memoryMarkup && (
               <div className="popover-section">
-                <h4>单词妙记</h4>
+                <h4>单词巧记</h4>
                 <div
                   className="popover-rich-text"
                   dangerouslySetInnerHTML={{ __html: memoryHtml }}
@@ -212,7 +197,7 @@ function PopoverCard({
             )}
           </>
         ) : (
-          <div className="popover-loading">正在加载单词详情…</div>
+          <div className="popover-loading" role="status">{loadFailed ? <>单词加载失败 <button onClick={onRetry}>重试</button></> : "正在加载单词详情…"}</div>
         )}
       </div>
     </div>
@@ -236,9 +221,21 @@ export function WordHoverProvider({
 }) {
   const [currentWordId, setCurrentWordId] = useState<string | undefined>(initialCurrentWordId);
   const [hoverState, setHoverState] = useState<HoverState | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [retry, setRetry] = useState(0);
   const showTimerRef = useRef<number | null>(null);
   const hideTimerRef = useRef<number | null>(null);
   const pinnedRef = useRef(false);
+  const hoverWordId = hoverState?.wordId;
+  const hoverDetail = hoverWordId ? details[hoverWordId] : undefined;
+  useEffect(() => {
+    let active = true;
+    setLoadFailed(false);
+    if (hoverWordId && !hoverDetail) void loadWords([hoverWordId], "bookmarks", planDay || 1).then(ok => {
+      if (active) setLoadFailed(!ok);
+    });
+    return () => { active = false; };
+  }, [hoverWordId, hoverDetail, planDay, retry, loadWords]);
 
   useEffect(() => {
     setCurrentWordId(initialCurrentWordId);
@@ -322,6 +319,12 @@ export function WordHoverProvider({
     }
   };
 
+  useEffect(() => {
+    clearTimers();
+    pinnedRef.current = false;
+    setHoverState(null);
+  }, [currentWordId]);
+
   const showHover = useCallback(
     (wordRef: string, element: HTMLElement, familiar = false, pinned = false) => {
       if (pinnedRef.current && !pinned) return;
@@ -344,9 +347,6 @@ export function WordHoverProvider({
           rect,
         });
 
-        if (!details[targetApp.wordId]) {
-          void loadWords([targetApp.wordId], "bookmarks", planDay || 1);
-        }
       }, 120);
     },
     [appearanceMap, checkWordStatus, details, loadWords, planDay],
@@ -457,6 +457,8 @@ export function WordHoverProvider({
             onMouseEnter={keepHover}
             onMouseLeave={hideHover}
             onClose={() => { clearTimers(); pinnedRef.current = false; setHoverState(null); }}
+            loadFailed={loadFailed}
+            onRetry={() => setRetry(value => value + 1)}
           /></>,
           document.body,
         )}

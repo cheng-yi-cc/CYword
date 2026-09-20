@@ -1,5 +1,6 @@
-import { useEffect, useState, useRef, type ReactNode } from "react";
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { fetchLatestRelease, release, type ReleaseInfo } from "./release";
+import { PronunciationPlayer } from "../../src/audio";
 
 function Icon({ name, className = "" }: { name: string; className?: string }) {
   const shapes: Record<string, ReactNode> = {
@@ -26,7 +27,7 @@ function Icon({ name, className = "" }: { name: string; className?: string }) {
 }
 
 function Brand({ footer = false }: { footer?: boolean }) {
-  return <a className={`brand-link ${footer ? "brand-footer" : ""}`} href="#top" aria-label="CYword 官网首页"><span className="brand-mark">Cy</span><span className="brand-name">CYword<small>词根记忆 · ROOTED RECALL</small></span></a>;
+  return <a className={`brand-link ${footer ? "brand-footer" : ""}`} href="#top" aria-label="CYword 官网首页"><span className="brand-name">CYword</span></a>;
 }
 
 const demoWords = [
@@ -106,51 +107,40 @@ const immersivePortable = {
 };
 
 function WebAudioButton({ url }: { url: string }) {
-  const [playing, setPlaying] = useState(false);
+  const [player] = useState(() => new PronunciationPlayer());
+  const playback = useSyncExternalStore(player.subscribe, player.snapshot);
+  const playing = playback.url === url && playback.status === "playing";
+  const failed = playback.url === url && playback.status === "error";
+  useEffect(() => () => player.stop(), [player, url]);
   const play = () => {
-    try {
-      setPlaying(true);
-      const audio = new Audio(url);
-      audio.addEventListener("ended", () => setPlaying(false), { once: true });
-      audio.addEventListener("error", () => setPlaying(false), { once: true });
-      audio.play().catch(() => setPlaying(false));
-    } catch {
-      setPlaying(false);
-    }
+    if (player.snapshot().status === "playing") player.stop();
+    else void player.play(url);
   };
-  return (
-    <button
-      className={`study-audio-btn ${playing ? "playing" : ""}`}
-      onClick={play}
-      aria-label="播放真人发音"
-      title="播放真人发音"
-    >
-      <Icon name="volume" />
-      <span className="audio-label">{playing ? "正在朗读" : "真人发音"}</span>
-      <span className={`audio-wave ${playing ? "active" : ""}`} aria-hidden="true">
-        <i /><i /><i />
-      </span>
-    </button>
-  );
+  return <button className={`study-audio-btn ${playing ? "playing" : ""}`} onClick={play}
+    aria-label={failed ? "发音加载失败，点击重试" : playing ? "暂停发音" : "播放发音"}>
+    <Icon name="volume" /><span className="audio-label">{failed ? "重试发音" : playing ? "暂停发音" : "播放发音"}</span>
+    <span className={`audio-wave ${playing ? "active" : ""}`} aria-hidden="true"><i /><i /><i /></span>
+  </button>;
 }
 
 function WordDemo() {
   const [activeRating, setActiveRating] = useState<number | null>(null);
   const [activeLane, setActiveLane] = useState<"word" | "morpheme" | "sentence">("word");
   const [hoveredRole, setHoveredRole] = useState<string | null>(null);
-  const [statusMsg, setStatusMsg] = useState("桌面端沉浸式学习体验：左栏探寻词根线索，中栏掌握音形巧记与真题，右栏深度拆解长难句语法结构");
+  const [sentenceExpanded, setSentenceExpanded] = useState(false);
+  const [statusMsg, setStatusMsg] = useState("交互示例 · 评级只在本页展示，刷新后重置，不保存学习记录。");
   const word = immersivePortable;
 
   const handleRate = (idx: number) => {
     setActiveRating(idx);
-    setStatusMsg(idx === 2 ? `${word.word} 已标记为“已掌握”，会自动移出待巩固列表。` : `${word.word} 已标记为“${levels[idx]}”，会自动收录到“词汇掌握”的待巩固列表。`);
+    setStatusMsg(`示例评级：${levels[idx]}。此操作不保存学习记录。`);
   };
 
 
   return (
     <div className="hero-demo" id="experience">
       <div className="demo-caption">
-        <span><i /> 桌面端沉浸式学习视窗 · 1:1 真实交互</span>
+        <span><i /> 学习界面交互示例 · 不保存记录</span>
         <span>词根巧记 ＋ 真题例句 ＋ 长难句拆解 <span aria-hidden="true">↘</span></span>
       </div>
 
@@ -159,54 +149,40 @@ function WordDemo() {
         <div className="immersive-topbar">
           <div className="topbar-brand">
             <span className="brand-dot" />
-            <span className="brand-text">Cy 词根记忆</span>
+            <span className="brand-text">CYword</span>
             <span className="topbar-book">大学英语六级</span>
-            <span className="topbar-group">Day 05 · port 词根家族</span>
+            <span className="topbar-group">port 单词示例</span>
           </div>
 
-          <div className="topbar-center">
-            <div className="topbar-progress-track" title="学习进度 33%">
-              <i style={{ width: "33%" }} />
-            </div>
-          </div>
-
-          <div className="topbar-meta">
-            <span className="topbar-badge-scroll">沉浸学习模式</span>
-            <span className="topbar-count">01 / 03</span>
-            <span className="topbar-controls" aria-hidden="true">— &nbsp; □ &nbsp; ×</span>
-          </div>
         </div>
 
         {/* 移动端/窄屏下的栏目切换器 */}
-        <div className="immersive-mobile-tabs" role="tablist" aria-label="沉浸式栏目切换">
+        <div className="immersive-mobile-tabs" role="group" aria-label="示例栏目切换">
           <button
-            role="tab"
-            aria-selected={activeLane === "morpheme"}
-            className={activeLane === "morpheme" ? "active" : ""}
-            onClick={() => setActiveLane("morpheme")}
-          >
-            词根词缀
-          </button>
-          <button
-            role="tab"
-            aria-selected={activeLane === "word"}
+            aria-pressed={activeLane === "word"}
             className={activeLane === "word" ? "active" : ""}
             onClick={() => setActiveLane("word")}
           >
-            核心巧记
+            单词
           </button>
           <button
-            role="tab"
-            aria-selected={activeLane === "sentence"}
+            aria-pressed={activeLane === "morpheme"}
+            className={activeLane === "morpheme" ? "active" : ""}
+            onClick={() => setActiveLane("morpheme")}
+          >
+            词根
+          </button>
+          <button
+            aria-pressed={activeLane === "sentence"}
             className={activeLane === "sentence" ? "active" : ""}
             onClick={() => setActiveLane("sentence")}
           >
-            长难句精读
+            长难句
           </button>
         </div>
 
         {/* 真实三栏并排独立滑动网格 */}
-        <div className={`study-session-grid show-${activeLane}`}>
+        <div className={`study-session-grid show-${activeLane} ${sentenceExpanded ? "sentences-open" : "sentences-collapsed"}`}>
           {/* 左栏：词根词缀（独立分开滑动） */}
           <aside className="study-morpheme-column">
             <header className="study-column-header">
@@ -232,7 +208,7 @@ function WordDemo() {
           </aside>
 
           {/* 中栏：单词主体（独立分开滑动） */}
-          <main className="study-word-column">
+          <div className="study-word-column">
             <div className="study-center-scroll">
               {/* 单词 Hero */}
               <header className="study-word-hero">
@@ -246,7 +222,7 @@ function WordDemo() {
                 </div>
                 <div className="study-hero-side">
                   <p className="study-definition">{word.definition}</p>
-                  <p className="study-mastery-state" aria-live="polite">{activeRating === null ? "评级后自动整理到词汇掌握情况" : activeRating === 2 ? "已掌握 · 已移出待巩固列表" : levels[activeRating] + " · 已自动收录到待巩固列表"}</p>
+                  <p className="study-mastery-state" aria-live="polite">{activeRating === null ? "试着选择一个熟练度" : `示例评级：${levels[activeRating]} · 不保存`}</p>
                 </div>
               </header>
 
@@ -254,7 +230,7 @@ function WordDemo() {
               <section className="session-section memory-section">
                 <header>
                   <span className="section-tag">MEMORY METHOD</span>
-                  <h4>巧记思路</h4>
+                  <h4>单词巧记</h4>
                 </header>
                 <div className="mnemonic-box">
                   <p>{word.memoryMethod}</p>
@@ -323,26 +299,26 @@ function WordDemo() {
                     onClick={() => handleRate(idx)}
                     aria-pressed={activeRating === idx}
                   >
-                    <kbd>{idx + 1}</kbd>
                     <b>{lvl}</b>
                     {activeRating === idx && <Icon name="check" />}
                   </button>
                 ))}
               </div>
-              <div className={`session-navigation ${activeRating !== null ? "has-next" : ""}`}>
-                <span><kbd>←</kbd> 上一个</span>
-                <span><kbd>空格</kbd> 播放发音</span>
-                {activeRating !== null && <span>下一个 <kbd>→</kbd></span>}
+              <div className="session-navigation">
+                <span>单词示例 1 / 1</span>
+                <button onClick={() => { setActiveRating(null); setStatusMsg("示例已重置 · 不保存学习记录。"); }}>重置示例</button>
               </div>
             </footer>
-          </main>
+          </div>
 
           {/* 右栏：长难句精读（独立分开滑动） */}
           <aside className="study-sentence-column">
+            <button className="sentence-toggle" aria-expanded={sentenceExpanded} aria-controls="demo-long-sentence" aria-label={sentenceExpanded ? "收起长难句" : "展开长难句"} onClick={() => setSentenceExpanded(open => !open)}><span aria-hidden="true">‹</span><b>长难句</b></button>
+            <div className="study-sentence-content" id="demo-long-sentence" inert={!sentenceExpanded && activeLane !== "sentence"}>
             <header className="study-column-header">
               <span className="column-tag">LONG SENTENCE</span>
-              <h3>长难句精读</h3>
-              <p>跟随当前词显示 · 独立滑动深读</p>
+              <h3>长难句</h3>
+              <p>第 1 句，共 1 句</p>
             </header>
             <div className="long-sentence-scroll">
               <article className="long-sentence-article">
@@ -350,7 +326,7 @@ function WordDemo() {
                 <p className="long-sentence-translation">{word.longSentence.translation}</p>
 
                 <div className="sentence-subblock">
-                  <h5>语法结构分层拆解 (悬停高亮)</h5>
+                  <h5>结构拆分</h5>
                   <div className="segment-list">
                     {word.longSentence.segments.map((seg, i) => (
                       <div
@@ -370,7 +346,7 @@ function WordDemo() {
                 </div>
 
                 <div className="sentence-subblock">
-                  <h5>考点与难点剖析</h5>
+                  <h5>难点分析</h5>
                   <div className="analysis-list">
                     {word.longSentence.analyses.map((ana, i) => (
                       <div
@@ -386,12 +362,7 @@ function WordDemo() {
               </article>
             </div>
 
-            {/* 右栏底部分页器 */}
-            <footer className="long-sentence-pagination">
-              <span className="page-tag">六级真题</span>
-              <span className="page-num">第 1 句 / 共 1 句</span>
-              <span className="page-status">已展开</span>
-            </footer>
+            </div>
           </aside>
         </div>
 
@@ -401,7 +372,7 @@ function WordDemo() {
           <span className="status-tip">鼠标滚轮置于各栏即可独立上下滑动</span>
         </div>
       </div>
-      <p className="demo-footnote">CYword 客户端沉浸式记忆视窗真实呈现 · 词书数据与真人发音均来自正式版六级词库</p>
+      <p className="demo-footnote">本页仅演示 portable 的阅读、发音与评级操作；完整学习计划请在客户端使用。</p>
     </div>
   );
 }
@@ -450,7 +421,7 @@ function Rhythm() {
 }
 
 const faqs = [
-  { question: "每天的学习量大概是多少？", answer: "当前六级计划每个学习日安排约 180 次单词学习，具体为 178–187 次。同一个词涉及多个词根时，会在相关组里再次出现；复习时按单词去重。这是计划安排的学习量，实际耗时和记忆效果会受词汇基础、专注程度与后续复习影响。" },
+  { question: "每天的学习量大概是多少？", answer: "当前六级计划每个学习日安排约 180 次单词学习，具体以客户端当日计划为准。同一个词涉及多个词根时，会在相关组里再次出现；复习时按单词去重。这是计划安排的学习量，实际耗时和记忆效果会受词汇基础、专注程度与后续复习影响。" },
   { question: "巧记里的联想，就是单词的真正构词吗？", answer: "两者会分开展示。谐音、熟词和画面联想用来帮助记忆，构词分析则说明词根词缀的联系。有真正词根的单词按词根成组，没有独立词根的词会单独安排，跟着逐词巧记学习。" },
   { question: "需要注册账号，或者付费吗？", answer: "使用邮箱验证码登录后即可学习，目前没有内置付费步骤。请使用你自己的邮箱接收验证码。" },
   { question: "断网也能背单词吗？", answer: "当前版本需要联网获取词书和单词详情，邮箱登录、发音和更新检查也需要网络。学习记录会保存在当前设备，暂不提供离线学习模式。" },
@@ -458,10 +429,49 @@ const faqs = [
   { question: "安装时出现 Windows 安全提示怎么办？", answer: "当前安装包尚未进行代码签名，Windows 可能提示无法识别发布者。这不等于已经确认软件安全。请先确认文件来自本页的官方发布地址、文件名和版本一致；不确定来源时不要运行，也无需关闭系统安全防护。下载区提供文件校验值，供需要时核对。" },
   { question: "词汇掌握页面会收录哪些词？", answer: "安卓端和电脑端按同一规则展示全书掌握统计：已掌握、未掌握、不清楚和未学习。待巩固列表只收录已学过且评级为“未掌握”或“不清楚”的词；改为“已掌握”后自动移出，学习记录仍然保留。尚未学习、未评级的词不会混入列表。" },
   { question: "学习进度会保存吗？更新后还在吗？", answer: "学习记录和熟练度自动保存在当前设备。正常覆盖升级会保留进度，“词汇掌握”会根据最新评级自动更新，无需另存一份列表。电脑与手机使用同一邮箱登录即可同步，换设备前请确认“已与云端同步”；卸载或清理应用数据前，请先备份本机数据。" },
-  { question: "下载没有开始，或者下载速度很慢？", answer: "主下载由本站通过 Cloudflare R2 提供，无需访问 GitHub，支持断点续传。跨境线路仍可能较慢，部分地区也可能无法连接。请先查看浏览器下载列表，尝试继续下载或稍后重试；也可以使用下载区的 GitHub 备用地址。两个地址提供的是同一份安装包，可核对下方 SHA-256。" },
+  { question: "下载没有开始，或者下载速度很慢？", answer: "主下载由本站通过 Cloudflare R2 提供，无需访问 GitHub，支持断点续传。跨境线路仍可能较慢，部分地区也可能无法连接。请先查看浏览器下载列表，尝试继续下载或稍后重试；也可以复制本站下载地址重试，并核对下载区的 SHA-256。" },
 ];
 
-function AndroidDownload({ currentRelease }: { currentRelease: ReleaseInfo | null }) {
+function InstallGuide() {
+  return <section className="guide-section section-wrap" id="guide" aria-labelledby="guide-title">
+    <div className="section-heading"><div><span className="eyebrow">START WITH CYWORD</span><h2 id="guide-title">装好，登录，开始今天。</h2></div><p>下载不需要账号，学习时使用邮箱验证码登录。<br />电脑和手机使用同一邮箱，换设备前确认已与云端同步。</p></div>
+    <div className="platform-guide">
+      <article id="guide-windows"><h3><Icon name="windows" />Windows 10 / 11 · 64 位</h3><ol>
+        <li>下载 Windows 安装包，核对文件名、版本和下载区校验值。</li>
+        <li>打开 .exe 并选择安装位置；遇到发布者提示时先确认来源，不需要关闭系统安全防护。</li>
+        <li>打开 CYword，用邮箱验证码登录，再进入今日计划。</li>
+      </ol><a href="#download">下载 Windows 安装包 <Icon name="arrow" /></a></article>
+      <article id="guide-android"><h3><Icon name="phone" />Android 7.0 及以上</h3><ol>
+        <li>在安卓手机上下载 APK，从浏览器的下载列表打开。</li>
+        <li>核对来源后按系统提示允许当前浏览器安装此应用；安装后可关闭该权限。</li>
+        <li>用同一邮箱登录。更新时直接覆盖安装；先确认云端同步，避免卸载后丢失未同步记录。</li>
+      </ol><a href="#download">下载安卓安装包 <Icon name="arrow" /></a></article>
+    </div>
+  </section>;
+}
+
+function ReleaseNotes() {
+  return <section className="information-section section-wrap" id="release-notes" aria-labelledby="release-notes-title">
+    <div className="section-heading"><h2 id="release-notes-title">版本记录</h2><p>这里记录已发布的客户端改动，安装包版本以下载区为准。</p></div>
+    <div className="release-notes-grid">
+      <article><span className="eyebrow">2026.09.20</span><h3>Windows 0.4.4</h3><p>新增账号间隔离的本机进度与云端同步，调整六级学习顺序与词汇掌握页面；单词详情支持重新评级和连续浏览。</p></article>
+      <article><span className="eyebrow">2026.09.20</span><h3>Android 0.1.0</h3><p>安卓首版。提供六级词书计划、三档评级、累计复习与词汇掌握，支持与 Windows 使用同一邮箱同步学习进度。</p></article>
+    </div>
+  </section>;
+}
+
+function PrivacyNotice() {
+  return <section className="information-section section-wrap" id="privacy" aria-labelledby="privacy-title">
+    <div className="section-heading"><h2 id="privacy-title">隐私与数据</h2><p>更新于 2026 年 9 月 20 日</p></div>
+    <div className="privacy-details">
+      <details open><summary>账号与学习记录<Icon name="plus" /></summary><p>客户端用邮箱接收登录验证码，服务端保存邮箱、账号标识与登录时间。学习进度、熟练度和复习记录保存在当前设备，并在登录后同步到云端，以便在电脑和手机间继续学习。退出登录不会删除已保存的学习记录；清理本机应用数据也不会自动删除云端记录。</p></details>
+      <details><summary>网站、发音与服务提供方<Icon name="plus" /></summary><p>官网交互示例只保存在当前页面内存中，刷新即重置，不读取客户端学习记录；官网没有添加统计脚本。下载、账号与同步服务使用 Cloudflare，验证码邮件通过 Resend 发送；点播放发音时，浏览器会请求词书音频服务 cdn.aimwords.com。这些网络服务会接收完成请求所需的网络信息。</p></details>
+      <details id="feedback" open><summary>反馈与数据删除<Icon name="plus" /></summary><p>账号、云端记录与本机数据需要分别处理。删除云端记录前，请先保留需要的学习进度，并停止其他设备的同步，避免记录再次上传。</p><p>反馈或申请删除账号及云端学习记录，请联系 <a href="mailto:cyi907369@gmail.com">cyi907369@gmail.com</a>。删除申请请使用登录邮箱发送。</p></details>
+    </div>
+  </section>;
+}
+
+function AndroidDownload({ currentRelease, status, retry }: { currentRelease: ReleaseInfo | null; status: "loading" | "ready" | "error"; retry: () => void }) {
   const [downloadStarted, setDownloadStarted] = useState(false);
   return <div className="download-card">
     <div className="download-card-heading"><span className="windows-tile"><Icon name="phone" /></span><div><h3>CYword for Android</h3><p>Android 7.0 及以上</p></div>{currentRelease && <span className="version-label">v{currentRelease.version}</span>}</div>
@@ -469,14 +479,14 @@ function AndroidDownload({ currentRelease }: { currentRelease: ReleaseInfo | nul
       <div className="download-meta"><span>大学英语六级词书 · 联网学习</span><span>{currentRelease.size} <i>·</i> {currentRelease.date}</span></div>
       <a className="button button-primary download-main" href={currentRelease.downloadUrl} onClick={() => setDownloadStarted(true)}><Icon name="download" />下载安卓安装包<Icon name="arrow" /></a>
       <p className="download-reassurance">下载 APK 后打开安装 · 邮箱验证码登录</p>
-      <div className="download-links"><a href={currentRelease.githubDownloadUrl}>GitHub 备用下载 ↗</a><span>·</span><a href={currentRelease.notesUrl} target="_blank" rel="noreferrer">版本记录 ↗</a></div>
+      <div className="download-links"><a href="#guide-android">安卓安装步骤</a><span>·</span><a href={currentRelease.notesUrl}>版本记录</a></div>
       <div className="download-feedback" role="status">{downloadStarted && <p>已发起下载，请在浏览器下载列表中打开 APK，并按系统提示安装。</p>}</div>
       <details className="checksum"><summary>安装说明与文件校验<Icon name="plus" /></summary><div><p>在安卓手机上打开 APK，按系统提示允许当前浏览器安装此应用。后续更新直接覆盖安装即可保留学习记录。</p><p className="filename">{currentRelease.filename}</p><span>SHA-256</span><code>{currentRelease.sha256}</code></div></details>
-    </> : <p className="download-reassurance" role="status">暂时无法读取安卓版本信息，请稍后刷新重试。</p>}
+    </> : <div className="release-error" role="status"><p>{status === "loading" ? "正在读取安卓版本信息…" : "暂时无法读取安卓版本信息，版本和校验值尚未确认。"}</p>{status === "error" && <button className="button" onClick={retry}>重新读取</button>}<a href="#guide-android">查看安卓安装步骤</a></div>}
   </div>;
 }
 
-function Download({ currentRelease, androidRelease }: { currentRelease: ReleaseInfo; androidRelease: ReleaseInfo | null }) {
+function Download({ currentRelease, androidRelease, androidStatus, windowsFallback, retryAndroid }: { currentRelease: ReleaseInfo; androidRelease: ReleaseInfo | null; androidStatus: "loading" | "ready" | "error"; windowsFallback: boolean; retryAndroid: () => void }) {
   const [downloadStarted, setDownloadStarted] = useState(false);
   const [copyState, setCopyState] = useState<"idle" | "done" | "failed">("idle");
   const copyLink = async () => {
@@ -484,12 +494,13 @@ function Download({ currentRelease, androidRelease }: { currentRelease: ReleaseI
     catch { setCopyState("failed"); }
   };
   return <section className="download-section section-wrap" id="download" aria-labelledby="download-title"><div className="download-intro"><span className="brand-mark download-logo" aria-hidden="true">Cy</span><span className="eyebrow">MAKE ROOM FOR A LITTLE PROGRESS</span><h2 id="download-title">下一组单词，<br className="mobile-break" />从这里开始。</h2><p>巧记、构词、分组与复习，都已经准备好。</p></div>
-    <div className="download-platforms"><AndroidDownload currentRelease={androidRelease} />
+    <div className="download-platforms"><AndroidDownload currentRelease={androidRelease} status={androidStatus} retry={retryAndroid} />
     <div className="download-card"><div className="download-card-heading"><span className="windows-tile"><Icon name="windows" /></span><div><h3>CYword for Windows</h3><p>Windows 10 / 11 · 64 位</p></div><span className="version-label">v{currentRelease.version}</span></div><div className="download-meta"><span>大学英语六级词书 · 联网学习</span><span>{currentRelease.size} <i>·</i> {currentRelease.date}</span></div>
       <a className="button button-primary download-main" href={currentRelease.downloadUrl} onClick={() => setDownloadStarted(true)}><Icon name="download" />下载 Windows 安装包<Icon name="arrow" /></a><p className="download-reassurance">邮箱验证码登录 · 下载后双击安装 · 可选择安装目录</p>
-      <div className="download-links"><button onClick={copyLink}>{copyState === "done" ? "下载地址已复制" : "复制下载地址"}</button><span>·</span><a href="#guide">查看安装步骤</a><span>·</span><a href={currentRelease.githubDownloadUrl}>GitHub 备用下载 ↗</a><span>·</span><a href={currentRelease.notesUrl} target="_blank" rel="noreferrer">版本记录 ↗</a></div>
+      <div className="download-links"><button onClick={copyLink}>{copyState === "done" ? "下载地址已复制" : "复制下载地址"}</button><span>·</span><a href="#guide-windows">Windows 安装步骤</a><span>·</span><a href={currentRelease.notesUrl}>版本记录</a></div>
       <div className="download-feedback" role="status">{downloadStarted && <p>已向浏览器发起下载，请查看下载列表。如果没有开始，可复制地址后重试。<a href="#faq">查看下载帮助</a></p>}{copyState === "done" && <p>下载地址已复制，可粘贴到 Windows 电脑的浏览器中打开。</p>}{copyState === "failed" && <label>浏览器未允许复制，请手动选择下面的地址：<input readOnly aria-label="Windows 安装包下载地址" value={currentRelease.downloadUrl} onFocus={(event) => event.currentTarget.select()} /></label>}</div>
-      <details className="checksum"><summary>安装包来源与文件校验<Icon name="plus" /></summary><div><p>本站主下载和 GitHub 备用下载提供同一份官方发布文件，无需登录。当前安装包未签名，安装前请确认来源并核对校验值。</p><p className="filename">{currentRelease.filename}</p><span>SHA-256</span><code>{currentRelease.sha256}</code></div></details>
+      {windowsFallback && <p className="release-status" role="status">最新版本信息暂不可用，当前提供最后核验的 Windows v{currentRelease.version}。</p>}
+      <details className="checksum"><summary>安装包来源与文件校验<Icon name="plus" /></summary><div><p>安装包通过本站下载服务提供，下载不需要登录。当前安装包未签名，安装前请确认来源并核对校验值。</p><p className="filename">{currentRelease.filename}</p><span>SHA-256</span><code>{currentRelease.sha256}</code></div></details>
     </div></div>
   </section>;
 }
@@ -498,25 +509,33 @@ export default function Website() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentRelease, setCurrentRelease] = useState(release);
   const [androidRelease, setAndroidRelease] = useState<ReleaseInfo | null>(null);
+  const [androidStatus, setAndroidStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [windowsFallback, setWindowsFallback] = useState(false);
+  const [retryAttempt, setRetryAttempt] = useState(0);
   useEffect(() => {
     let active = true;
-    fetchLatestRelease().then((latest) => { if (active) setCurrentRelease(latest); }).catch(() => {});
-    fetchLatestRelease(true).then((latest) => { if (active) setAndroidRelease(latest); }).catch(() => {});
+    fetchLatestRelease().then((latest) => { if (active) { setCurrentRelease(latest); setWindowsFallback(false); } }).catch(() => { if (active) setWindowsFallback(true); });
+    setAndroidStatus("loading");
+    fetchLatestRelease(true).then((latest) => { if (active) { setAndroidRelease(latest); setAndroidStatus("ready"); } }).catch(() => { if (active) setAndroidStatus("error"); });
     return () => { active = false; };
-  }, []);
+  }, [retryAttempt]);
   return <>
     <div id="top" aria-hidden="true" />
     <a className="skip-link" href="#main">跳到正文</a>
     <header className="site-header"><div className="header-inner"><Brand /><nav id="main-navigation" aria-label="主导航" className={menuOpen ? "menu-open" : ""}><a href="#method" onClick={() => setMenuOpen(false)}>学习方式</a><a href="#plan" onClick={() => setMenuOpen(false)}>分级复习</a><a href="#guide" onClick={() => setMenuOpen(false)}>上手指南</a><a href="#faq" onClick={() => setMenuOpen(false)}>常见问题</a></nav><div className="header-actions"><a className="header-download" href="#download" onClick={() => setMenuOpen(false)}>下载软件<Icon name="download" /></a><button className="menu-toggle" aria-expanded={menuOpen} aria-controls="main-navigation" aria-label={menuOpen ? "收起导航" : "展开导航"} onClick={() => setMenuOpen(!menuOpen)}><Icon name={menuOpen ? "close" : "menu"} /></button></div></div></header>
     <main id="main">
-      <section className="hero section-wrap" aria-labelledby="hero-title"><div className="hero-copy"><span className="hero-kicker"><i /> 巧记 · 词根分组 · 分级复习</span><h1 id="hero-title">巧记带着学，<br /><em>单词成串记。</em></h1><p className="hero-description">5,166 个六级单词，逐词备好巧记思路。<br />拆开词根词缀，一组一组带着你记，<br />再按熟练度复习，把时间留给还不熟的词。</p><div className="hero-actions"><a className="button button-primary" href="#download"><Icon name="download" />下载 CYword<Icon name="arrow" /></a><a className="text-link" href="#experience">先体验一下 <span aria-hidden="true">↗</span></a></div><div className="hero-availability"><span className="availability-dot" />v{currentRelease.version}<i>·</i>Windows / Android<i>·</i>邮箱验证码登录</div><div className="hero-note"><span aria-hidden="true">↳</span> 省下自己找词根、编巧记、排复习的准备时间。</div></div><WordDemo /></section>
+      <section className="hero section-wrap" aria-labelledby="hero-title"><div className="hero-copy"><span className="hero-kicker"><i /> 巧记 · 词根分组 · 分级复习</span><h1 id="hero-title">巧记带着学，<br /><em>单词成串记。</em></h1><p className="hero-description">5,166 个六级单词，逐词备好巧记思路。<br />拆开词根词缀，一组一组带着你记，<br />再按熟练度复习，把时间留给还不熟的词。</p><div className="hero-actions"><a className="button button-primary" href="#download"><Icon name="download" />下载 CYword<Icon name="arrow" /></a><a className="text-link" href="#experience">先体验一下 <span aria-hidden="true">↗</span></a></div><div className="hero-availability"><span className="availability-dot" />Windows v{currentRelease.version}<i>·</i>{androidRelease ? `Android v${androidRelease.version}` : androidStatus === "loading" ? "Android 版本读取中" : "Android 版本暂不可用"}<i>·</i>邮箱验证码登录</div><div className="hero-note"><span aria-hidden="true">↳</span> 省下自己找词根、编巧记、排复习的准备时间。</div></div><WordDemo /></section>
       <div className="facts-strip section-wrap"><div><span className="fact-number">5,166</span><span>每词都有巧记<span>从怎么记，就给你思路</span></span></div><div><Icon name="branch" /><span>词根成组学习<span>同根单词，在同一天串起来</span></span></div><div><span className="fact-number">3 <i>档</i></span><span>熟练度分级<span>让复习分清轻重</span></span></div></div>
       <MnemonicMethod />
       <Rhythm />
-      <section className="guide-section section-wrap" id="guide" aria-labelledby="guide-title"><div className="section-heading"><div><span className="eyebrow">A SMALL START IS STILL A START</span><h2 id="guide-title">装好，打开，<br className="mobile-break" />开始今天。</h2></div><p>不需要懂代码，也不用研究项目页面。<br />三个小步骤，就能开始学习。</p></div><ol className="guide-steps"><li><span className="step-number">01</span><div className="step-art installer-art"><Icon name="download" /><span>CYword-Setup<small>.exe</small></span><Icon name="check" /></div><h3>下载安装包</h3><p>在 Windows 电脑上点击下载，保存安装文件。无需下载源码，也不用注册账号。</p><a href="#download">前往下载 <Icon name="arrow" /></a></li><li><span className="step-number">02</span><div className="step-art install-art"><span className="mini-cy">Cy</span><div><span>选择安装位置</span><small>D:\CYword</small></div><span className="mini-install-label">安装</span></div><h3>双击，完成安装</h3><p>打开下载好的 .exe 文件，按提示选择安装位置。安装完成后，从桌面打开 CYword。</p><a href="#faq">遇到安全提示？ <Icon name="arrow" /></a></li><li><span className="step-number">03</span><div className="step-art first-day-art"><span>Day 1</span><span className="mini-start-label">开始学习 <Icon name="arrow" /></span></div><h3>从第一组词根开始</h3><p>点击首页的「继续今日学习」，进入今日计划后点击开始按钮，跟着巧记按组学习，标记熟练度。进度会自动保存。</p><a href="#experience">先试试学习体验 <Icon name="arrow" /></a></li></ol></section>
-      <Download currentRelease={currentRelease} androidRelease={androidRelease} />
+      <InstallGuide />
+      <Download currentRelease={currentRelease} androidRelease={androidRelease} androidStatus={androidStatus}
+        windowsFallback={windowsFallback} retryAndroid={() => setRetryAttempt((value) => value + 1)} />
+      <ReleaseNotes />
+
       <section className="faq-section section-wrap" id="faq" aria-labelledby="faq-title"><div><span className="eyebrow">A FEW THINGS TO KNOW</span><h2 id="faq-title">你可能还想知道</h2><p>开始之前，把这些小问题说清楚。</p></div><div className="faq-list">{faqs.map((faq, i) => <details name="faq" key={faq.question} open={i === 0 ? true : undefined}><summary>{faq.question}<Icon name="plus" /></summary><p>{faq.answer}</p></details>)}</div></section>
+      <PrivacyNotice />
     </main>
-    <footer className="site-footer section-wrap"><div className="footer-top"><Brand footer /><p>每个词有巧记，每一组有联系，学过之后有复习。</p><a href="#top">回到顶部 ↑</a></div><div className="footer-bottom"><span>© {new Date().getFullYear()} CYword · 词根记忆</span><span>巧记带着学，单词成串记。<a href={currentRelease.repositoryUrl} target="_blank" rel="noreferrer">开源项目 ↗</a></span></div></footer>
+    <footer className="site-footer section-wrap"><div className="footer-top"><Brand footer /><p>每个词有巧记，每一组有联系，学过之后有复习。</p><a href="#top">回到顶部 ↑</a></div><div className="footer-bottom"><span>© {new Date().getFullYear()} CYword</span><span><a href="#release-notes">版本记录</a><a href="#privacy">隐私与数据</a><a href="#feedback">反馈与删除申请</a></span></div></footer>
   </>;
 }

@@ -27,6 +27,12 @@ import { applyCurriculum } from "./curriculum";
 import { WordHoverProvider, useWordHover } from "./components/WordHoverContext";
 import { MeaningBridgeMemory, MeaningBridgeProvider } from "./components/MeaningBridgeMemory";
 import { PronunciationMemory, PronunciationSpelling } from "./components/PronunciationMemory";
+import { AudioButton } from "./components/AudioButton";
+import { useSessionSave, useSessionWord } from "./session-state";
+import { useWordResources } from "./useWordResources";
+import { useSessionDialog } from "./useSessionDialog";
+import { playPronunciation, stopPronunciation } from "./audio";
+import { completedSegmentEnd } from "./study-segments";
 import type {
   AppProgress,
   Catalog,
@@ -40,12 +46,12 @@ import type {
   WordDetail,
 } from "./types";
 
-const navItems: Array<{ id: ViewName; label: string; glyph: string }> = [
-  { id: "home", label: "首页", glyph: "⌂" },
-  { id: "plan", label: "词书计划", glyph: "▦" },
-  { id: "today", label: "今日学习", glyph: "▷" },
-  { id: "vocabulary", label: "词汇掌握", glyph: "◇" },
-  { id: "search", label: "单词搜索", glyph: "⌕" },
+const navItems: Array<{ id: ViewName; label: string; path: string }> = [
+  { id: "home", label: "首页", path: "m3 10 9-7 9 7v10H3z M9 20v-7h6v7" },
+  { id: "plan", label: "词书计划", path: "M4 4h16v16H4z M4 9h16 M9 9v11 M15 9v11 M4 15h16" },
+  { id: "today", label: "今日学习", path: "m8 4 12 8-12 8z" },
+  { id: "vocabulary", label: "词汇掌握", path: "m12 3 9 9-9 9-9-9z M8 12l3 3 5-6" },
+  { id: "search", label: "单词搜索", path: "M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0 M15 15l6 6" },
 ];
 
 type ViewTransitionDocument = Document & {
@@ -127,43 +133,6 @@ function MarkdownBlock({ value, empty = "当前数据没有提供这部分内容
   );
 }
 
-function AudioButton({ url }: { url?: string }) {
-  const [playing, setPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  useEffect(() => {
-    setPlaying(false);
-    return () => {
-      audioRef.current?.pause();
-      audioRef.current = null;
-    };
-  }, [url]);
-  if (!url) return null;
-  const play = async () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-      setPlaying(false);
-      return;
-    }
-    const audio = new Audio(url);
-    const clear = () => {
-      if (audioRef.current !== audio) return;
-      audioRef.current = null;
-      setPlaying(false);
-    };
-    try {
-      setPlaying(true);
-      audioRef.current = audio;
-      audio.addEventListener("ended", clear, { once: true });
-      audio.addEventListener("error", clear, { once: true });
-      await audio.play();
-    } catch {
-      clear();
-    }
-  };
-  return <button className="audio-button" onClick={play}>{playing ? "停止" : "播放发音"}</button>;
-}
-
 function FittedWordTitle({ word, guide }: { word: string; guide?: PronunciationGuide }) {
   const titleRef = useRef<HTMLHeadingElement>(null);
 
@@ -233,14 +202,14 @@ function MorphologyRail({ detail }: { detail: WordDetail }) {
   if (!detail.roots.length) return <p className="empty-copy">该单词没有独立词根，按单词自身成组。</p>;
   return (
     <div className="morphology-rail">
-      {detail.roots.map((part, index) => (
+      {[...detail.roots].sort((a, b) => a.order - b.order).map((part, index) => (
         <div className={`morphology-node ${part.type}`} key={`${part.id}-${part.order}`}>
           <div><span>{labels[part.type]}</span><b>{part.spelling}</b></div>
           <p>{part.meaning}</p>
-          <details>
-            <summary>音形巧记</summary>
+          {part.memoryMethod?.trim() && <details>
+            <summary>巧记</summary>
             <MarkdownBlock value={part.memoryMethod} empty="原始数据未提供独立音标或巧记。" />
-          </details>
+          </details>}
           {index < detail.roots.length - 1 && <i>＋</i>}
         </div>
       ))}
@@ -285,6 +254,7 @@ function SentenceSpotlight({
   exam?: boolean;
 }) {
   const item = rows[index];
+  if (!rows.length) return null;
   return (
     <section className="session-section sentence-spotlight">
       <header>
@@ -330,34 +300,34 @@ function WordDetailPanel({
       </header>
       <div className="detail-tabs">
         <button className={tab === "core" ? "active" : ""} onClick={() => setTab("core")}>核心记忆</button>
-        <button className={tab === "sentences" ? "active" : ""} onClick={() => setTab("sentences")}>例句 {detail.examples.length + detail.examExamples.length}</button>
-        <button className={tab === "expand" ? "active" : ""} onClick={() => setTab("expand")}>搭配与关联</button>
-        <button className={tab === "long" ? "active" : ""} onClick={() => setTab("long")}>长难句 {detail.longSentences.length}</button>
+        {(detail.examples.length + detail.examExamples.length > 0) && <button className={tab === "sentences" ? "active" : ""} onClick={() => setTab("sentences")}>例句 {detail.examples.length + detail.examExamples.length}</button>}
+        {(detail.collocations.length + detail.relations.length + detail.frequencies.length > 0) && <button className={tab === "expand" ? "active" : ""} onClick={() => setTab("expand")}>搭配与关联</button>}
+        {detail.longSentences.length > 0 && <button className={tab === "long" ? "active" : ""} onClick={() => setTab("long")}>长难句 {detail.longSentences.length}</button>}
       </div>
       <div className="detail-scroll">
         {tab === "core" && <>
           <PronunciationMemory key={detail.id} guide={detail.pronunciationGuide} />
-          <Section eyebrow="MEMORY" title="单词妙记"><MarkdownBlock value={wordMemoryDisplay(detail.memoryMarkup)} /></Section>
-          <Section eyebrow="MORPHEME" title="词根词缀构成"><MorphologyRail detail={detail} /></Section>
-          <Section eyebrow="COMPOSITION" title="词根词缀分析"><MarkdownBlock value={detail.etymologyMarkup} /></Section>
+          <Section eyebrow="MEMORY" title="单词巧记"><MarkdownBlock value={wordMemoryDisplay(detail.memoryMarkup)} /></Section>
+          {detail.roots.length > 0 && <Section eyebrow="MORPHEME" title="词根词缀构成"><MorphologyRail detail={detail} /></Section>}
+          {detail.etymologyMarkup?.trim() && <Section eyebrow="COMPOSITION" title="词根词缀分析"><MarkdownBlock value={detail.etymologyMarkup} /></Section>}
           <MeaningBridgeMemory detail={detail} />
-          <Section eyebrow="ACCUMULATION" title="词根词缀积累"><MarkdownBlock value={detail.rootAffixAccumulation} /></Section>
-          <Section eyebrow="NOTES" title="补充笔记"><MarkdownBlock value={detail.rootAffixNotes} /></Section>
+          {detail.rootAffixAccumulation?.trim() && <Section eyebrow="ACCUMULATION" title="词根词缀积累"><MarkdownBlock value={detail.rootAffixAccumulation} /></Section>}
+          {detail.rootAffixNotes?.trim() && <Section eyebrow="NOTES" title="补充笔记"><MarkdownBlock value={detail.rootAffixNotes} /></Section>}
         </>}
         {tab === "sentences" && <>
-          <Section eyebrow="EXAMPLES" title="普通例句" count={detail.examples.length}><SentenceList rows={detail.examples} /></Section>
-          <Section eyebrow="EXAM" title="真题例句" count={detail.examExamples.length}><SentenceList rows={detail.examExamples} exam /></Section>
+          {detail.examples.length > 0 && <Section eyebrow="EXAMPLES" title="普通例句" count={detail.examples.length}><SentenceList rows={detail.examples} /></Section>}
+          {detail.examExamples.length > 0 && <Section eyebrow="EXAM" title="真题例句" count={detail.examExamples.length}><SentenceList rows={detail.examExamples} exam /></Section>}
         </>}
         {tab === "expand" && <>
-          <Section eyebrow="COLLOCATION" title="常用搭配" count={detail.collocations.length}>
+          {detail.collocations.length > 0 && <Section eyebrow="COLLOCATION" title="常用搭配" count={detail.collocations.length}>
             {detail.collocations.length ? <div className="collocation-list">{detail.collocations.map((item, index) => <div key={item.collocation_id || index}><strong>{item.phrase}</strong><p>{item.meaning}</p><small>{item.example}</small></div>)}</div> : <p className="empty-copy">暂无搭配数据。</p>}
-          </Section>
-          <Section eyebrow="RELATIONS" title="关联词" count={detail.relations.length}>
+          </Section>}
+          {detail.relations.length > 0 && <Section eyebrow="RELATIONS" title="关联词" count={detail.relations.length}>
             {detail.relations.length ? detail.relations.map((relation, index) => <div className="relation-group" key={index}><h4>{String(relation.relation_type || "关联")}</h4><div>{relation.words.map((word, wordIndex) => <span key={word.related_word_id || wordIndex}><b>{word.spelling || word.display_text}</b>{word.meaning && ` · ${word.meaning}`}</span>)}</div></div>) : <p className="empty-copy">暂无关联词数据。</p>}
-          </Section>
-          <Section eyebrow="FREQUENCY" title="考试词频" count={detail.frequencies.length}>
+          </Section>}
+          {detail.frequencies.length > 0 && <Section eyebrow="FREQUENCY" title="考试词频" count={detail.frequencies.length}>
             {detail.frequencies.length ? <div className="frequency-grid">{detail.frequencies.map((item, index) => <div key={index}><span>{item.exam_type}</span><b>{item.frequency_count}</b><small>每万词 {item.per_10k_words}</small></div>)}</div> : <p className="empty-copy">暂无词频数据。</p>}
-          </Section>
+          </Section>}
         </>}
         {tab === "long" && <Section eyebrow="LONG SENTENCES" title="长难句精读" count={detail.longSentences.length}>
           {detail.longSentences.length ? detail.longSentences.map((item, index) => <details className="long-sentence" key={String(item.long_sentence_id ?? index)}><summary>{String(item.sentence || `长难句 ${index + 1}`)}</summary><p>{String(item.translation || "")}</p>{item.segments?.map((segment, segmentIndex) => <div className="segment" key={segmentIndex}><b>{segment.role_label || segment.role}</b><span>{segment.text}</span><small>{segment.gloss}</small></div>)}{item.analyses?.map((analysis, analysisIndex) => <div className="analysis-note" key={analysisIndex}><b>{analysis.dimension}</b><p>{analysis.analysis_text}</p></div>)}</details>) : <p className="empty-copy">暂无长难句数据。</p>}
@@ -468,18 +438,20 @@ function HomeView({
   progress,
   current,
   goToday,
+  showPlan,
 }: {
   catalog?: Catalog;
   progress: AppProgress;
   plan?: PlanDay[];
   current: PlanDay;
   goToday: () => void;
+  showPlan: () => void;
 }) {
   const fraction = planDayFraction(progress, current);
   const dayState = progress.planDays[String(current.day)];
   const done = Boolean(dayState?.completedAt);
   const completed = current.kind === "study" ? completedStudyExposureKeys(progress, current).length : (dayState?.reviewedWordIds.length ?? 0);
-  const target = current.kind === "study" ? current.appearanceCount : (dayState?.reviewWordIds.length || Object.keys(progress.words).length);
+  const target = current.kind === "study" ? current.appearanceCount : (dayState?.reviewWordIds.length ?? reviewCandidates(progress, true).length);
 
   return (
     <div className="page home-page">
@@ -491,6 +463,7 @@ function HomeView({
           </div>
           <div className="day-action">
             <button onClick={goToday}>{done ? "查看今日记录" : current.kind === "study" ? "继续今日学习" : "进入复习判断"} <b>→</b></button>
+            <button className="home-plan-link" onClick={showPlan}>查看今日安排</button>
           </div>
         </section>
       </div>
@@ -554,6 +527,8 @@ function StudyToday({
   details,
   loadWords,
   saveProgress,
+  autoStart = false,
+  preview = false,
 }: {
   catalog: Catalog;
   progress: AppProgress;
@@ -561,6 +536,8 @@ function StudyToday({
   details: Record<string, WordDetail>;
   loadWords: (ids: string[], kind: "study" | "review" | "bookmarks", planDay: number) => Promise<boolean>;
   saveProgress: (progress: AppProgress) => Promise<void>;
+  autoStart?: boolean;
+  preview?: boolean;
 }) {
   const groupsById = useMemo(() => new Map(catalog.groups.map((group) => [group.id, group])), [catalog]);
   const groups = plan.groupIds.map((id) => groupsById.get(id)).filter(Boolean) as StudyGroup[];
@@ -572,13 +549,18 @@ function StudyToday({
   const finished = isPlanDayComplete(progress, plan.day);
   const [sessionActive, transitionSession, sessionTransitionPhase] = useSoftTransitionState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [breakNextIndex, setBreakNextIndex] = useState<number | null>(null);
+  const shownBreaks = useRef(new Set<number>());
   const [simpleExampleIndex, setSimpleExampleIndex] = useState(0);
   const [examExampleIndex, setExamExampleIndex] = useState(0);
   const [longSentenceIndex, setLongSentenceIndex] = useState(0);
   const [sentencesOpen, setSentencesOpen] = useState(false);
-  const [ratingBusy, setRatingBusy] = useState(false);
+  const saving = useSessionSave();
+  const ratingBusy = saving.busy;
   const [mobilePanel, setMobilePanel] = useState<"word" | "roots" | "sentences">("word");
-  const ratingLock = useRef(false);
+  const ratingLock = saving.lock;
+  const closingSession = useRef(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(() => new Set());
   const exposure = exposures[activeIndex];
   const group = exposure ? groupsById.get(exposure.groupId) : undefined;
@@ -586,58 +568,50 @@ function StudyToday({
   const hover = useWordHover();
   const rated = exposure ? completedKeys.has(exposure.key) : false;
   const activeProficiency = rated && exposure ? progress.words[exposure.wordId]?.proficiency : undefined;
+  const resource = useSessionWord(sessionActive ? exposure?.wordId : undefined, loadWords, "study", plan.day, exposures.slice(activeIndex + 1, activeIndex + 5).map(item => item.wordId));
+  const endSession = () => { closingSession.current = true; transitionSession(false); };
+  const closeSession = () => { if (!ratingLock.current) endSession(); };
+  useSessionDialog({ active: sessionActive, dialogRef, bodyClass: "study-mode-active", onClose: closeSession, busy: () => ratingLock.current });
 
   useEffect(() => {
     if (hover && activeDetail?.id) hover.setCurrentWordId(activeDetail.id);
   }, [activeDetail?.id, hover]);
 
-  useEffect(() => {
-    document.body.classList.toggle("study-mode-active", sessionActive);
-    return () => {
-      document.body.classList.remove("study-mode-active");
-    };
-  }, [sessionActive]);
-
-  useEffect(() => {
-    if (!sessionActive) return;
-    const back = (event: Event) => { event.preventDefault(); event.stopImmediatePropagation(); transitionSession(false); };
-    window.addEventListener("cyword-back", back);
-    return () => window.removeEventListener("cyword-back", back);
-  }, [sessionActive]);
-
   const openWordSession = async (targetGroupId: string, targetWordId: string) => {
+    if (ratingLock.current) return;
+    closingSession.current = false;
+    setBreakNextIndex(null);
+    shownBreaks.current.clear();
     const targetIndex = exposures.findIndex((item) => item.groupId === targetGroupId && item.wordId === targetWordId);
     setActiveIndex(targetIndex >= 0 ? targetIndex : 0);
     setSentencesOpen(false);
     transitionSession(true);
-    void loadWords([targetWordId], "study", plan.day).then(() => {
-      const remainingIds = [...new Set(exposures.map((item) => item.wordId))].filter((id) => id !== targetWordId);
-      if (remainingIds.length) void loadWords(remainingIds, "bookmarks", plan.day);
-    });
   };
 
   const startSession = async () => {
+    if (ratingLock.current) return;
+    closingSession.current = false;
+    setBreakNextIndex(null);
+    shownBreaks.current.clear();
     const nextIndex = exposures.findIndex((item) => !completedKeys.has(item.key));
     const targetIdx = nextIndex >= 0 ? nextIndex : 0;
     setActiveIndex(targetIdx);
     setSentencesOpen(false);
     transitionSession(true);
-    const firstWordId = exposures[targetIdx]?.wordId;
-    if (firstWordId) {
-      void loadWords([firstWordId], "study", plan.day).then(() => {
-        const remainingIds = [...new Set(exposures.map((item) => item.wordId))].filter((id) => id !== firstWordId);
-        if (remainingIds.length) void loadWords(remainingIds, "bookmarks", plan.day);
-      });
-    }
   };
 
   useEffect(() => {
-    if (sessionActive && exposure?.wordId && !details[exposure.wordId]) {
-      void loadWords([exposure.wordId], "study", plan.day);
-    }
-  }, [sessionActive, exposure?.wordId, details, plan.day]);
+    if (autoStart) void startSession();
+  }, [autoStart]);
+  useEffect(() => () => stopPronunciation(), []);
+  useEffect(() => { if (!sessionActive) stopPronunciation(); }, [sessionActive]);
+  useLayoutEffect(() => {
+    if (breakNextIndex !== null) dialogRef.current?.querySelector<HTMLButtonElement>(".study-break-panel button")?.focus({ preventScroll: true });
+  }, [breakNextIndex]);
 
   const move = (direction: -1 | 1) => {
+    if (ratingLock.current || closingSession.current || breakNextIndex !== null || (direction > 0 && !rated)) return;
+    saving.setError("");
     setActiveIndex((current) => Math.max(0, Math.min(exposures.length - 1, current + direction)));
   };
 
@@ -655,39 +629,40 @@ function StudyToday({
     setExamExampleIndex(0);
     setLongSentenceIndex(0);
     setMobilePanel("word");
+    stopPronunciation();
     document.querySelectorAll(".study-center-scroll, .study-column-scroll").forEach((element) => element.scrollTo(0, 0));
   }, [exposure?.key]);
 
   const rate = async (level: Proficiency) => {
-    if (!group || !activeDetail || !exposure || ratingLock.current) return;
-    ratingLock.current = true;
-    setRatingBusy(true);
+    if (!group || !activeDetail || !exposure || ratingLock.current || closingSession.current || breakNextIndex !== null) return;
     const next = rateStudyWord(progress, plan, group, exposure.wordId, level);
-    try {
-      await saveProgress(next);
+    await saving.run(() => saveProgress(next), () => {
       if (finished) {
         if (activeIndex < exposures.length - 1) setActiveIndex(activeIndex + 1);
-        else transitionSession(false);
+        else endSession();
       } else {
         const ratedKeys = new Set(completedStudyExposureKeys(next, plan));
         const nextUnrated = exposures.findIndex((item, index) => index > activeIndex && !ratedKeys.has(item.key));
         const anyUnrated = nextUnrated >= 0 ? nextUnrated : exposures.findIndex((item) => !ratedKeys.has(item.key));
-        if (anyUnrated >= 0) setActiveIndex(anyUnrated);
-        else transitionSession(false);
+        if (anyUnrated >= 0) {
+          const boundary = !rated ? completedSegmentEnd(plan.segmentEnds, activeIndex, anyUnrated, exposures, ratedKeys) : null;
+          if (boundary !== null && !shownBreaks.current.has(boundary)) {
+            shownBreaks.current.add(boundary);
+            setBreakNextIndex(anyUnrated);
+          } else setActiveIndex(anyUnrated);
+        }
+        else endSession();
       }
-    } finally { ratingLock.current = false; setRatingBusy(false); }
+    });
   };
 
   useEffect(() => {
     if (!sessionActive) return;
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
       const target = event.target as HTMLElement | null;
       const editing = target?.matches("input, textarea, select, [contenteditable='true']");
-      if (event.key === "Escape") {
-        event.preventDefault();
-        transitionSession(false);
-        return;
-      }
+      if (ratingLock.current || closingSession.current || breakNextIndex !== null) return;
       if (editing || target?.closest(".sound-memory, .meaning-bridge, .word-hover-popover")) return;
       if (event.key === "ArrowLeft") {
         event.preventDefault();
@@ -700,8 +675,9 @@ function StudyToday({
         return;
       }
       if (event.code === "Space") {
+        if (target?.closest("button, a, summary, [role='button']")) return;
         event.preventDefault();
-        if (!event.repeat && activeDetail?.audioUrl) void new Audio(activeDetail.audioUrl).play().catch(() => undefined);
+        if (!event.repeat && activeDetail?.audioUrl) void playPronunciation(activeDetail.audioUrl);
         return;
       }
       const shortcut: Record<string, Proficiency> = { "1": "unmastered", "2": "unclear", "3": "mastered" };
@@ -713,11 +689,12 @@ function StudyToday({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [sessionActive, activeIndex, activeDetail?.id, activeDetail?.audioUrl, ratingBusy, progress, rated]);
+  }, [sessionActive, activeIndex, activeDetail?.id, activeDetail?.audioUrl, ratingBusy, progress, rated, breakNextIndex]);
 
   const rootPriority = { root: 0, prefix: 1, suffix: 2, base: 3 };
   const rootLabels = { root: "词根", prefix: "前缀", suffix: "后缀", base: "词基" };
-  const orderedParts = [...(activeDetail?.roots ?? [])].sort((a, b) => rootPriority[a.type] - rootPriority[b.type] || a.order - b.order);
+  const studyPriority = [...(activeDetail?.roots ?? [])].sort((a, b) => rootPriority[a.type] - rootPriority[b.type] || a.order - b.order);
+  const wordOrder = [...(activeDetail?.roots ?? [])].sort((a, b) => a.order - b.order);
   const longSentences = activeDetail?.longSentences ?? [];
   const longSentence = longSentences[longSentenceIndex];
 
@@ -761,65 +738,66 @@ function StudyToday({
             </div>}
           </article>;})}
         </div>
-        <button className="floating-study-start" aria-label={!exposures.length ? "今日无学习内容" : finished ? "回顾今日内容" : completedCount ? "继续学习" : "开始学习"} title={!exposures.length ? "今日无学习内容" : finished ? "回顾今日内容" : completedCount ? "继续学习" : "开始学习"} onClick={() => void startSession()} disabled={!exposures.length}><i /></button>
+        <button className="floating-study-start" onClick={() => void startSession()} disabled={!exposures.length}><i /><span>{!exposures.length ? "今日无学习内容" : finished ? "回顾今日内容" : completedCount ? "继续学习" : "开始学习"}</span></button>
       </div>
 
-      {sessionActive && exposure && <div className={`study-session-overlay mobile-panel-${mobilePanel}`} role="dialog" aria-modal="true" aria-label="今日单词学习">
+      {sessionActive && exposure && createPortal(<div ref={dialogRef} tabIndex={-1} className={`study-session-overlay mobile-panel-${mobilePanel}`} role="dialog" aria-modal="true" aria-label="今日单词学习">
         <header className="study-session-topbar">
-          <div><span>大学英语六级</span><b>Day {plan.day} · {group?.kind === "root" ? group.spelling : "独立词"}</b></div>
+          <div><span>{catalog.book.name}</span><b>{preview ? "查看 " : ""}Day {plan.day} · {group?.kind === "root" ? group.spelling : "独立词"}</b>{mobilePanel !== "word" && <div className="session-word-anchor"><b>{activeDetail?.spelling || catalog.words[exposure.wordId]?.spelling}</b><AudioButton url={activeDetail?.audioUrl} /></div>}</div>
           <div className="session-progress"><i style={{ width: `${Math.max(completedCount / Math.max(1, plan.appearanceCount), 1 / Math.max(1, plan.appearanceCount)) * 100}%` }} /></div>
           <strong>{activeIndex + 1} / {exposures.length}</strong>
-          <button onClick={() => transitionSession(false)}><kbd>Esc</kbd> 返回</button>
+          <button disabled={ratingBusy} onClick={closeSession}><kbd>Esc</kbd> 返回</button>
         </header>
-        <nav className="study-session-tabs" aria-label="学习内容">
-          {([['word', '单词'], ['roots', '词根'], ['sentences', '长难句']] as const).map(([id, label]) => <button key={id} aria-pressed={mobilePanel === id} onClick={() => setMobilePanel(id)}>{label}</button>)}
+        <nav className="study-session-tabs" aria-label="学习内容" inert={breakNextIndex !== null}>
+          {([['word', '单词'], ['roots', '词根'], ['sentences', '长难句']] as const).filter(([id]) => id !== "sentences" || longSentences.length > 0).map(([id, label]) => <button disabled={ratingBusy} key={id} aria-pressed={mobilePanel === id} onClick={() => setMobilePanel(id)}>{label}</button>)}
         </nav>
 
-        <div className={`study-session-grid ${sentencesOpen ? "sentences-open" : "sentences-collapsed"}`}>
-          <aside className="study-morpheme-column">
-            <header><span>MORPHEME NOTES</span><h2>词根词缀</h2><p>词根优先，先抓住最稳定的含义线索。</p></header>
+        {breakNextIndex !== null ? <section className="study-break-panel" aria-live="polite"><h2>本段完成</h2><p>今天已学 {completedCount} / {plan.appearanceCount} 词，可以休息一下。</p><div><button onClick={() => { setActiveIndex(breakNextIndex); setBreakNextIndex(null); }}>继续下一段</button><button onClick={closeSession}>返回安排</button></div></section> : <div className={`study-session-grid ${longSentences.length ? sentencesOpen ? "sentences-open" : "sentences-collapsed" : "without-sentences"}`}>
+          <aside className="study-morpheme-column" inert={ratingBusy}>
+            <header><span>MORPHEME NOTES</span><h2>词根词缀</h2></header>
             <div className="study-column-scroll">
-              {activeDetail ? orderedParts.length ? orderedParts.map((part, index) => <section className={`study-part-card ${part.type}`} key={`${part.id}-${part.order}`}>
+              {activeDetail ? studyPriority.length ? studyPriority.map((part, index) => <section className={`study-part-card ${part.type}`} key={`${part.id}-${part.order}`}>
                 <header><span>{rootLabels[part.type]} · {String(index + 1).padStart(2, "0")}</span><b>{part.spelling}</b></header>
                 <p>{part.meaning}</p>
-                <div><span>巧记</span><MarkdownBlock value={part.memoryMethod} empty="暂无独立巧记。" /></div>
-              </section>) : <div className="session-empty"><b>{activeDetail.spelling}</b><p>这个单词没有独立词根，按单词整体记忆。</p></div> : <div className="session-loading">正在准备词根词缀…</div>}
+                {part.memoryMethod?.trim() && <div><span>巧记</span><MarkdownBlock value={part.memoryMethod} /></div>}
+              </section>) : <div className="session-empty"><b>{activeDetail.spelling}</b><p>这个单词没有独立词根，按单词整体记忆。</p></div> : <div className="session-loading" role="status">{resource.failed ? <><p>单词详情加载失败</p><button onClick={resource.retry}>重新加载</button></> : "正在准备词根词缀…"}</div>}
             </div>
           </aside>
 
           <main className="study-word-column">
-            <div className="study-center-scroll">
+            <div className="study-center-scroll" inert={ratingBusy}>
               {activeDetail ? <>
                 <header className="study-word-hero">
                   <div><span>{group?.kind === "root" ? `${group.spelling} 词根家族` : "独立单词"}</span><FittedWordTitle word={activeDetail.spelling} guide={activeDetail.pronunciationGuide} /><div><strong>{activeDetail.pronunciation || "音标未提供"}</strong><AudioButton url={activeDetail.audioUrl} /></div></div>
                   <div><p>{activeDetail.definitionCn}</p></div>
                 </header>
                 <PronunciationMemory key={activeDetail.id} guide={activeDetail.pronunciationGuide} />
-                <section className="session-section"><header><div><span>MEMORY</span><h3>单词妙记</h3></div></header><MarkdownBlock value={wordMemoryDisplay(activeDetail.memoryMarkup)} /></section>
-                <section className="session-section etymology-study"><header><div><span>WORD BUILDING</span><h3>词根词缀分析</h3></div></header>
-                  {orderedParts.length > 0 && <div className="study-word-equation">{orderedParts.map((part, index) => <div className="study-word-equation-piece" key={`${part.id}-${part.order}`}>{index > 0 && <i aria-hidden="true">＋</i>}<span><b>{part.spelling}</b><small>{part.meaning}</small></span></div>)}</div>}
-                  <MarkdownBlock value={activeDetail.etymologyMarkup} empty="暂无独立构词分析，请结合词根词缀巧记整体记忆。" />
-                </section>
+                <section className="session-section"><header><div><span>MEMORY</span><h3>单词巧记</h3></div></header><MarkdownBlock value={wordMemoryDisplay(activeDetail.memoryMarkup)} /></section>
+                {(wordOrder.length > 0 || activeDetail.etymologyMarkup?.trim()) && <section className="session-section etymology-study"><header><div><span>WORD BUILDING</span><h3>词根词缀分析</h3></div></header>
+                  {wordOrder.length > 0 && <div className="study-word-equation">{wordOrder.map((part, index) => <div className="study-word-equation-piece" key={`${part.id}-${part.order}`}>{index > 0 && <i aria-hidden="true">＋</i>}<span><b>{part.spelling}</b><small>{part.meaning}</small></span></div>)}</div>}
+                  {activeDetail.etymologyMarkup?.trim() && <MarkdownBlock value={activeDetail.etymologyMarkup} />}
+                </section>}
                 <MeaningBridgeMemory detail={activeDetail} position={{ day: plan.day, index: activeIndex }} />
                 <SentenceSpotlight eyebrow="EXAMPLE" title="简单例句" rows={activeDetail.examples} index={simpleExampleIndex} onNext={() => setSimpleExampleIndex((simpleExampleIndex + 1) % activeDetail.examples.length)} />
                 <SentenceSpotlight eyebrow="EXAM" title="真题例句" rows={activeDetail.examExamples} index={examExampleIndex} onNext={() => setExamExampleIndex((examExampleIndex + 1) % activeDetail.examExamples.length)} exam />
-              </> : <div className="session-loading center">正在展开 {catalog.words[exposure.wordId]?.spelling}…</div>}
+              </> : <div className="session-loading center" role="status">{resource.failed ? <><p>单词详情加载失败</p><button onClick={resource.retry}>重新加载</button></> : <>正在展开 {catalog.words[exposure.wordId]?.spelling}…</>}</div>}
             </div>
             <footer className="study-session-controls">
+              {saving.error && <p className="session-save-error" role="alert">{saving.error} 请重新选择评级重试。</p>}
               <div className="session-rating">
                 {(["unmastered", "unclear", "mastered"] as Proficiency[]).map((level, index) => <button className={`${level} ${activeProficiency === level ? "active" : ""}`} disabled={!activeDetail || ratingBusy} onClick={() => void rate(level)} key={level}><kbd>{index + 1}</kbd><b>{proficiencyCopy[level].label}</b></button>)}
               </div>
               <div className={`session-navigation ${rated ? "has-next" : ""}`}>
-                <button disabled={activeIndex === 0} onClick={() => move(-1)}><kbd>←</kbd> 上一个</button>
+                <button disabled={activeIndex === 0 || ratingBusy} onClick={() => move(-1)}><kbd>←</kbd> 上一个</button>
                 <span
                   role="button"
                   tabIndex={0}
                   className="session-audio-trigger"
-                  onClick={() => activeDetail?.audioUrl && void new Audio(activeDetail.audioUrl).play().catch(() => undefined)}
+                  onClick={() => activeDetail?.audioUrl && void playPronunciation(activeDetail.audioUrl)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      if (activeDetail?.audioUrl) void new Audio(activeDetail.audioUrl).play().catch(() => undefined);
+                      if (activeDetail?.audioUrl) void playPronunciation(activeDetail.audioUrl);
                     }
                   }}
                   title="播放发音"
@@ -827,13 +805,13 @@ function StudyToday({
                   <kbd>空格</kbd> 发音
                 </span>
                 {rated && (
-                  <button disabled={activeIndex === exposures.length - 1} onClick={() => move(1)}>下一个 <kbd>→</kbd></button>
+                  <button disabled={activeIndex === exposures.length - 1 || ratingBusy} onClick={() => move(1)}>下一个 <kbd>→</kbd></button>
                 )}
               </div>
             </footer>
           </main>
 
-          <aside className="study-sentence-column">
+          {longSentences.length > 0 && <aside className="study-sentence-column" inert={ratingBusy}>
             <button className="sentence-toggle" aria-expanded={sentencesOpen} aria-controls="study-sentence-content" aria-label={sentencesOpen ? "收起长难句" : "展开长难句"} onClick={() => setSentencesOpen((open) => !open)}><span aria-hidden="true">‹</span><b>长难句</b></button>
             <div className="study-sentence-content" id="study-sentence-content" inert={!sentencesOpen && mobilePanel !== "sentences"}>
             <header><span>LONG SENTENCE</span><h2>长难句</h2><p>{longSentences.length ? `第 ${longSentenceIndex + 1} 句，共 ${longSentences.length} 句` : "跟随当前单词显示"}</p></header>
@@ -851,71 +829,59 @@ function StudyToday({
               <button disabled={longSentenceIndex === longSentences.length - 1} onClick={() => setLongSentenceIndex((current) => Math.min(longSentences.length - 1, current + 1))}>›</button>
             </footer>}
             </div>
-          </aside>
-        </div>
-      </div>}
+          </aside>}
+        </div>}
+      </div>, document.body)}
     </div>
   );
 }
 
-function ReviewToday({
-  catalog,
-  progress,
-  plan,
-  details,
-  loadWords,
-  saveProgress,
-}: {
+function ReviewToday({ catalog, progress, plan, details, loadWords, saveProgress, autoStart = false }: {
   catalog: Catalog;
   progress: AppProgress;
   plan: PlanDay;
   details: Record<string, WordDetail>;
   loadWords: (ids: string[], kind: "study" | "review" | "bookmarks", planDay: number) => Promise<boolean>;
   saveProgress: (progress: AppProgress) => Promise<void>;
+  autoStart?: boolean;
 }) {
   const [skipMastered, setSkipMastered] = useState(true);
   const [revealed, setRevealed] = useState(false);
-  const reviewLock = useRef(false);
+  const saving = useSessionSave();
   const day = progress.planDays[String(plan.day)];
   const candidates = reviewCandidates(progress, skipMastered);
   const queue = day?.reviewWordIds.filter((id) => !day.reviewedWordIds.includes(id)) ?? [];
   const currentId = queue[0];
   const finished = isPlanDayComplete(progress, plan.day);
   const hover = useWordHover();
-
+  const resource = useSessionWord(currentId, loadWords, "review", plan.day, queue.slice(1, 5));
   useEffect(() => {
     setRevealed(false);
+    stopPronunciation();
     if (hover && currentId) hover.setCurrentWordId(currentId);
   }, [currentId]);
-
-  useEffect(() => {
-    if (day?.reviewWordIds.length) void loadWords(day.reviewWordIds, "review", plan.day);
-  }, [plan.day, day?.reviewWordIds]);
-
-  const start = async () => {
-    if (!await loadWords(candidates, "review", plan.day)) return;
-    await saveProgress(startReviewDay(progress, plan.day, candidates, skipMastered));
+  const start = () => saving.run(
+    () => saveProgress(startReviewDay(progress, plan.day, candidates, skipMastered)),
+    () => setRevealed(false),
+  );
+  useEffect(() => { if (autoStart && !day) void start(); }, [autoStart]);
+  useEffect(() => () => stopPronunciation(), []);
+  const rate = (level: Proficiency) => {
+    if (!currentId || !details[currentId] || !revealed) return;
+    return saving.run(() => saveProgress(rateReviewWord(progress, plan.day, currentId, level)), () => setRevealed(false));
   };
-  const rate = async (level: Proficiency) => {
-    if (!currentId || reviewLock.current) return;
-    reviewLock.current = true;
-    try {
-      await saveProgress(rateReviewWord(progress, plan.day, currentId, level));
-      setRevealed(false);
-    } finally { reviewLock.current = false; }
-  };
-
+  const saveNotice = saving.error && <p className="session-save-error" role="alert">{saving.error} 请重试。</p>;
   if (!day) {
     const counts = proficiencyCounts(progress);
-    return <div className="page review-setup"><PageHeader eyebrow={`DAY ${plan.day} · REVIEW`} title="先决定本轮复习范围" description="复习覆盖此前学过的全部唯一单词，并按“未掌握 → 不清楚 → 已掌握”的顺序出现。" /><div className="review-setup-card"><span>本轮复习</span><b>{candidates.length}</b><small>个单词</small><label><input type="checkbox" checked={skipMastered} onChange={(event) => setSkipMastered(event.target.checked)} /><i />不复习已掌握单词 <em>默认开启</em></label><div><p>未掌握 <b>{counts.unmastered}</b></p><p>不清楚 <b>{counts.unclear}</b></p><p className={skipMastered ? "muted" : ""}>已掌握 <b>{counts.mastered}</b></p></div><button onClick={start}>开始判断式复习 <b>→</b></button></div></div>;
+    return <div className="page review-setup"><PageHeader eyebrow={`DAY ${plan.day} · REVIEW`} title="本轮复习" description="先回想词义，再判断熟练度。" /><div className="review-setup-card"><span>本轮复习</span><b>{candidates.length}</b><small>个单词</small><label><input type="checkbox" checked={skipMastered} disabled={saving.busy} onChange={(event) => setSkipMastered(event.target.checked)} /><i />跳过已掌握</label><div><p>未掌握 <b>{counts.unmastered}</b></p><p>不清楚 <b>{counts.unclear}</b></p><p className={skipMastered ? "muted" : ""}>已掌握 <b>{counts.mastered}</b></p></div>{saveNotice}<button disabled={saving.busy} onClick={() => void start()}>{saving.busy ? "正在准备…" : "开始复习"} <b>→</b></button></div></div>;
   }
-
-  if (finished) return <div className="page review-finished"><PageHeader eyebrow={`DAY ${plan.day} · COMPLETE`} title="今天的复习判断已经完成" description={`共重新判断 ${day.reviewedWordIds.length} 个单词，新的熟练度已经保存。`} /><div className="review-finished-mark">✓<span>REVIEW COMPLETE</span></div></div>;
+  if (finished) return <div className="page review-finished"><PageHeader eyebrow={`DAY ${plan.day} · COMPLETE`} title="今天的复习已完成" description={`已保存 ${day.reviewedWordIds.length} 个单词的判断。`} /><div className="review-finished-mark">✓<span>REVIEW COMPLETE</span></div></div>;
   const word = currentId ? catalog.words[currentId] : null;
   const detail = currentId ? details[currentId] ?? null : null;
-  return <div className="page review-session"><PageHeader eyebrow={`DAY ${plan.day} · REVIEW`} title="先回想，再点击查看详情" description={`本轮剩余 ${queue.length} 个单词；同一个单词只出现一次。`} aside={<div className="today-progress"><b>{day.reviewedWordIds.length}</b><span>/ {day.reviewWordIds.length}</span></div>} /><div className={`judgment-card ${revealed ? "revealed" : ""}`}>{!revealed && word ? <button className="judgment-front" onClick={() => setRevealed(true)}><span>点击屏幕查看详细情况</span><h2>{word.spelling}</h2><p>{word.pronunciation}</p><i>CLICK TO REVEAL</i></button> : <WordDetailPanel detail={detail} footer={<ProficiencyPicker value={currentId ? progress.words[currentId]?.proficiency : undefined} onChange={rate} title="重新判断这个单词的熟练度" />} />}</div></div>;
+  return <div className="page review-session"><PageHeader eyebrow={`DAY ${plan.day} · REVIEW`} title="先回想，再查看详情" description={`还剩 ${queue.length} 词`} aside={<div className="today-progress"><b>{day.reviewedWordIds.length}</b><span>/ {day.reviewWordIds.length}</span></div>} />{saveNotice}<div className={`judgment-card ${revealed ? "revealed" : ""}`}>
+    {!revealed && word ? <button className="judgment-front" disabled={saving.busy} onClick={() => setRevealed(true)}><span>查看词义</span><h2>{word.spelling}</h2><p>{word.pronunciation}</p></button> : detail ? <WordDetailPanel detail={detail} footer={<ProficiencyPicker disabled={saving.busy} value={currentId ? progress.words[currentId]?.proficiency : undefined} onChange={(level) => void rate(level)} title="重新判断熟练度" />} /> : <div className="vocabulary-loading" role="status"><p>{resource.failed ? "单词详情加载失败" : "正在加载单词详情…"}</p>{resource.failed && <button onClick={resource.retry}>重新加载</button>}</div>}
+  </div></div>;
 }
-
 function WordBrowseSession({ wordIds, initialIndex, category, progress, details, loadWords, planDay, saveProgress, onClose }: {
   wordIds: string[];
   initialIndex: number;
@@ -929,48 +895,20 @@ function WordBrowseSession({ wordIds, initialIndex, category, progress, details,
 }) {
   const [index, setIndex] = useState(initialIndex);
   const [ratedIds, setRatedIds] = useState<Set<string>>(() => new Set());
-  const [busy, setBusy] = useState(false);
+  const saving = useSessionSave();
+  const busy = saving.busy;
   const [closing, setClosing] = useState(false);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [retry, setRetry] = useState(0);
-  const [saveError, setSaveError] = useState("");
-  const ratingLock = useRef(false);
+  const ratingLock = saving.lock;
   const dialogRef = useRef<HTMLDivElement>(null);
-  const backRef = useRef<HTMLButtonElement>(null);
   const wordId = wordIds[index];
   const detail = details[wordId] ?? null;
   const rated = ratedIds.has(wordId);
   const requestClose = () => { if (!ratingLock.current) setClosing(true); };
 
-  useLayoutEffect(() => {
-    const shell = document.querySelector<HTMLElement>(".app-shell");
-    const main = document.querySelector<HTMLElement>(".app-content");
-    const trigger = document.activeElement as HTMLElement | null;
-    const oldInert = shell?.inert ?? false;
-    const oldOverflow = main?.style.overflow ?? "";
-    const scrollTop = main?.scrollTop ?? 0;
-    if (shell) shell.inert = true;
-    if (main) main.style.overflow = "hidden";
-    document.body.classList.add("vocabulary-session-active");
-    backRef.current?.focus({ preventScroll: true });
-    return () => {
-      if (shell) shell.inert = oldInert;
-      if (main) { main.style.overflow = oldOverflow; main.scrollTop = scrollTop; }
-      document.body.classList.remove("vocabulary-session-active");
-      const target = trigger?.isConnected ? trigger : document.querySelector<HTMLElement>('.vocabulary-filters [aria-pressed="true"]');
-      target?.focus({ preventScroll: true });
-    };
-  }, []);
-  useEffect(() => {
-    let active = true;
-    setLoadFailed(false);
-    void loadWords([wordId], "bookmarks", planDay).then((ok) => {
-      if (!active) return;
-      setLoadFailed(!ok);
-      if (ok && wordIds[index + 1]) void loadWords([wordIds[index + 1]], "bookmarks", planDay);
-    });
-    return () => { active = false; };
-  }, [wordId, planDay, retry]);
+  const resource = useSessionWord(wordId, loadWords, "bookmarks", planDay, wordIds.slice(index + 1, index + 5));
+  useSessionDialog({ active: true, dialogRef, bodyClass: "vocabulary-session-active", onClose: requestClose, busy: () => ratingLock.current });
+  useEffect(() => { stopPronunciation(); }, [wordId]);
+  useEffect(() => () => stopPronunciation(), []);
   useEffect(() => {
     if (!closing) return;
     document.querySelector<HTMLButtonElement>(".popover-close")?.click();
@@ -979,57 +917,36 @@ function WordBrowseSession({ wordIds, initialIndex, category, progress, details,
   }, [closing, onClose]);
   const move = (delta: number) => {
     if (ratingLock.current || closing || (delta > 0 && !rated)) return;
-    setSaveError("");
+    saving.setError("");
     setIndex((value) => Math.max(0, Math.min(wordIds.length - 1, value + delta)));
   };
   const rate = async (level: Proficiency) => {
     if (!detail || (category !== "search" && !progress.words[wordId]) || ratingLock.current || closing) return;
-    ratingLock.current = true; setBusy(true); setSaveError("");
-    try {
-      await saveProgress(category === "search" ? rateSearchWord(progress, wordId, level) : updateWordProficiency(progress, wordId, level));
+    await saving.run(() => saveProgress(category === "search" ? rateSearchWord(progress, wordId, level) : updateWordProficiency(progress, wordId, level)), () => {
       setRatedIds((previous) => new Set([...previous, wordId]));
       if (index < wordIds.length - 1) setIndex(index + 1);
       else setClosing(true);
-    } catch { setSaveError("评级未保存，请重试。"); }
-    finally { ratingLock.current = false; setBusy(false); }
+    });
   };
   useEffect(() => {
-    const back = (event: Event) => {
-      if (event.defaultPrevented) return;
-      event.preventDefault(); requestClose();
-    };
     const key = (event: KeyboardEvent) => {
-      const popupClose = document.querySelector<HTMLButtonElement>(".popover-close");
-      if (popupClose) {
-        if (event.key === "Escape") { event.preventDefault(); event.stopImmediatePropagation(); popupClose.click(); }
-        return;
-      }
-      if (event.key === "Escape") { event.preventDefault(); event.stopImmediatePropagation(); requestClose(); return; }
-      if (event.key === "Tab") {
-        const controls = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input, a[href], [tabindex="0"]') ?? []).filter((el) => el.getClientRects().length);
-        const first = controls[0], last = controls.at(-1);
-        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
-        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
-        return;
-      }
-      if ((event.target as HTMLElement)?.closest('input, textarea, select, [contenteditable="true"]')) return;
+      if (event.defaultPrevented || ratingLock.current || closing) return;
+      if ((event.target as HTMLElement)?.closest('input, textarea, select, [contenteditable="true"], .word-hover-popover, .sound-memory, .meaning-bridge')) return;
       if (event.key === "ArrowLeft" || event.key === "ArrowRight") { event.preventDefault(); move(event.key === "ArrowLeft" ? -1 : 1); }
       const shortcut: Record<string, Proficiency> = { "1": "unmastered", "2": "unclear", "3": "mastered" };
       if (shortcut[event.key] && !event.repeat) { event.preventDefault(); void rate(shortcut[event.key]); }
-      if (event.code === "Space" && event.target === document.body) { event.preventDefault(); if (detail?.audioUrl && !event.repeat) void new Audio(detail.audioUrl).play().catch(() => undefined); }
+      if (event.code === "Space" && event.target === document.body) { event.preventDefault(); if (detail?.audioUrl && !event.repeat) void playPronunciation(detail.audioUrl); }
     };
-    window.addEventListener("cyword-back", back);
-    window.addEventListener("keydown", key, true);
-    return () => { window.removeEventListener("cyword-back", back); window.removeEventListener("keydown", key, true); };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
   }, [index, detail, progress, rated, closing]);
-
-  return createPortal(<div ref={dialogRef} className={"vocabulary-session " + (closing ? "is-closing" : "")} role="dialog" aria-modal="true" aria-label={category === "search" ? "单词搜索全屏详情" : "词汇掌握全屏详情"}>
-    <header className="vocabulary-session-header"><button ref={backRef} onClick={requestClose} disabled={busy}>‹ 返回列表</button><b>{category === "search" ? "单词搜索" : proficiencyCopy[category].label}</b><span aria-live="polite">{index + 1} / {wordIds.length}</span></header>
-    <div className="vocabulary-session-content" key={wordId}>
-      {detail ? <WordDetailPanel detail={detail} /> : <div className="vocabulary-loading" role="status"><p>{loadFailed ? "单词详情加载失败，请重试。" : "正在加载单词详情…"}</p>{loadFailed && <button onClick={() => setRetry((value) => value + 1)}>重新加载</button>}</div>}
+  return createPortal(<div ref={dialogRef} tabIndex={-1} className={"vocabulary-session " + (closing ? "is-closing" : "")} role="dialog" aria-modal="true" aria-label={category === "search" ? "单词搜索全屏详情" : "词汇掌握全屏详情"}>
+    <header className="vocabulary-session-header"><button onClick={requestClose} disabled={busy}>‹ 返回列表</button><b>{category === "search" ? "单词搜索" : proficiencyCopy[category].label}</b><span aria-live="polite">{index + 1} / {wordIds.length}</span></header>
+    <div className="vocabulary-session-content" key={wordId} inert={busy}>
+      {detail ? <WordDetailPanel detail={detail} /> : <div className="vocabulary-loading" role="status"><p>{resource.failed ? "单词详情加载失败，请重试。" : "正在加载单词详情…"}</p>{resource.failed && <button onClick={resource.retry}>重新加载</button>}</div>}
     </div>
     <footer className="vocabulary-session-controls">
-      {saveError && <p role="alert">{saveError}</p>}
+      {saving.error && <p className="session-save-error" role="alert">{saving.error} 请重新选择评级重试。</p>}
       <div className="session-rating">{(Object.keys(proficiencyCopy) as Proficiency[]).map((level) => <button className={level + (rated && progress.words[wordId]?.proficiency === level ? " active" : "")} key={level} disabled={busy || !detail || closing} onClick={() => void rate(level)}>{proficiencyCopy[level].label}</button>)}</div>
       <nav className="vocabulary-session-navigation" aria-label="切换单词"><button onClick={() => move(-1)} disabled={index === 0 || busy || closing}>‹ 上一个</button><button onClick={() => move(1)} disabled={!rated || index === wordIds.length - 1 || busy || closing}>下一个 ›</button></nav>
     </footer>
@@ -1254,13 +1171,25 @@ function UpdateControl() {
   );
 }
 
+function LogoutNotice({ message, canLeave, busy, onRetry, onContinue, onCancel }: {
+  message: string; canLeave: boolean; busy: boolean; onRetry: () => void; onContinue: () => void; onCancel: () => void;
+}) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useSessionDialog({ active: true, dialogRef, onClose: onCancel, busy });
+  return createPortal(<div className="logout-notice-backdrop"><div ref={dialogRef} tabIndex={-1} className="logout-notice" role="dialog" aria-modal="true" aria-labelledby="logout-title"><h2 id="logout-title">退出登录</h2><p>{message}</p><div><button disabled={busy} onClick={onRetry}>{busy ? "正在保存…" : "重试"}</button>{canLeave && <button disabled={busy} onClick={onContinue}>继续退出</button>}<button disabled={busy} onClick={onCancel}>留在当前账号</button></div></div></div>, document.body);
+}
+
 function App() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [session, setSession] = useState<UserSession | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [sessionRestoreError, setSessionRestoreError] = useState("");
+  const authGeneration = useRef(0);
   const synced = useSyncedProgress(session, catalog, () => {
+    authGeneration.current += 1;
     setSession(null);
     setSessionExpired(true);
+    setLogoutNotice(null);
     setSelectedDayNumber(null);
     setError("");
     void window.cyword.clearSession?.().catch((reason) => console.warn("清除过期会话失败:", reason));
@@ -1268,11 +1197,13 @@ function App() {
   const progress = synced.progress;
   const [sessionChecked, setSessionChecked] = useState(false);
   const [view, transitionView, viewTransitionPhase] = useSoftTransitionState<ViewName>("home");
-  const [details, setDetails] = useState<Record<string, WordDetail>>({});
-  const detailsRef = useRef<Record<string, WordDetail>>({});
-  const detailsGeneration = useRef(0);
-  const wordLoadRef = useRef<Promise<boolean> | null>(null);
-  const [loadingWords, setLoadingWords] = useState(false);
+  const { details, loadWords } = useWordResources(catalog);
+  const saveLock = useRef(false);
+  const [savingProgress, setSavingProgress] = useState(false);
+  const [autoStartStudy, setAutoStartStudy] = useState(false);
+  const [logoutBusy, setLogoutBusy] = useState(false);
+  const logoutLock = useRef(false);
+  const [logoutNotice, setLogoutNotice] = useState<{ message: string; canLeave: boolean } | null>(null);
   const [error, setError] = useState("");
   const [selectedDayNumber, setSelectedDayNumber] = useState<number | null>(null);
 
@@ -1282,6 +1213,8 @@ function App() {
 
   useEffect(() => {
     const back = (event: Event) => {
+      if (event.defaultPrevented) return;
+      if (saveLock.current || logoutLock.current) { event.preventDefault(); return; }
       const close = document.querySelector<HTMLButtonElement>(".popover-close");
       if (close) { event.preventDefault(); event.stopImmediatePropagation(); close.click(); return; }
       if (document.body.classList.contains("study-mode-active") || document.body.classList.contains("vocabulary-session-active")) return;
@@ -1306,6 +1239,7 @@ function App() {
         }
       } catch (err) {
         console.warn("Failed to restore session:", err);
+        setSessionRestoreError("读取受保护登录状态失败。本机学习记录已保留，请重启应用重试或重新登录。");
       } finally {
         setSessionChecked(true);
       }
@@ -1319,62 +1253,42 @@ function App() {
     }).catch((reason) => setError(reason instanceof Error ? reason.message : String(reason)));
   }, []);
 
-  const loadWords = async (ids: string[], kind: "study" | "review" | "bookmarks", planDay: number) => {
-    if (!catalog) return false;
-    const missing = [...new Set(ids)].filter((id) => !detailsRef.current[id]);
-    if (!missing.length) return true;
-    const isMainSessionKind = kind === "study" || kind === "review";
-    const generation = detailsGeneration.current;
-    if (isMainSessionKind) setLoadingWords(true);
-
-    try {
-      const response = await window.cyword.readWords({
-        dataVersion: catalog.dataVersion,
-        planDay,
-        kind,
-        wordIds: missing,
-      });
-      if (!response?.words || missing.some((id) => !response.words[id])) {
-        throw new Error("词库服务返回的数据不完整，请重试");
-      }
-      if (generation !== detailsGeneration.current) return false;
-      detailsRef.current = { ...detailsRef.current, ...response.words };
-      setDetails(detailsRef.current);
-      return true;
-    }
-    catch (reason) {
-      if (isMainSessionKind) {
-        setError(reason instanceof Error ? reason.message : String(reason));
-      } else {
-        console.warn("Background word load failed:", reason);
-      }
-      return false;
-    }
-    finally {
-      if (isMainSessionKind) setLoadingWords(false);
-    }
-  };
-
   const saveProgress = async (next: AppProgress) => {
+    if (saveLock.current || logoutLock.current || logoutNotice) throw new Error("正在保存，请稍后重试。");
+    saveLock.current = true;
+    setSavingProgress(true);
     try { await synced.save(next); }
-    catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); throw reason; }
+    finally { saveLock.current = false; setSavingProgress(false); }
   };
-
-  const handleLogout = async () => {
-    try {
-      await synced.flush();
-      if (window.cyword?.clearSession) {
-        await window.cyword.clearSession();
-      } else {
-        localStorage.removeItem("cyword_session");
-      }
-    } catch (err) {
-      console.warn("Logout error:", err);
-    }
+  const finishLogout = async () => {
+    if (window.cyword?.clearSession) {
+      if (!await window.cyword.clearSession()) throw new Error("退出失败：无法清除本机登录状态，请重试。");
+    } else localStorage.removeItem("cyword_session");
+    stopPronunciation();
+    setLogoutNotice(null);
+    setSelectedDayNumber(null);
+    setAutoStartStudy(false);
+    transitionView("home");
     setSession(null);
   };
-
-  if (sessionChecked && !session) return <><AuthModal notice={sessionExpired ? "登录已过期，请重新登录。本机学习记录已保留。" : undefined} onSuccess={(s) => { setSessionExpired(false); setSession(s); }} /><UpdateControl /></>;
+  const handleLogout = async (continueWithoutCloud = false) => {
+    if (saveLock.current || logoutLock.current) return;
+    logoutLock.current = true;
+    setLogoutBusy(true);
+    const generation = authGeneration.current;
+    try {
+      if (!continueWithoutCloud) {
+        const result = await synced.flush();
+        if (generation !== authGeneration.current) return;
+        if (!result.localSaved) { setLogoutNotice({ message: result.message || "本机保存失败，请重试后退出。", canLeave: false }); return; }
+        if (!result.cloudSynced) { setLogoutNotice({ message: "本机记录已保存，但云端同步未完成。继续退出后，请勿清理当前设备数据；在其他设备上可能暂时看不到本次进度。", canLeave: true }); return; }
+      }
+      await finishLogout();
+    } catch (reason) {
+      if (generation === authGeneration.current) setLogoutNotice({ message: reason instanceof Error ? reason.message : "退出失败，请重试。", canLeave: false });
+    } finally { logoutLock.current = false; setLogoutBusy(false); }
+  };
+  if (sessionChecked && !session) return <><AuthModal notice={sessionRestoreError || (sessionExpired ? "登录已过期，请重新登录。本机学习记录已保留。" : undefined)} onSuccess={(s) => { authGeneration.current += 1; setLogoutNotice(null); setSessionRestoreError(""); setSessionExpired(false); setSession(s); }} /><UpdateControl /></>;
   if (error) return <div className="fatal-error"><span>CYWORD</span><h1>暂时无法继续</h1><p>{error}</p><button onClick={() => location.reload()}>重新连接</button></div>;
   if (session && !progress && synced.status === "error") return <div className="fatal-error"><h1>进度读取失败</h1><p>{synced.message}</p><button onClick={() => location.reload()}>重试</button></div>;
   if (!catalog || !progress || !sessionChecked) return <div className="loading-screen"><div>Cy</div><p>正在铺开今天的词书计划…</p></div>;
@@ -1382,25 +1296,26 @@ function App() {
   const plan = buildPlan(catalog);
   const currentDayNumber = currentPlanDayNumber(progress, plan.length);
   const activeDayNumber = selectedDayNumber ?? currentDayNumber;
-  const current = plan[activeDayNumber - 1] ?? plan[0];
+  const current = plan[currentDayNumber - 1] ?? plan[0];
+  const selected = plan[activeDayNumber - 1] ?? current;
 
   const navigate = (nextView: ViewName) => {
-    if (nextView !== view) {
+    if (saveLock.current || logoutLock.current || logoutNotice) return;
+    setAutoStartStudy(false);
+    if (nextView !== view || (nextView === "today" && selectedDayNumber !== null)) {
       if (nextView === "today") {
         setSelectedDayNumber(null);
       }
-      detailsGeneration.current += 1;
-      detailsRef.current = {};
-      setDetails({});
+      stopPronunciation();
       transitionView(nextView);
     }
   };
 
-  const handleSelectPlanDay = (dayNumber: number) => {
+  const handleSelectPlanDay = (dayNumber: number, start = false) => {
+    if (saveLock.current || logoutLock.current || logoutNotice) return;
     setSelectedDayNumber(dayNumber);
-    detailsGeneration.current += 1;
-    detailsRef.current = {};
-    setDetails({});
+    setAutoStartStudy(start);
+    stopPronunciation();
     transitionView("today");
   };
 
@@ -1409,15 +1324,15 @@ function App() {
       catalog={catalog}
       details={details}
       loadWords={loadWords}
-      planDay={current?.day}
+      planDay={selected.day}
     >
       <MeaningBridgeProvider catalog={catalog} progress={progress}>
       <div className="app-wallpaper" aria-hidden="true" />
       <div className="app-shell">
-        <header className="mobile-header"><a className="mobile-brand" href="#" onClick={(event) => { event.preventDefault(); navigate("home"); }}>CYword</a><details className="mobile-account"><summary aria-label={`我的账号，${synced.message}`}><i className={`sync-dot ${synced.status}`} aria-hidden="true" /><span>我的</span><svg className="account-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg></summary><div><b>{session?.user.email}</b><p className="account-sync-message"><i className={`sync-dot ${synced.status}`} aria-hidden="true" />{synced.message}</p><button onClick={() => void synced.sync()}>立即同步</button><button onClick={() => void handleLogout()}>退出登录</button></div></details></header>
+        <header className="mobile-header"><a className="mobile-brand" href="#" onClick={(event) => { event.preventDefault(); navigate("home"); }}>CYword</a><details className="mobile-account"><summary aria-label={`我的账号，${synced.message}`}><i className={`sync-dot ${synced.status}`} aria-hidden="true" /><span>我的</span><svg className="account-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg></summary><div><b>{session?.user.email}</b><p className="account-sync-message"><i className={`sync-dot ${synced.status}`} aria-hidden="true" />{synced.message}</p><button onClick={() => void synced.sync()}>立即同步</button><button disabled={savingProgress || logoutBusy} onClick={() => void handleLogout()}>退出登录</button></div></details></header>
         <aside className="sidebar">
           <div className="brand"><b>CYword</b></div>
-          <nav>{navItems.map((item) => <button aria-label={item.label} aria-current={view === item.id ? "page" : undefined} className={view === item.id ? "active" : ""} key={item.id} onClick={() => navigate(item.id)}><i>{item.glyph}</i><b>{item.label}</b></button>)}</nav>
+          <nav>{navItems.map((item) => <button disabled={savingProgress || logoutBusy || Boolean(logoutNotice)} aria-label={item.label} aria-current={view === item.id ? "page" : undefined} className={view === item.id ? "active" : ""} key={item.id} onClick={() => navigate(item.id)}><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d={item.path} /></svg></i><b>{item.label}</b></button>)}</nav>
           {session && (
             <footer className="sidebar-user-footer">
               <button className={`sync-status ${synced.status}`} title={synced.message} onClick={() => void synced.sync()}><i className={`sync-dot ${synced.status}`} />{synced.message}</button>
@@ -1429,20 +1344,20 @@ function App() {
                   {session.user.email}
                 </span>
               </div>
-              <button className="btn-logout" onClick={handleLogout}>退出登录</button>
+              <button className="btn-logout" disabled={savingProgress || logoutBusy} onClick={() => void handleLogout()}>退出登录</button>
             </footer>
           )}
         </aside>
         <main className={`app-content soft-transition transition-${viewTransitionPhase}`}>
-          {view === "home" && <HomeView catalog={catalog} progress={progress} plan={plan} current={current} goToday={() => handleSelectPlanDay(currentDayNumber)} />}
+          {view === "home" && <HomeView catalog={catalog} progress={progress} plan={plan} current={current} goToday={() => handleSelectPlanDay(currentDayNumber, !isPlanDayComplete(progress, currentDayNumber))} showPlan={() => handleSelectPlanDay(currentDayNumber)} />}
           {view === "plan" && <PlanView plan={plan} progress={progress} current={plan[currentDayNumber - 1] ?? current} onSelectDay={handleSelectPlanDay} />}
-          {view === "today" && (current.kind === "study" ? <StudyToday catalog={catalog} progress={progress} plan={current} details={details} loadWords={loadWords} saveProgress={saveProgress} /> : <ReviewToday catalog={catalog} progress={progress} plan={current} details={details} loadWords={loadWords} saveProgress={saveProgress} />)}
+          {view === "today" && <>{selected.day !== current.day && <div className="day-preview-banner">正在查看 Day {selected.day}<button disabled={savingProgress} onClick={() => handleSelectPlanDay(current.day)}>返回今日</button></div>}{selected.kind === "study" ? <StudyToday key={`${session?.user.id}:${selected.day}`} catalog={catalog} progress={progress} plan={selected} details={details} loadWords={loadWords} saveProgress={saveProgress} autoStart={autoStartStudy} preview={selected.day !== current.day} /> : <ReviewToday key={`${session?.user.id}:${selected.day}`} catalog={catalog} progress={progress} plan={selected} details={details} loadWords={loadWords} saveProgress={saveProgress} autoStart={autoStartStudy} />}</>}
           {view === "vocabulary" && <VocabularyView catalog={catalog} progress={progress} details={details} loadWords={loadWords} planDay={current.day} saveProgress={saveProgress} />}
           {view === "search" && <WordSearchView catalog={catalog} progress={progress} details={details} loadWords={loadWords} planDay={current.day} saveProgress={saveProgress} />}
         </main>
         {!session && <AuthModal onSuccess={(s) => setSession(s)} />}
         <UpdateControl />
-        {loadingWords && <div className="word-loading">正在获取今天需要的词汇…</div>}
+        {logoutNotice && <LogoutNotice {...logoutNotice} busy={logoutBusy} onRetry={() => void handleLogout()} onContinue={() => void handleLogout(true)} onCancel={() => setLogoutNotice(null)} />}
       </div>
       </MeaningBridgeProvider>
     </WordHoverProvider>

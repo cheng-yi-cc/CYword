@@ -42,13 +42,63 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check for an existing GitHub Release
+        id: published
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          $headers = @{ Authorization = "Bearer $env:GH_TOKEN"; Accept = "application/vnd.github+json"; "X-GitHub-Api-Version" = "2026-03-10" }
+          $tag = [Uri]::EscapeDataString($env:RELEASE_TAG)
+          $response = Invoke-WebRequest -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/releases/tags/$tag" -Headers $headers -SkipHttpErrorCheck
+          if ($response.StatusCode -eq 404) {
+            "exists=false" >> $env:GITHUB_OUTPUT
+          } elseif ($response.StatusCode -eq 200) {
+            $published = $response.Content | ConvertFrom-Json
+            if ($published.tag_name -cne $env:RELEASE_TAG -or $published.draft) {
+              throw "The existing release must be published and match the requested tag."
+            }
+            $version = node -p "require('./package.json').version"
+            $requiredAssets = @("CYword-Setup-$version.exe", "CYword-Setup-$version.exe.blockmap", "latest.yml")
+            foreach ($name in $requiredAssets) {
+              $asset = @($published.assets | Where-Object { $_.name -ceq $name })
+              if ($asset.Count -ne 1 -or $asset[0].state -ne "uploaded" -or $asset[0].size -le 0) {
+                throw "Existing release asset is missing or incomplete: $name. Published assets will not be overwritten."
+              }
+            }
+            "exists=true" >> $env:GITHUB_OUTPUT
+          } else {
+            throw "GitHub Release lookup failed with HTTP $($response.StatusCode); refusing to treat it as a missing release."
+          }
+
       - name: Run tests
+        if: steps.published.outputs.exists == 'false'
         run: npm test
 
       - name: Build NSIS installer
+        if: steps.published.outputs.exists == 'false'
         run: npm run dist
 
+      - name: Restore published release assets
+        if: steps.published.outputs.exists == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          # 重跑沿用首次发布的原件，避免重建产生新的 releaseDate 或安装包字节。
+          $version = node -p "require('./package.json').version"
+          New-Item -ItemType Directory -Path release -Force | Out-Null
+          gh release download $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --dir release `
+            --pattern "CYword-Setup-$version.exe" --pattern "CYword-Setup-$version.exe.blockmap" --pattern "latest.yml"
+          if ($LASTEXITCODE -ne 0) { throw "Failed to restore the published release assets." }
+
+      - name: Verify installer and updater metadata
+        run: npm run publish:site:release -- release --prepare-only
+
       - name: Publish GitHub Release
+        if: steps.published.outputs.exists == 'false'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -69,16 +119,11 @@ jobs:
           }
 
           $releaseAssets = @($installers[0].FullName, $metadata[0].FullName, $blockmaps[0].FullName)
-          gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY *> $null
-          if ($LASTEXITCODE -eq 0) {
-            gh release upload $env:RELEASE_TAG $releaseAssets --repo $env:GITHUB_REPOSITORY --clobber
-          } else {
-            gh release create $env:RELEASE_TAG $releaseAssets `
-              --repo $env:GITHUB_REPOSITORY `
-              --verify-tag `
-              --title "CYword $env:RELEASE_TAG" `
-              --generate-notes
-          }
+          gh release create $env:RELEASE_TAG $releaseAssets `
+            --repo $env:GITHUB_REPOSITORY `
+            --verify-tag `
+            --title "CYword $env:RELEASE_TAG" `
+            --generate-notes
 
           if ($LASTEXITCODE -ne 0) {
             throw "GitHub Release publishing failed."
