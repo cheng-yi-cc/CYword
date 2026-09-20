@@ -21,11 +21,14 @@ import { AuthModal } from "./components/AuthModal";
 import { useSyncedProgress } from "./useSyncedProgress";
 import { applyCurriculum } from "./curriculum";
 import { WordHoverProvider, useWordHover } from "./components/WordHoverContext";
+import { MeaningBridgeMemory, MeaningBridgeProvider } from "./components/MeaningBridgeMemory";
+import { PronunciationMemory, PronunciationSpelling } from "./components/PronunciationMemory";
 import type {
   AppProgress,
   Catalog,
   PlanDay,
   Proficiency,
+  PronunciationGuide,
   StudyGroup,
   UpdateStatus,
   UserSession,
@@ -121,22 +124,42 @@ function MarkdownBlock({ value, empty = "当前数据没有提供这部分内容
 
 function AudioButton({ url }: { url?: string }) {
   const [playing, setPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    setPlaying(false);
+    return () => {
+      audioRef.current?.pause();
+      audioRef.current = null;
+    };
+  }, [url]);
   if (!url) return null;
   const play = async () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+      setPlaying(false);
+      return;
+    }
+    const audio = new Audio(url);
+    const clear = () => {
+      if (audioRef.current !== audio) return;
+      audioRef.current = null;
+      setPlaying(false);
+    };
     try {
       setPlaying(true);
-      const audio = new Audio(url);
-      audio.addEventListener("ended", () => setPlaying(false), { once: true });
-      audio.addEventListener("error", () => setPlaying(false), { once: true });
+      audioRef.current = audio;
+      audio.addEventListener("ended", clear, { once: true });
+      audio.addEventListener("error", clear, { once: true });
       await audio.play();
     } catch {
-      setPlaying(false);
+      clear();
     }
   };
   return <button className="audio-button" onClick={play}>{playing ? "停止" : "播放发音"}</button>;
 }
 
-function FittedWordTitle({ word }: { word: string }) {
+function FittedWordTitle({ word, guide }: { word: string; guide?: PronunciationGuide }) {
   const titleRef = useRef<HTMLHeadingElement>(null);
 
   useLayoutEffect(() => {
@@ -145,7 +168,9 @@ function FittedWordTitle({ word }: { word: string }) {
     const fitTitle = () => {
       title.style.removeProperty("font-size");
       const availableWidth = title.clientWidth;
-      const naturalWidth = title.scrollWidth;
+      const naturalWidth = guide
+        ? Array.from(title.querySelectorAll(".sound-spelling-part")).reduce((width, part) => width + part.getBoundingClientRect().width, 0)
+        : title.scrollWidth;
       if (!availableWidth || naturalWidth <= availableWidth) return;
       const naturalSize = Number.parseFloat(window.getComputedStyle(title).fontSize);
       title.style.fontSize = `${Math.max(28, Math.floor(naturalSize * availableWidth / naturalWidth))}px`;
@@ -155,9 +180,9 @@ function FittedWordTitle({ word }: { word: string }) {
     const observer = new ResizeObserver(fitTitle);
     if (title.parentElement) observer.observe(title.parentElement);
     return () => observer.disconnect();
-  }, [word]);
+  }, [word, guide]);
 
-  return <h1 ref={titleRef}>{word}</h1>;
+  return <h1 ref={titleRef} className={guide ? "has-sound-spelling" : undefined}><PronunciationSpelling word={word} guide={guide} /></h1>;
 }
 
 function ProficiencyPicker({
@@ -293,7 +318,7 @@ function WordDetailPanel({
       <header className="word-hero">
         <div>
           <span className="eyebrow">{detail.bookName || detail.bookCode}</span>
-          <h2>{detail.spelling}</h2>
+          <h2><PronunciationSpelling word={detail.spelling} guide={detail.pronunciationGuide} /></h2>
           <div className="pronunciation"><strong>{detail.pronunciation || "音标未提供"}</strong><AudioButton url={detail.audioUrl} /></div>
         </div>
         <div className="word-meaning"><p>{detail.definitionCn}</p></div>
@@ -306,9 +331,11 @@ function WordDetailPanel({
       </div>
       <div className="detail-scroll">
         {tab === "core" && <>
+          <PronunciationMemory key={detail.id} guide={detail.pronunciationGuide} />
           <Section eyebrow="MEMORY" title="联想巧记"><MarkdownBlock value={detail.memoryMarkup} /></Section>
           <Section eyebrow="MORPHEME" title="词根词缀构成"><MorphologyRail detail={detail} /></Section>
           <Section eyebrow="COMPOSITION" title="词根词缀分析"><MarkdownBlock value={detail.etymologyMarkup} /></Section>
+          <MeaningBridgeMemory detail={detail} />
           <Section eyebrow="ACCUMULATION" title="词根词缀积累"><MarkdownBlock value={detail.rootAffixAccumulation} /></Section>
           <Section eyebrow="NOTES" title="补充笔记"><MarkdownBlock value={detail.rootAffixNotes} /></Section>
         </>}
@@ -643,7 +670,7 @@ function StudyToday({
         transitionSession(false);
         return;
       }
-      if (editing) return;
+      if (editing || target?.closest(".sound-memory, .meaning-bridge, .word-hover-popover")) return;
       if (event.key === "ArrowLeft") {
         event.preventDefault();
         move(-1);
@@ -746,14 +773,16 @@ function StudyToday({
             <div className="study-center-scroll">
               {activeDetail ? <>
                 <header className="study-word-hero">
-                  <div><span>{group?.kind === "root" ? `${group.spelling} 词根家族` : "独立单词"}</span><FittedWordTitle word={activeDetail.spelling} /><div><strong>{activeDetail.pronunciation || "音标未提供"}</strong><AudioButton url={activeDetail.audioUrl} /></div></div>
+                  <div><span>{group?.kind === "root" ? `${group.spelling} 词根家族` : "独立单词"}</span><FittedWordTitle word={activeDetail.spelling} guide={activeDetail.pronunciationGuide} /><div><strong>{activeDetail.pronunciation || "音标未提供"}</strong><AudioButton url={activeDetail.audioUrl} /></div></div>
                   <div><p>{activeDetail.definitionCn}</p></div>
                 </header>
+                <PronunciationMemory key={activeDetail.id} guide={activeDetail.pronunciationGuide} />
                 <section className="session-section"><header><div><span>MEMORY</span><h3>巧记</h3></div></header><MarkdownBlock value={activeDetail.memoryMarkup} /></section>
                 <section className="session-section etymology-study"><header><div><span>WORD BUILDING</span><h3>词根词缀分析</h3></div></header>
                   {orderedParts.length > 0 && <div className="study-word-equation">{orderedParts.map((part, index) => <div className="study-word-equation-piece" key={`${part.id}-${part.order}`}>{index > 0 && <i aria-hidden="true">＋</i>}<span><b>{part.spelling}</b><small>{part.meaning}</small></span></div>)}</div>}
                   <MarkdownBlock value={activeDetail.etymologyMarkup} empty="暂无独立构词分析，请结合词根词缀巧记整体记忆。" />
                 </section>
+                <MeaningBridgeMemory detail={activeDetail} position={{ day: plan.day, index: activeIndex }} />
                 <SentenceSpotlight eyebrow="EXAMPLE" title="简单例句" rows={activeDetail.examples} index={simpleExampleIndex} onNext={() => setSimpleExampleIndex((simpleExampleIndex + 1) % activeDetail.examples.length)} />
                 <SentenceSpotlight eyebrow="EXAM" title="真题例句" rows={activeDetail.examExamples} index={examExampleIndex} onNext={() => setExamExampleIndex((examExampleIndex + 1) % activeDetail.examExamples.length)} exam />
               </> : <div className="session-loading center">正在展开 {catalog.words[exposure.wordId]?.spelling}…</div>}
@@ -1258,6 +1287,7 @@ function App() {
       loadWords={loadWords}
       planDay={current?.day}
     >
+      <MeaningBridgeProvider catalog={catalog} progress={progress}>
       <div className="app-wallpaper" aria-hidden="true" />
       <div className="app-shell">
         <header className="mobile-header"><a className="mobile-brand" href="#" onClick={(event) => { event.preventDefault(); navigate("home"); }}>Cy<span>词根记忆</span></a><details className="mobile-account"><summary aria-label={`我的账号，${synced.message}`}><i className={`sync-dot ${synced.status}`} aria-hidden="true" /><span>我的</span><svg className="account-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg></summary><div><b>{session?.user.email}</b><p className="account-sync-message"><i className={`sync-dot ${synced.status}`} aria-hidden="true" />{synced.message}</p><button onClick={() => void synced.sync()}>立即同步</button><button onClick={() => void handleLogout()}>退出登录</button></div></details></header>
@@ -1289,6 +1319,7 @@ function App() {
         <UpdateControl />
         {loadingWords && <div className="word-loading">正在获取今天需要的词汇…</div>}
       </div>
+      </MeaningBridgeProvider>
     </WordHoverProvider>
   );
 }

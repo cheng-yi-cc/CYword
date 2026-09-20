@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { parse } from "csv-parse/sync";
+import { loadPronunciationGuides } from "./pronunciation-data.mjs";
+import { loadMeaningBridges } from "./meaning-bridge-data.mjs";
 
 const projectRoot = process.cwd();
 const bookCode = process.env.CYWORD_BOOK ?? process.argv[2] ?? "cet6";
@@ -46,6 +48,8 @@ for (const table of tableCatalog) {
 }
 
 const words = readCsv("words.csv");
+const pronunciationGuides = loadPronunciationGuides(bookDir, manifest, words);
+const meaningBridges = loadMeaningBridges(bookDir, manifest, words, readCsv("relation_words.csv"));
 const wordIds = new Set(words.map((row) => row.word_id));
 if (wordIds.size !== words.length) throw new Error("words.csv contains duplicate word_id values");
 assertCount("Unique words", words.length, manifest.statistics.uniqueWords);
@@ -106,6 +110,9 @@ const summary = {
   book: `${manifest.name} (${bookCode})`,
   canonicalFiles: actualFiles.length,
   uniqueWords: words.length,
+  pronunciationGuides: pronunciationGuides.size,
+  meaningBridgeRecords: meaningBridges.size,
+  wordsWithMeaningBridges: [...meaningBridges.values()].filter(bridges => bridges.length).length,
   wordForeignKeyOrphans: 0,
   rootMarkupRows: roots.length,
   trueRoots: trueRootIds.size,

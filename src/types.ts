@@ -71,7 +71,24 @@ export interface RootPart {
   memoryMethod: string;
 }
 
+export interface PronunciationGuide {
+  /** 对应当前词书读音；分块用于学习，不表示词根或词典断字。 */
+  pronunciation: string;
+  chunks: Array<{ text: string; ipa: string; stress: "none" | "primary" | "secondary" }>;
+  notes: string[];
+}
+
+export interface MeaningBridge {
+  pairId: string;
+  anchorId: string;
+  anchorSpelling: string;
+  relation: "near_synonym" | "antonym";
+  explanation: string;
+}
+
 export interface WordDetail extends WordSummary {
+  meaningBridges?: MeaningBridge[];
+  pronunciationGuide?: PronunciationGuide;
   audioUrl: string;
   memoryMarkup: string;
   etymologyMarkup: string;

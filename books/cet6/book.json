@@ -28,7 +28,10 @@
     "studyDays": 30,
     "reviewDays": 10,
     "planDays": 40,
-    "studyDayAppearanceRange": [178, 187],
+    "studyDayAppearanceRange": [
+      178,
+      187
+    ],
     "grouping": "true-root-or-solo",
     "cycle": "study-study-study-review"
   },
@@ -52,5 +55,18 @@
     "table_catalog.csv",
     "word_markup_links.csv",
     "words.csv"
-  ]
+  ],
+  "pronunciationEnhancement": {
+    "schemaVersion": 1,
+    "wordCount": 5166,
+    "guidesFile": "enhancements/pronunciation-guides.jsonl",
+    "reviewFile": "enhancements/pronunciation-review.jsonl"
+  },
+  "meaningBridgeEnhancement": {
+    "schemaVersion": 1,
+    "wordCount": 5166,
+    "recordsFile": "enhancements/meaning-bridges.jsonl",
+    "reviewFile": "enhancements/meaning-bridge-reviews.jsonl",
+    "wordReviewFile": "enhancements/meaning-bridge-word-review.jsonl"
+  }
 }

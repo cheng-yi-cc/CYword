@@ -6,6 +6,7 @@ import React, {
   useCallback,
   useMemo,
   useEffect,
+  useLayoutEffect,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
@@ -30,7 +31,7 @@ interface HoverState {
 }
 
 interface WordHoverContextValue {
-  showHover: (wordRef: string, element: HTMLElement) => void;
+  showHover: (wordRef: string, element: HTMLElement, familiar?: boolean, pinned?: boolean) => void;
   hideHover: () => void;
   keepHover: () => void;
   checkWordStatus: (wordRef: string) => { isUnlearned: boolean; targetDay?: number; wordId?: string; inBook: boolean };
@@ -89,10 +90,10 @@ function PopoverCard({
     placement: "bottom",
   });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const rect = state.rect;
-    const popoverWidth = 360;
-    const estimatedHeight = 360;
+    const popoverWidth = cardRef.current?.offsetWidth ?? 395;
+    const estimatedHeight = cardRef.current?.offsetHeight ?? 360;
 
     let left = rect.left + rect.width / 2 - popoverWidth / 2;
     if (left + popoverWidth > window.innerWidth - 16) {
@@ -111,11 +112,11 @@ function PopoverCard({
       top = Math.max(16, rect.top - estimatedHeight - 10);
     } else {
       placement = "bottom";
-      top = rect.bottom + 8;
+      top = Math.min(rect.bottom + 8, Math.max(16, window.innerHeight - estimatedHeight - 16));
     }
 
     setCoords({ top, left, placement });
-  }, [state.rect]);
+  }, [state.rect, detail]);
 
   const spelling = detail?.spelling || summary?.spelling || state.spelling;
   const pronunciation = detail?.pronunciation || summary?.pronunciation;
@@ -153,10 +154,10 @@ function PopoverCard({
         <button className="popover-close" onClick={onClose} aria-label="关闭关联词">×</button>
         <div className="popover-meta">
           {state.isUnlearned ? (
-            <span className="popover-badge unlearned">未学单词 · 第 {state.targetDay} 天</span>
+            <span className="popover-badge unlearned">计划后序词 · 第 {state.targetDay} 天</span>
           ) : (
             <span className="popover-badge learned">
-              {state.targetDay ? `第 ${state.targetDay} 天已学` : "词书词汇"}
+              {state.targetDay ? `学习计划 · 第 ${state.targetDay} 天` : "词书词汇"}
             </span>
           )}
         </div>
@@ -236,6 +237,7 @@ export function WordHoverProvider({
   const [hoverState, setHoverState] = useState<HoverState | null>(null);
   const showTimerRef = useRef<number | null>(null);
   const hideTimerRef = useRef<number | null>(null);
+  const pinnedRef = useRef(false);
 
   useEffect(() => {
     setCurrentWordId(initialCurrentWordId);
@@ -320,12 +322,14 @@ export function WordHoverProvider({
   };
 
   const showHover = useCallback(
-    (wordRef: string, element: HTMLElement) => {
+    (wordRef: string, element: HTMLElement, familiar = false, pinned = false) => {
+      if (pinnedRef.current && !pinned) return;
       clearTimers();
       let clean = wordRef.toLowerCase().trim();
       clean = clean.replace(/-(?:根|缀|基|前缀|后缀|词根|词缀|词基)$/u, "");
       const targetApp = appearanceMap.get(clean);
       if (!targetApp) return;
+      pinnedRef.current = pinned;
 
       const rect = element.getBoundingClientRect();
       const status = checkWordStatus(wordRef);
@@ -334,7 +338,7 @@ export function WordHoverProvider({
         setHoverState({
           wordId: targetApp.wordId,
           spelling: targetApp.spelling,
-          isUnlearned: status.isUnlearned,
+          isUnlearned: familiar ? false : status.isUnlearned,
           targetDay: targetApp.day,
           rect,
         });
@@ -348,6 +352,7 @@ export function WordHoverProvider({
   );
 
   const hideHover = useCallback(() => {
+    if (pinnedRef.current) return;
     if (showTimerRef.current) {
       window.clearTimeout(showTimerRef.current);
       showTimerRef.current = null;
@@ -365,10 +370,18 @@ export function WordHoverProvider({
   }, []);
 
   useEffect(() => {
+    const dismissOutside = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest(".word-hover-popover, .meaning-bridge button, [data-word-ref]")) return;
+      clearTimers();
+      pinnedRef.current = false;
+      setHoverState(null);
+    };
     const handleScrollOrKey = (e: Event) => {
       if (e.type === "keydown") {
         if ((e as KeyboardEvent).key !== "Escape") return;
         clearTimers();
+        pinnedRef.current = false;
         setHoverState(null);
         return;
       }
@@ -378,14 +391,17 @@ export function WordHoverProvider({
           return;
         }
         clearTimers();
+        pinnedRef.current = false;
         setHoverState(null);
       }
     };
     window.addEventListener("scroll", handleScrollOrKey, true);
     window.addEventListener("keydown", handleScrollOrKey);
+    window.addEventListener("pointerdown", dismissOutside);
     return () => {
       window.removeEventListener("scroll", handleScrollOrKey, true);
       window.removeEventListener("keydown", handleScrollOrKey);
+      window.removeEventListener("pointerdown", dismissOutside);
       clearTimers();
     };
   }, []);
@@ -433,13 +449,13 @@ export function WordHoverProvider({
       {children}
       {hoverState &&
         createPortal(
-          <><div className="popover-backdrop" onClick={() => { clearTimers(); setHoverState(null); }} /><PopoverCard
+          <><div className="popover-backdrop" onClick={() => { clearTimers(); pinnedRef.current = false; setHoverState(null); }} /><PopoverCard
             state={hoverState}
             detail={details[hoverState.wordId]}
             summary={catalog?.words[hoverState.wordId]}
             onMouseEnter={keepHover}
             onMouseLeave={hideHover}
-            onClose={() => { clearTimers(); setHoverState(null); }}
+            onClose={() => { clearTimers(); pinnedRef.current = false; setHoverState(null); }}
           /></>,
           document.body,
         )}

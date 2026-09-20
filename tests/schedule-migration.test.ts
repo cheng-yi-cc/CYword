@@ -32,6 +32,8 @@ test("moving study days preserves ratings and review sessions, and credits only 
 
 test("stale day completion cannot finish a different day, and old devices cannot double count moved exposures", () => {
   const old = oldProgress();
+  old.planDays[1].startedAt = "2026-09-01T10:00:00.000Z";
+  old.planDays[2].startedAt = "2026-09-02T10:00:00.000Z";
   const expanded = { ...catalog, schedule: [plan(1, [a, c]), plan(2, [b])] } as Catalog;
   const partial = structuredClone(old); delete partial.planDays[2];
   const next = reconcileCompletion(partial, expanded);
@@ -39,7 +41,10 @@ test("stale day completion cannot finish a different day, and old devices cannot
   const migrated = reconcileCompletion(old, catalog);
   const merged = reconcileCompletion(mergeProgress(migrated, old), catalog);
   assert.equal(merged.words.w1.exposures, 1);
-  assert.deepEqual(merged.planDays, migrated.planDays);
+  // 同一天编号的旧记录合并时保留较早开始时间；迁移完成情况不应因此改变。
+  const expectedDays = structuredClone(migrated.planDays);
+  expectedDays[1].startedAt = old.planDays[1].startedAt;
+  assert.deepEqual(merged.planDays, expectedDays);
   assert.deepEqual(reconcileCompletion(mergeProgress(merged, old), catalog), merged);
 });
 

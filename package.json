@@ -8,6 +8,8 @@
   "main": "electron/main.cjs",
   "scripts": {
     "data:verify": "node scripts/verify-book-data.mjs",
+    "data:audit:pronunciation": "node scripts/audit-pronunciation.mjs",
+    "data:audit:meaning-bridges": "node scripts/audit-meaning-bridges.mjs",
     "data:build": "npm run data:verify && node scripts/build-app-data.mjs",
     "data:api": "npm run data:build && node scripts/build-book-api-data.mjs",
     "dev": "npm run data:build && concurrently -k \"vite\" \"wait-on http-get://127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\"",

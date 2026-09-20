@@ -5,7 +5,9 @@ const path = require("node:path");
 const { createHash, randomUUID } = require("node:crypto");
 
 const devUrl = process.env.VITE_DEV_SERVER_URL;
-const bookApiUrl = process.env.CYWORD_BOOK_API_URL || "https://cyword.chengyi.me/api/books/cet6";
+const bookApiUrl = process.env.CYWORD_BOOK_API_URL || (devUrl
+  ? `${devUrl.replace(/\/$/, "")}/api/books/cet6`
+  : "https://cyword.chengyi.me/api/books/cet6");
 const authApiUrl = devUrl
   ? `${devUrl.replace(/\/$/, "")}/api/auth`
   : "https://cyword.chengyi.me/api/auth";

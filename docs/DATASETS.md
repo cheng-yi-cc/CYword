@@ -18,6 +18,8 @@ books/
 
 ## 六级数据基线
 
+六级另含 `enhancements/` 音形分块和词义桥接增强，由 `book.json.pronunciationEnhancement` 与 `meaningBridgeEnhancement` 指定。两者均有 5166 词的逐词记录，独立于原 19 张规范表；以熟带生另外保存逐对审核，2180 词有候选，运行时仍按熟词范围筛选。字段、读音纠正、来源和验收范围见 [增强数据说明](../books/cet6/enhancements/README.md)。构建前同时校验增强数据，缺失、过期或还原失败会终止构建。
+
 | 指标 | 数量 |
 | --- | ---: |
 | 元数据标称单词 | 5169 |

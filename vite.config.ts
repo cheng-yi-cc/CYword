@@ -4,6 +4,8 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { validProgress } from "./website/server/progress-sync.ts";
 import { emptyProgress } from "./src/progress.ts";
 import type { AppProgress } from "./src/types.ts";
+import type { WordsRequest } from "./src/types.ts";
+import { readLocalBook } from "./scripts/local-book-preview.ts";
 
 async function readRequestJson(request: IncomingMessage, timeoutMs = 5_000): Promise<unknown> {
   if ((request as unknown as { body?: unknown }).body) {
@@ -83,7 +85,11 @@ function localDataPreview() {
         if (realAuth) return next();
         try {
           let payload: unknown;
-          if (url === "/api/progress") {
+          if (request.method === "GET" && url === "/api/books/cet6/catalog") {
+            payload = await readLocalBook("data");
+          } else if (request.method === "POST" && url === "/api/books/cet6/words") {
+            payload = await readLocalBook("data", await readRequestJson(request) as WordsRequest);
+          } else if (url === "/api/progress") {
             const token = (request.headers.authorization || "").replace(/^Bearer /, "");
             const user = Array.from(devUsers.values()).find((item) => `dev-jwt-token-${item.id}` === token);
             if (!user) { response.statusCode = 401; payload = { error: "登录已过期，请重新登录后同步" }; }

@@ -11,7 +11,11 @@ npm run dev
 
 `npm run dev` 会先校验六级规范表并生成 `data/`，随后启动 Vite 和 Electron。修改 CSV 后重新启动即可重新编译；不要直接编辑 `data/`。
 
-手机/浏览器预览运行 `npm run dev:mobile`（5173，默认模拟登录与同步）；`CYWORD_REAL_AUTH=1` 切换生产认证。桌面词书 API 可由 `CYWORD_BOOK_API_URL` 覆盖，安卓工具链及签名变量见 [ANDROID.md](ANDROID.md)。这些变量不改变正式云端的部署状态。
+手机/浏览器预览运行 `npm run dev:mobile`（5173，默认模拟登录与同步）。开发服务默认读取本地编译的六级词书，Electron 开发窗口同样连接该服务，因此本地增强数据可直接预览。`CYWORD_REAL_AUTH=1` 切换生产认证、同步及词书代理。桌面词书 API 可由 `CYWORD_BOOK_API_URL` 覆盖，安卓工具链及签名变量见 [ANDROID.md](ANDROID.md)。这些变量不改变正式云端的部署状态。
+
+以音记形：进入「今日学习」打开任意单词，标题显示分块与重音，点击「展开音形对照」检查对应关系。`npm run data:audit:pronunciation` 输出 5166 词逐条结构检查报告到 `.work/pronunciation/acceptance.json`。修改增强 JSONL 后需重新编译并刷新预览。
+
+以熟带生：在词根词缀分析下方查看近义参照或反义对照，悬停、聚焦或点按参照词可打开悬浮卡。只显示本书计划中较早出现或实际已有学习记录的参照；没有合格参照的词不出现该板块。`npm run data:audit:meaning-bridges` 输出全书审核统计和每词首次位置的显示/隐藏结果到 `.work/meaning-bridges/acceptance.json`。纯浏览器可运行 `npm run dev:web`，打开 `http://127.0.0.1:5173/`。
 
 ## 常用检查
 

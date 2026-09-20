@@ -265,6 +265,11 @@ body.study-mode-active .app-wallpaper {
 .session-section > header button { padding: 6px 9px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); background: #faf7f2; font-size: 11px; }
 .session-section > header button:hover { color: var(--terracotta-dark); border-color: #d8b29f; }
 .session-section > .rich-text { font-size: 15px; line-height: 1.9; }
+.meaning-bridge-anchor { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.meaning-bridge-anchor > span { font-size: 12px; color: var(--muted); }
+.meaning-bridge-anchor > button { border: 0; border-bottom: 1px solid var(--terracotta-dark); background: transparent; padding: 5px 2px; color: var(--terracotta-dark); font: 500 23px Georgia, serif; }
+.meaning-bridge-anchor > button:focus-visible { outline: 2px solid var(--terracotta-dark); outline-offset: 4px; }
+.meaning-bridge > p { margin: 12px 0 0; font-size: 14px; line-height: 1.9; overflow-wrap: anywhere; }
 .study-word-equation { display: flex; flex-wrap: wrap; align-items: stretch; gap: 9px 10px; margin-bottom: 15px; }
 .study-word-equation-piece { display: flex; min-width: 0; align-items: center; gap: 10px; }
 .study-word-equation-piece > i { flex: 0 0 14px; color: var(--faint); font-style: normal; text-align: center; }
@@ -316,6 +321,30 @@ body.study-mode-active .app-wallpaper {
 .session-empty p { max-width: 240px; margin: 8px auto 0; font-size: 13px; line-height: 1.7; }
 
 /* Word detail shared by learning, review and vocabulary. */
+.sound-spelling { letter-spacing: -.025em; overflow-wrap: anywhere; }
+.sound-spelling-part { display: inline-block; font-weight: inherit; }
+.sound-spelling-part + .sound-spelling-part::before { content: "·"; color: var(--faint); font-weight: 400; padding: 0 .035em; }
+.sound-spelling-part.stress-primary { text-decoration: underline; text-decoration-thickness: .055em; text-underline-offset: .13em; }
+.study-word-hero h1.has-sound-spelling { white-space: normal; font-size: clamp(32px, 3.8vw, 54px); line-height: 1.22; }
+.sound-memory { margin: 14px 0 20px; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+.sound-memory-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sound-memory-bar > span { font-size: 12px; font-weight: 600; color: var(--muted); }
+.sound-memory-bar > button { display: inline-flex; gap: 12px; align-items: center; padding: 8px 0 8px 8px; border: 0; background: transparent; color: var(--terracotta-dark); font-size: 12px; min-height: 36px; }
+.sound-memory-help, .sound-memory-caption { margin: 8px 0 12px; color: var(--muted); font-size: 11px; line-height: 1.7; }
+.sound-chunks { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; }
+.sound-chunk { display: grid; grid-template-rows: auto auto 16px; gap: 8px; min-width: 64px; max-width: 100%; padding: 12px 12px 6px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink); background: var(--paper); text-align: center; overflow-wrap: anywhere; }
+.sound-chunk b { font: 500 22px/1.15 Georgia, serif; }
+.sound-chunk > span { padding-top: 8px; border-top: 1px solid var(--line); font: 15px/1.35 "Segoe UI", sans-serif; }
+.sound-chunk small { color: var(--muted); font-size: 10px; }
+.sound-chunk.stress-primary b { text-decoration: underline; text-underline-offset: 4px; }
+.sound-chunk.selected { border-color: var(--terracotta-dark); box-shadow: inset 0 0 0 1px var(--terracotta-dark); background: var(--peach); }
+.sound-chunk:focus-visible, .sound-memory-bar > button:focus-visible { outline: 2px solid var(--terracotta-dark); outline-offset: 3px; }
+.sound-notes { margin: 12px 0 4px; padding-left: 18px; color: var(--ink); font-size: 12px; line-height: 1.8; }
+.sound-memory-caption { margin-bottom: 0; }
+@media (max-width: 520px) {
+  .sound-chunk { min-width: 58px; padding-inline: 9px; }
+  .sound-chunk b { font-size: 20px; }
+}
 .word-detail { min-width: 0; background: var(--glass-bg-heavy); }
 .word-detail.compact { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
 .word-detail.compact .word-hero { flex-shrink: 0; }

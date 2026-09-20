@@ -5,7 +5,7 @@
 ## 数据流
 
 ```text
-books/<code>/book.json + csv/*.csv
+books/<code>/book.json + csv/*.csv + enhancements/*.jsonl（可选）
                 │
                 ├─ scripts/verify-book-data.mjs  校验文件、行数、外键和基线
                 │
@@ -30,6 +30,10 @@ books/<code>/book.json + csv/*.csv
 `books/` 是唯一应手工维护和提交的词书源数据，原巧记正文严禁修改。`data/` 是构建生成物；完整目录及单词详情不进入安装包。`data/curriculum.json` 仅包含分组 ID、词 ID 与日程顺序，由两端共用的 `applyCurriculum` 编译进应用，校验远端分组成员一致后应用；远端 `dataVersion` 保留用于请求原有分片，因此重排不要求替换线上词书，也不改变旧客户端的日程。服务端发布物按内容哈希生成不可变版本：每个单词只进入首次出现的学习日分片，清单记录单词到分片的映射。所有版本文件上传完成后才更新 `current.json`。
 
 ## 桌面边界
+
+音形增强在编译时合入 `WordDetail.pronunciationGuide`，不参与排课或进度模型。`PronunciationMemory` 在学习主卡和详情复用；字段缺失时隐藏增强入口。结构验收及源音标快照检查由 `pronunciation-data.mjs` 执行，候选生成器不在构建/运行时调用。Vite 开发模式从 `data/` 提供本地接口，正式应用继续请求线上版本化词书。
+
+词义桥接由 `meaning-bridge-data.mjs` 校验逐对审核及全书逐词结果，编译为可选的 `WordDetail.meaningBridges`。`MeaningBridgeProvider` 根据同一排课的曝光顺序与学习记录筛选同书参照；学习页传入本次曝光位置，详情默认首次位置。`MeaningBridgeMemory` 在构词分析后显示一个候选，复用 `WordHoverContext`，无候选则隐藏。新关系不增加排课依赖，不改写原巧记或进度。
 
 Electron 主进程通过固定 HTTPS 地址读取词书目录和每日批量词汇，并提供进度原子读写、同步请求及基于 electron-updater 的版本更新管理 IPC。渲染进程启用上下文隔离、关闭 Node 集成并开启沙箱。进度原子写入 `userData/accounts/<账号哈希>/progress.json`；旧版 `progress.json` 保留且只向已知归属账号迁移。网页预览使用 localStorage，安卓通过 `src/platform.ts` 使用 Capacitor 原生 HTTP 与 Preferences。
 

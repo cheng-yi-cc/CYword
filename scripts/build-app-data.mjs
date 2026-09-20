@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { parse } from "csv-parse/sync";
 import { extractDependencies, buildLearningSchedule } from "./learning-schedule.mjs";
+import { loadPronunciationGuides } from "./pronunciation-data.mjs";
+import { loadMeaningBridges } from "./meaning-bridge-data.mjs";
 
 const projectRoot = process.cwd();
 const bookCode = process.env.CYWORD_BOOK ?? process.argv[2] ?? "cet6";
@@ -43,7 +45,9 @@ function cleanWord(row) {
   return {
     id: row.word_id,
     spelling: row.spelling,
-    pronunciation: row.pronunciation || "",
+    pronunciation: pronunciationGuides.get(row.word_id)?.pronunciation ?? row.pronunciation ?? "",
+    ...(pronunciationGuides.has(row.word_id) ? { pronunciationGuide: pronunciationGuides.get(row.word_id) } : {}),
+    ...(meaningBridges.get(row.word_id)?.length ? { meaningBridges: meaningBridges.get(row.word_id) } : {}),
     definitionCn: row.definition_cn || "",
     audioUrl: row.audio_url || "",
     memoryMarkup: row.memory_markup || "",
@@ -68,6 +72,8 @@ function cleanWord(row) {
 }
 
 const wordsRaw = readCsv("words.csv");
+const pronunciationGuides = loadPronunciationGuides(bookDir, bookManifest, wordsRaw);
+const meaningBridges = loadMeaningBridges(bookDir, bookManifest, wordsRaw, readCsv("relation_words.csv"));
 const rootsRaw = readCsv("root_markups.csv");
 const examples = indexMany(readCsv("examples.csv"));
 const examExamples = indexMany(readCsv("exam_examples.csv"));
