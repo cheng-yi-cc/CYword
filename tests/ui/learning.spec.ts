@@ -19,8 +19,31 @@ const catalog = {
 };
 const empty = { version: 2, planDays: {}, words: {}, bookmarks: {}, reviewHistory: [] };
 
-async function setup(page: Page, learned: string[] = ["a"], sessionReadFails = false) {
-  await page.addInitScript(({ catalog, details, empty, learned, sessionReadFails }) => {
+test("Android update menu retries and downloads only on request without changing progress", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await setup(page, ["a"], false, true);
+  const wordsBefore = await page.evaluate(() => (window as any).__test.local.words);
+  await page.locator(".mobile-account summary").click();
+  const menu = page.locator(".mobile-account .android-update-menu");
+  await expect(menu).toContainText("当前版本 0.1.2");
+  await expect(menu).toContainText("检查失败，请重试");
+  await menu.getByRole("button", { name: "检查更新" }).click();
+  await expect(menu).toContainText("已是最新版本");
+  await page.evaluate(() => (window as any).__updateTest.notify({ status: "available", currentVersion: "0.1.2", release: { version: "0.1.3" } }));
+  const notice = page.getByRole("complementary", { name: "发现应用更新" });
+  await expect(notice).toContainText("新版本 0.1.3");
+  expect(await page.evaluate(() => (window as any).__updateTest.downloads)).toBe(0);
+  await notice.getByRole("button", { name: "稍后更新" }).click();
+  await expect(notice).toBeHidden();
+  await menu.getByRole("button", { name: "下载新版" }).click();
+  await expect(menu).toContainText("已打开浏览器");
+  expect(await page.evaluate(() => (window as any).__updateTest.downloads)).toBe(1);
+  expect(await page.evaluate(() => (window as any).__test.local.words)).toEqual(wordsBefore);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+async function setup(page: Page, learned: string[] = ["a"], sessionReadFails = false, androidUpdates = false) {
+  await page.addInitScript(({ catalog, details, empty, learned, sessionReadFails, androidUpdates }) => {
     const initial = structuredClone(empty) as any;
     for (const id of learned) initial.words[id] = { learnedAt: "2026-09-19T00:00:00.000Z", lastSeenAt: "2026-09-19T00:00:00.000Z", proficiency: "unclear", exposures: 0, reviewCount: 0 };
     const state = { local: initial, remote: structuredClone(empty), revision: 0, writes: 0, wordRequests: [] as string[][], failLoads: false, failWrites: false, offline: false, writeGate: null as Promise<void> | null, releaseWrite: null as (() => void) | null, loadGate: null as Promise<void> | null, releaseLoad: null as (() => void) | null, clearFails: false, sessionCleared: false };
@@ -47,7 +70,19 @@ async function setup(page: Page, learned: string[] = ["a"], sessionReadFails = f
         return { dataVersion: catalog.dataVersion, wordCount: request.wordIds.length, words: Object.fromEntries(request.wordIds.map(id => [id, details[id]])) };
       },
     } as any;
-  }, { catalog, details, empty, learned, sessionReadFails });
+    if (androidUpdates) {
+      let snapshot: any = { status: "error", currentVersion: "0.1.2", message: "检查失败，请重试" };
+      const listeners = new Set<() => void>();
+      const notify = (next: any) => { snapshot=next; listeners.forEach(listener=>listener()); };
+      (window as any).__updateTest = { downloads: 0, notify };
+      window.cyword.androidUpdates = {
+        getSnapshot: () => snapshot,
+        subscribe: listener => { listeners.add(listener); return () => { listeners.delete(listener); }; },
+        check: async () => notify({ status: "current", currentVersion: "0.1.2" }),
+        download: async () => { (window as any).__updateTest.downloads++; notify({ ...snapshot, message: "已打开浏览器，下载后点击 APK 安装" }); },
+      };
+    }
+  }, { catalog, details, empty, learned, sessionReadFails, androidUpdates });
   await page.goto("/");
   if (sessionReadFails) {
     await expect(page.locator(".auth-message")).toContainText("读取受保护登录状态失败");

@@ -40,6 +40,7 @@
 - 新标签工作流先创建 GitHub Release，再把安装器、blockmap 和版本化 `latest.yml` 上传到 R2，最后原子更新 `releases/current.json`。不得覆盖旧版本内容或提前写入指针。
 - 首次写入 v2 发布清单前必须先部署兼容 v1/v2 的下载函数，发布脚本检查线上能力后才能写入 R2。重跑已有 Release 时复用原资产；同版本内容不一致须拒绝，上传前校验完整元数据和 blockmap 分块哈希。
 - 桌面自动更新使用官网 generic 源 `/downloads/`，不得恢复为 GitHub provider。`website/src/release.ts` 只保留动态指针不可用时的已核验回退版本。
+- 安卓检查更新只读取官网独立安卓清单，与安装应用的版本号比较；启动及回到前台自动检查（间隔 6 小时），“我的”保留手动检查与失败重试。下载须由用户点击，浏览器只打开经校验的官网版本化 APK 地址，不影响学习进度或 Windows 更新源。
 - GitHub Actions 只使用限定到 `cyword-downloads` 的 R2 Object Read & Write S3 凭据。`chengyi.me` 的权威 DNS 为 Cloudflare；只维护 `cyword` Pages CNAME 与 `auth.cyword` 的 Resend 验证记录，不修改根域、`www` 或其他项目记录。
 - R2 已获用户授权开通和超额计费；不要自行升级 Workers 付费套餐。凭据、`.dev.vars*`、`.wrangler/`、生成类型及 `.work/` 过程文件不得提交。
 

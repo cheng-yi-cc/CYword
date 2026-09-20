@@ -94,6 +94,17 @@ body.study-mode-active .app-wallpaper {
 .app-shell > main { min-width: 0; height: 100%; overflow: auto; }
 
 .update-control { position: fixed; z-index: 20; top: 16px; right: 20px; }
+.android-update-menu { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.android-update-menu p { margin: 0 0 8px; font-size: 13px; color: var(--muted); }
+.android-update-menu p:empty { display: none; }
+.android-update-menu button { min-height: 44px; margin-right: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
+.android-update-notice { position: fixed; z-index: 1100; right: 16px; bottom: calc(88px + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 10px; width: min(390px,calc(100vw - 32px)); padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); box-shadow: var(--shadow); }
+.android-update-notice > div { flex: 1; min-width: 0; }
+.android-update-notice strong { font-size: 14px; }
+.android-update-notice p { margin: 6px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
+.android-update-notice button { min-height: 44px; padding: 8px 10px; border: 0; border-radius: 8px; background: var(--action); color: white; white-space: nowrap; }
+.android-update-notice button:last-child { background: transparent; color: var(--muted); }
+body.study-mode-active .android-update-notice { display: none; }
 .auth-overlay ~ .update-control { z-index: 1001; }
 .update-control button { display: grid; width: 34px; height: 34px; padding: 0; place-items: center; border: 1px solid var(--line); border-radius: 11px 9px 12px 8px; color: var(--terracotta-dark); background: rgba(252,251,248,.94); box-shadow: 0 8px 22px rgba(83,65,43,.11); transition: transform .16s ease, border-color .16s ease, background .16s ease; }
 .update-control button:hover:not(:disabled) { border-color: #d8a48f; background: #fffaf6; transform: translateY(-1px); }

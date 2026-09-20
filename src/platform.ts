@@ -2,6 +2,7 @@ import { Capacitor, CapacitorHttp, registerPlugin } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
 import { App as NativeApp } from "@capacitor/app";
 import type { AppProgress, UserSession, WordsRequest } from "./types";
+import { AndroidUpdateService } from "./android-updates";
 
 export const isNative = Capacitor.isNativePlatform();
 const DeviceStorage = registerPlugin<{
@@ -70,6 +71,17 @@ export function installPlatform() {
     clearSession: async () => { if (isNative) await DeviceStorage.clearSession(); else await storage.remove("cyword_session"); return true; },
   };
   if (isNative) {
+    if (Capacitor.getPlatform() === "android") {
+      const AppUpdates = registerPlugin<{ openDownload(options: { url: string }): Promise<void> }>("AppUpdates");
+      const updates = new AndroidUpdateService({
+        version: async () => (await NativeApp.getInfo()).version,
+        release: () => json("/downloads/android/latest.json"),
+        open: url => AppUpdates.openDownload({ url }),
+      });
+      window.cyword.androidUpdates = updates;
+      void updates.check(true);
+      window.addEventListener("cyword-resume", () => { void updates.check(true); });
+    }
     document.documentElement.classList.add("native-app");
     void NativeApp.addListener("backButton", () => {
       const event = new Event("cyword-back", { cancelable: true });

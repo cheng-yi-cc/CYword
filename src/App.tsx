@@ -20,6 +20,7 @@ import {
   vocabularyOverview,
 } from "./progress";
 import { AuthModal } from "./components/AuthModal";
+import { AndroidUpdateMenu } from "./components/AndroidUpdates";
 import { useSyncedProgress } from "./useSyncedProgress";
 import { wordMemoryDisplay } from "./memory-display";
 import { bookWordOrder, searchBookWords } from "./word-search";
@@ -1329,7 +1330,7 @@ function App() {
       <MeaningBridgeProvider catalog={catalog} progress={progress}>
       <div className="app-wallpaper" aria-hidden="true" />
       <div className="app-shell">
-        <header className="mobile-header"><a className="mobile-brand" href="#" onClick={(event) => { event.preventDefault(); navigate("home"); }}>CYword</a><details className="mobile-account"><summary aria-label={`我的账号，${synced.message}`}><i className={`sync-dot ${synced.status}`} aria-hidden="true" /><span>我的</span><svg className="account-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg></summary><div><b>{session?.user.email}</b><p className="account-sync-message"><i className={`sync-dot ${synced.status}`} aria-hidden="true" />{synced.message}</p><button onClick={() => void synced.sync()}>立即同步</button><button disabled={savingProgress || logoutBusy} onClick={() => void handleLogout()}>退出登录</button></div></details></header>
+        <header className="mobile-header"><a className="mobile-brand" href="#" onClick={(event) => { event.preventDefault(); navigate("home"); }}>CYword</a><details className="mobile-account"><summary aria-label={`我的账号，${synced.message}`}><i className={`sync-dot ${synced.status}`} aria-hidden="true" /><span>我的</span><svg className="account-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg></summary><div><b>{session?.user.email}</b><p className="account-sync-message"><i className={`sync-dot ${synced.status}`} aria-hidden="true" />{synced.message}</p><button onClick={() => void synced.sync()}>立即同步</button><button disabled={savingProgress || logoutBusy} onClick={() => void handleLogout()}>退出登录</button><AndroidUpdateMenu /></div></details></header>
         <aside className="sidebar">
           <div className="brand"><b>CYword</b></div>
           <nav>{navItems.map((item) => <button disabled={savingProgress || logoutBusy || Boolean(logoutNotice)} aria-label={item.label} aria-current={view === item.id ? "page" : undefined} className={view === item.id ? "active" : ""} key={item.id} onClick={() => navigate(item.id)}><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d={item.path} /></svg></i><b>{item.label}</b></button>)}</nav>
@@ -1344,7 +1345,7 @@ function App() {
                   {session.user.email}
                 </span>
               </div>
-              <button className="btn-logout" disabled={savingProgress || logoutBusy} onClick={() => void handleLogout()}>退出登录</button>
+              <AndroidUpdateMenu /><button className="btn-logout" disabled={savingProgress || logoutBusy} onClick={() => void handleLogout()}>退出登录</button>
             </footer>
           )}
         </aside>
