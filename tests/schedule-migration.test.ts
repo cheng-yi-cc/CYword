@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { emptyProgress, reconcileCompletion, rateStudyWord, startReviewDay, rateReviewWord } from "../src/progress.ts";
+import { buildPlan, planDayFraction, emptyProgress, reconcileCompletion, rateStudyWord, startReviewDay, rateReviewWord } from "../src/progress.ts";
 import { mergeProgress } from "../src/sync-merge.ts";
 import { ProgressSync } from "../src/sync-client.ts";
 import type { Catalog, PlanDay, StudyGroup } from "../src/types.ts";
@@ -17,7 +17,7 @@ function oldProgress() {
   return rateReviewWord(progress, 4, "w2", "unclear");
 }
 
-test("moving study days preserves ratings and review sessions, and credits only completed group exposures", () => {
+test("moving study days preserves actual exposures and credits learned words in their new groups", () => {
   const old = oldProgress(), snapshot = structuredClone(old), next = reconcileCompletion(old, catalog);
   assert.deepEqual(next.words, old.words);
   assert.deepEqual(next.reviewHistory, old.reviewHistory);
@@ -25,7 +25,9 @@ test("moving study days preserves ratings and review sessions, and credits only 
   assert.deepEqual(next.planDays[1].ratedExposureKeys, ["solo:c:w4"]);
   assert.deepEqual(next.planDays[3].ratedExposureKeys, ["root:a:w1", "root:a:w2"]);
   assert.ok(next.planDays[1].completedAt && next.planDays[3].completedAt);
-  assert.equal(next.planDays[2], undefined, "w1 in another root still needs its own exposure");
+  assert.deepEqual(next.planDays[2].ratedExposureKeys, [], "crediting a known word does not invent a rating event");
+  assert.equal(planDayFraction(next, buildPlan(catalog)[1]), 0.5);
+  assert.equal(next.planDays[2].completedAt, undefined, "the unlearned w3 still needs a rating");
   assert.deepEqual(reconcileCompletion(next, catalog), next);
   assert.deepEqual(old, snapshot, "migration does not mutate its input");
 });
@@ -33,7 +35,7 @@ test("moving study days preserves ratings and review sessions, and credits only 
 test("stale day completion cannot finish a different day, and old devices cannot double count moved exposures", () => {
   const old = oldProgress();
   const expanded = { ...catalog, schedule: [plan(1, [a, c]), plan(2, [b])] } as Catalog;
-  const partial = structuredClone(old); delete partial.planDays[2];
+  const partial = structuredClone(old); delete partial.planDays[2]; delete partial.words.w4;
   const next = reconcileCompletion(partial, expanded);
   assert.equal(next.planDays[1].completedAt, undefined);
   const migrated = reconcileCompletion(old, catalog);

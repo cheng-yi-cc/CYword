@@ -12,15 +12,16 @@ function formatAuthError(err: unknown): string {
 
 interface AuthModalProps {
   onSuccess: (session: UserSession) => void;
+  notice?: string;
 }
 
-export function AuthModal({ onSuccess }: AuthModalProps) {
+export function AuthModal({ onSuccess, notice }: AuthModalProps) {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [countdown, setCountdown] = useState(0);
   const [sendingCode, setSendingCode] = useState(false);
   const [verifying, setVerifying] = useState(false);
-  const [message, setMessage] = useState<{ type: "info" | "error" | "success"; text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: "info" | "error" | "success"; text: string } | null>(notice ? { type: "info", text: notice } : null);
   const timerRef = useRef<number | null>(null);
 
   useEffect(() => {

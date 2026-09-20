@@ -76,6 +76,7 @@ export function buildPlan(catalog: Catalog): PlanDay[] {
       studyDay: study.day,
       groupIds: study.groupIds,
       exposureOrder: study.exposureOrder,
+      exposureKeys: studyExposures(study, catalog.groups).map((item) => item.key),
       appearanceCount: study.appearanceCount,
       uniqueWordCount: study.uniqueWordCount,
     });
@@ -99,6 +100,14 @@ export function studyExposures(plan: Pick<PlanDay, "groupIds" | "exposureOrder">
     groupId: id, wordId, key: `${id}:${wordId}`,
   })));
   return plan.exposureOrder ? plan.exposureOrder.map(index => flat[index]) : flat;
+}
+
+/** Learned words count in every scheduled group without inventing rating events. */
+export function completedStudyExposureKeys(progress: AppProgress, plan: PlanDay): string[] {
+  const rated = progress.planDays[String(plan.day)]?.ratedExposureKeys ?? [];
+  if (!plan.exposureKeys) return rated;
+  const actual = new Set(rated);
+  return plan.exposureKeys.filter((key) => actual.has(key) || Boolean(progress.words[key.slice(key.lastIndexOf(":") + 1)]));
 }
 
 export function currentPlanDayNumber(progress: AppProgress, totalDays: number): number {
@@ -157,7 +166,7 @@ export function rateStudyWord(
       }
     : { learnedAt: now, lastSeenAt: now, proficiency, reviewCount: 0, exposures: 1 };
 
-  const groupFinished = group.wordIds.every((id) => day.ratedExposureKeys.includes(`${group.id}:${id}`));
+  const groupFinished = group.wordIds.every((id) => next.words[id] || day.ratedExposureKeys.includes(`${group.id}:${id}`));
   if (groupFinished && !day.completedGroupIds.includes(group.id)) day.completedGroupIds.push(group.id);
   if (plan.groupIds.every((id) => day.completedGroupIds.includes(id))) day.completedAt = now;
   return next;
@@ -216,6 +225,15 @@ export function updateWordProficiency(progress: AppProgress, wordId: string, pro
   return next;
 }
 
+/** Search can teach a new word, but does not create a planned exposure or review event. */
+export function rateSearchWord(progress: AppProgress, wordId: string, proficiency: Proficiency): AppProgress {
+  if (progress.words[wordId]) return updateWordProficiency(progress, wordId, proficiency);
+  const next = structuredClone(progress);
+  const now = new Date().toISOString();
+  next.words[wordId] = { learnedAt: now, lastSeenAt: now, proficiency, reviewCount: 0, exposures: 0 };
+  return next;
+}
+
 /** The vocabulary list is derived from ratings; legacy bookmarks never determine membership. */
 export function vocabularyOverview(progress: AppProgress, catalog: Catalog) {
   const counts = { unmastered: 0, unclear: 0, mastered: 0, unlearned: 0 };
@@ -233,11 +251,11 @@ export function vocabularyOverview(progress: AppProgress, catalog: Catalog) {
 
 export function planDayFraction(progress: AppProgress, plan: PlanDay): number {
   const day = progress.planDays[String(plan.day)];
+  if (plan.kind === "study") {
+    return Math.min(1, completedStudyExposureKeys(progress, plan).length / Math.max(1, plan.appearanceCount));
+  }
   if (!day) return 0;
   if (day.completedAt) return 1;
-  if (plan.kind === "study") {
-    return Math.min(1, day.ratedExposureKeys.length / Math.max(1, plan.appearanceCount));
-  }
   return Math.min(1, day.reviewedWordIds.length / Math.max(1, day.reviewWordIds.length));
 }
 
@@ -264,22 +282,26 @@ export function reconcileCompletion(progress: AppProgress, catalog: Catalog): Ap
     if (plan.kind !== "study") continue;
     const keys = plan.groupIds.flatMap((id) => groups.get(id)?.wordIds.map((wordId) => `${id}:${wordId}`) ?? []);
     const ratedExposureKeys = keys.filter((key) => exposures.has(key)).sort();
-    if (!ratedExposureKeys.length) continue;
+    const credited = new Map(keys.flatMap((key) => {
+      const word = next.words[key.slice(key.lastIndexOf(":") + 1)];
+      const learnedAt = word?.learnedAt ?? exposures.get(key);
+      return learnedAt ? [[key, learnedAt] as const] : [];
+    }));
+    if (!credited.size) continue;
     const previous = progress.planDays[String(plan.day)];
     const day: PlanDayProgress = {
       kind: "study",
-      startedAt: ratedExposureKeys.map((key) => exposures.get(key)!).sort()[0],
-      completedGroupIds: plan.groupIds.filter((id) => groups.get(id)?.wordIds.every((wordId) => exposures.has(`${id}:${wordId}`))).sort(),
+      startedAt: [...credited.values()].sort()[0],
+      completedGroupIds: plan.groupIds.filter((id) => groups.get(id)?.wordIds.every((wordId) => credited.has(`${id}:${wordId}`))).sort(),
       ratedExposureKeys,
       reviewWordIds: [],
       reviewedWordIds: [],
       skipMastered: previous?.skipMastered ?? true,
     };
-    if (ratedExposureKeys.length === keys.length) {
-      const sameMembership = previous?.kind === "study" && previous.ratedExposureKeys.length === keys.length
-        && previous.ratedExposureKeys.every((key) => keys.includes(key));
-      day.completedAt = (sameMembership && previous.completedAt) || ratedExposureKeys
-        .map((key) => next.words[key.slice(key.lastIndexOf(":") + 1)]?.lastSeenAt).filter(Boolean).sort().at(-1) || day.startedAt;
+    if (credited.size === keys.length) {
+      const sameMembership = previous?.kind === "study" && previous.completedGroupIds.length === plan.groupIds.length
+        && previous.completedGroupIds.every((id) => plan.groupIds.includes(id));
+      day.completedAt = (sameMembership && previous.completedAt) || [...credited.values()].sort().at(-1) || day.startedAt;
     }
     next.planDays[String(plan.day)] = day;
   }

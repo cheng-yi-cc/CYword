@@ -90,3 +90,41 @@ test("server rejects malformed snapshots and compressed data round-trips", async
   assert.equal(validProgress({ ...valid, planDays: { 1: { ...valid.planDays["1"], ratedExposureKeys: "bad" } } }), false);
   assert.deepEqual(await unpackProgress(await packProgress(valid)), valid);
 });
+
+test("expired sessions stop syncing and retain locally saved learning records", async () => {
+  for (const expireOn of [1, 2, 6]) {
+    let calls = 0, expired = 0;
+    let local = one();
+    const sync = new ProgressSync({
+      read: async () => local,
+      write: async (value) => { local = structuredClone(value); },
+      change: () => {},
+      unauthorized: () => { expired++; },
+      request: async () => ({ status: ++calls === expireOn ? 401 : calls === 1 ? 200 : 409, data: { revision: calls, progress: emptyProgress(), error: "登录已过期" } }),
+    });
+    await sync.open();
+    assert.equal(expired, 1);
+    assert.ok(local.words.w1);
+    await sync.sync();
+    assert.equal(calls, expireOn, "expired token must not keep retrying");
+    await assert.rejects(sync.save(two()), /账号已切换/);
+  }
+});
+
+test("network and service errors do not log out an account; late 401 cannot log out its replacement", async () => {
+  let expired = 0;
+  for (const status of [403, 500, 503]) {
+    const sync = new ProgressSync({ read: async () => one(), write: async () => {}, change: () => {}, unauthorized: () => { expired++; }, request: async () => ({ status, data: { revision: 0, progress: emptyProgress() } }) });
+    await sync.open();
+    assert.ok(sync.progress.words.w1);
+    sync.stop();
+  }
+  let resolve!: (value: { status: number; data: { revision: number; progress: AppProgress } }) => void;
+  const sync = new ProgressSync({ read: async () => one(), write: async () => {}, change: () => {}, unauthorized: () => { expired++; }, request: () => new Promise((done) => { resolve = done; }) });
+  const opening = sync.open();
+  await new Promise((done) => setTimeout(done, 0));
+  sync.stop();
+  resolve({ status: 401, data: { revision: 0, progress: emptyProgress() } });
+  await opening;
+  assert.equal(expired, 0);
+});

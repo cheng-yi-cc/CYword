@@ -29,7 +29,7 @@ function updateErrorMessage(error) {
 function configureAutoUpdater() {
   if (!app.isPackaged) return;
 
-  autoUpdater.autoDownload = false;
+  autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = false;
   autoUpdater.autoRunAppAfterInstall = true;
   autoUpdater.allowPrerelease = false;
@@ -37,7 +37,7 @@ function configureAutoUpdater() {
 
   autoUpdater.on("update-available", (info) => {
     publishUpdateState({
-      status: "available",
+      status: "downloading",
       version: info.version,
       percent: 0,
       message: "",
@@ -72,8 +72,8 @@ function configureAutoUpdater() {
 
 function checkForUpdatesOnce() {
   if (!app.isPackaged) return;
-  autoUpdater.checkForUpdates().catch((error) => {
-    console.warn("CYword update check failed:", updateErrorMessage(error));
+  autoUpdater.checkForUpdates().then((result) => result?.downloadPromise).catch((error) => {
+    console.warn("CYword update check/download failed:", updateErrorMessage(error));
   });
 }
 
