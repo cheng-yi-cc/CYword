@@ -3,9 +3,11 @@ import { ProgressSync, type SyncStatus } from "./sync-client";
 import { reconcileCompletion } from "./progress";
 import type { AppProgress, Catalog, UserSession } from "./types";
 
-export function useSyncedProgress(session: UserSession | null, catalog: Catalog | null) {
+export function useSyncedProgress(session: UserSession | null, catalog: Catalog | null, onSessionExpired: () => void) {
   const [state, setState] = useState<{ account: string; progress: AppProgress | null; status: SyncStatus; message: string }>({ account: "", progress: null, status: "syncing", message: "正在准备进度" });
   const ref = useRef<ProgressSync | null>(null);
+  const expiredRef = useRef(onSessionExpired);
+  expiredRef.current = onSessionExpired;
   useEffect(() => {
     if (!session || !catalog) return;
     let active = true;
@@ -18,7 +20,12 @@ export function useSyncedProgress(session: UserSession | null, catalog: Catalog 
         return window.cyword.syncProgress(token, payload);
       },
       reconcile: (progress) => reconcileCompletion(progress, catalog),
-      change: (progress, status, message) => setState({ account: user.id, progress, status, message }),
+      change: (progress, status, message) => { if (active) setState({ account: user.id, progress, status, message }); },
+      unauthorized: () => {
+        if (!active) return;
+        setState({ account: "", progress: null, status: "error", message: "登录已过期" });
+        expiredRef.current();
+      },
     });
     ref.current = sync;
     void sync.open().catch((error) => { if (active) setState({ account: user.id, progress: null, status: "error", message: `读取本机进度失败：${String(error)}` }); });

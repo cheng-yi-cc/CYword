@@ -2,13 +2,13 @@
 
 ## 用途与入口
 
-官网面向普通用户介绍 CYword，提供功能体验、Windows 安装包与安装指南，不是桌面应用的在线完整版。
+官网面向普通用户介绍 CYword，提供功能体验、Windows 和安卓安装包与安装指南，不是应用的在线完整版。客户端尚未发布的搜索、布局和记忆增强不自动进入官网示例。
 
 - 官网：<https://cyword.chengyi.me/>；Pages 备用域名：<https://cyword.pages.dev/>。
 - 主下载：<https://cyword.chengyi.me/downloads/latest>，从私有 R2 桶的原子版本指针跳转到当前内容寻址安装包，支持断点续传，无需访问 GitHub。
 - 备用下载：`latest.json.githubDownloadUrl` 指向当前 GitHub Release 的同一份正式安装包；官网页面不得硬编码历史版本链接。
-- 版本和校验值以 `/downloads/latest.json` 为准；`website/src/release.ts` 只保留动态指针不可用时的 v0.2.1 回退信息。
-- 首屏搭载 1:1 动态还原的沉浸式记忆视窗，呈现词根词缀、核心巧记与真题例句、长难句精读三栏独立分开上下滑动交互，采用 `overscroll-behavior: contain` 阻断外层滚动穿透，并集成发音声波可视化与长难句语法高光流光联动。
+- 版本和校验值以 `/downloads/latest.json` 为准；`website/src/release.ts` 只保留动态指针不可用时已核验的 Windows 0.4.4 回退信息。
+- 首屏提供学习视窗示例，呈现词根词缀、核心巧记与真题例句、长难句精读三栏独立上下滑动交互，采用 `overscroll-behavior: contain` 阻断外层滚动穿透，并集成发音声波可视化与长难句语法高光联动。
 
 网站使用境外 Cloudflare 服务。国内线路受地区、运营商和跨境网络影响，不能承诺全国永久可达；境外托管适用的备案说明见[阿里云文档](https://help.aliyun.com/en/icp-filing/basic-icp-service/support/for-the-record-process-faq)。迁移后的桌面版本通过同域 `/downloads/latest.yml` 检查更新，并从 R2 下载更新资产，不再向 GitHub 查询更新。
 
@@ -30,7 +30,7 @@ npm run preview:site
 
 输出为 `dist-site/`，预览地址为 `http://127.0.0.1:4174/`，与桌面端 `dist/` 和端口 5173 分离。Vite 只预览页面，下载按钮仍访问正式域名。
 
-`npm run build:site` 会生成函数类型并检查 TypeScript。`npm run test:site:download` 会构建官网，以 256 KiB 确定性文件在本地 R2 模拟器运行 19 项集成检查，覆盖原子最新版指针、electron-updater 清单、blockmap、字节完整性、HEAD、Range、续传拼接、条件请求、错误码及静态首页；不读取或写入远端桶。生成类型和测试状态不提交。
+`npm run build:site` 会生成函数类型并检查 TypeScript。`npm run test:site:download` 会构建官网，以确定性文件在本地 R2 模拟器运行集成检查，覆盖 Windows 和安卓的原子最新版指针、electron-updater 清单、blockmap、字节完整性、HEAD、Range、续传拼接、条件请求、错误码及静态首页；不读取或写入远端桶。生成类型和测试状态不提交。
 
 ## 代码入口
 
@@ -92,6 +92,8 @@ npm run preview:site
 
 接口先读取版本清单，把 ID 按学习日分片分组，再顺序读取 R2 并流式返回一个 `words` 对象。学习日请求当天全部唯一单词；复习日由本机进度决定 ID。响应和错误都不缓存。请求不存在的版本返回 409，参数或非本词书 ID 返回 400，R2 故障返回 503。当前阶段接口公开可读，没有账号登录或授权防复制。
 
+单词详情可选携带 `pronunciationGuide` 和 `meaningBridges`，格式以 `src/types.ts` 为准。旧数据缺少字段时客户端隐藏增强入口；旧客户端忽略额外字段。上传增强词书会生成新的内容版本，不覆盖旧分片；只有客户端代码合并或安装包升级不会更新 R2 词书。增强源数据和审核规则见[数据说明](../books/cet6/enhancements/README.md)。
+
 ## 用户认证 HTTP 协议
 
 - `POST /api/auth/send-code`：提交 `{ email }`。服务端校验邮箱格式，生成 6 位数字 OTP 存入 D1（有效期 5 分钟），执行 60 秒重发冷却，并通过 `login@auth.cyword.chengyi.me` 调用 Resend 发送邮件。生产环境缺少 Key 时返回 503，发送失败时删除刚写入的验证码，不回显验证码。
@@ -114,7 +116,7 @@ curl.exe --fail --head 'https://cyword.chengyi.me/downloads/latest'
 
 官网沿用暖纸色、陶土橙、橄榄绿和 Cy 标记，中文使用系统无衬线字体，英文单词和品牌使用 Georgia。字体、图标、样式不依赖外部 CDN。主线是“逐词巧记 → 构词成组 → 熟练度与累计复习”。
 
-- 自 0.3.0 起，安装包不内置六级详情，运行时通过词书接口加载 5166 个唯一单词。同期发布首个安卓客户端 0.1.0；没有 Mac 版、四级或考研词书。官网正式下载仍以已经核验的发布指针为准。
+- Windows 自 0.3.0 起，安装包不内置六级详情，运行时通过词书接口加载 5166 个唯一单词。Windows 0.4.4 与首个安卓客户端 0.1.0 于 2026-09-20 发布；没有 Mac 版、四级或考研词书。官网正式下载以已经核验的发布指针为准。
 - 计划包含 30 个学习日和 10 个累计复习日，不保证在 40 个自然日内记住全部单词。0.4.4 重排后的学习日为 174–185 次曝光，多词根组可重复出现同一词，不能写成 200 个唯一新词或保证记忆效果。
 - 0.2.1 可离线学习；0.3.0 起启动和每天学习需联网。0.4.4 的进度同步依赖新接口部署，两端须使用同一邮箱。正常覆盖升级保留进度，旧文件按已登录账号归属迁移。
 - Windows 安装包未签名，安卓 APK 使用项目私有密钥签名；页面应提示核对来源与哈希，不引导用户关闭系统防护，也不把校验一致等同于安全认证。

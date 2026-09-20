@@ -10,6 +10,7 @@ export interface SyncAdapter {
   request: (payload?: { revision: number; progress: AppProgress }) => Promise<{ status: number; data: Snapshot }>;
   change: (progress: AppProgress, status: SyncStatus, message: string) => void;
   reconcile?: (progress: AppProgress) => AppProgress;
+  unauthorized?: () => void;
 }
 
 export class ProgressSync {
@@ -57,8 +58,14 @@ export class ProgressSync {
     this.notify("syncing", "正在同步进度");
     try {
       let response = await this.adapter.request();
-      for (let attempt = 0; attempt < 5; attempt++) {
+      for (let attempt = 0; attempt <= 5; attempt++) {
         if (this.stopped) return;
+        if (response.status === 401) {
+          this.stop();
+          this.adapter.unauthorized?.();
+          return;
+        }
+        if (attempt === 5) break;
         if (response.status !== 200 && response.status !== 409) throw new Error(response.data?.error || "网络连接中断，请重试同步");
         if (!Number.isSafeInteger(response.data.revision) || response.data.progress?.version !== 2) throw new Error("同步服务尚未就绪，请稍后重试");
         const remote = response.data.progress;

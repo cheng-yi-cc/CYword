@@ -12,6 +12,7 @@ import React, {
 import { createPortal } from "react-dom";
 import DOMPurify from "dompurify";
 import { marked } from "marked";
+import { wordMemoryDisplay } from "../memory-display";
 import type { Catalog, WordDetail, WordSummary } from "../types";
 import { buildPlan, studyExposures } from "../progress";
 
@@ -130,7 +131,7 @@ function PopoverCard({
 
   const memoryHtml = useMemo(() => {
     if (!detail?.memoryMarkup) return "";
-    const preprocessed = detail.memoryMarkup
+    const preprocessed = wordMemoryDisplay(detail.memoryMarkup)!
       .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, "**$2**")
       .replace(/\[\[([^\]]+)\]\]/g, "**$1**");
     return DOMPurify.sanitize(marked.parse(preprocessed, { breaks: true }) as string);
@@ -177,7 +178,7 @@ function PopoverCard({
           <>
             {detail.memoryMarkup && (
               <div className="popover-section">
-                <h4>联想巧记</h4>
+                <h4>单词妙记</h4>
                 <div
                   className="popover-rich-text"
                   dangerouslySetInnerHTML={{ __html: memoryHtml }}

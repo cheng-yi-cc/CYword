@@ -1,4 +1,4 @@
-export type ViewName = "home" | "plan" | "today" | "vocabulary";
+export type ViewName = "home" | "plan" | "today" | "vocabulary" | "search";
 export type Proficiency = "unmastered" | "unclear" | "mastered";
 
 export interface WordSummary {
@@ -34,6 +34,7 @@ export interface PlanDay {
   studyDay?: number;
   groupIds: string[];
   exposureOrder?: number[];
+  exposureKeys?: string[];
   appearanceCount: number;
   uniqueWordCount: number;
   plannedReviewWordCount?: number;
