@@ -11,6 +11,8 @@ npm run dev
 
 `npm run dev` 会先校验六级规范表并生成 `data/`，随后启动 Vite 和 Electron。修改 CSV 后重新启动即可重新编译；不要直接编辑 `data/`。
 
+手机/浏览器预览运行 `npm run dev:mobile`（5173，默认模拟登录与同步）；`CYWORD_REAL_AUTH=1` 切换生产认证。桌面词书 API 可由 `CYWORD_BOOK_API_URL` 覆盖，安卓工具链及签名变量见 [ANDROID.md](ANDROID.md)。这些变量不改变正式云端的部署状态。
+
 ## 常用检查
 
 ```powershell
@@ -27,7 +29,7 @@ npm run build:web
 npm run dist
 ```
 
-主要安装文件是 `release/CYword-Setup-<version>.exe`。`data/` 会在构建前生成用于检查，但不在 electron-builder 的 `files` 中，也不得通过 `extraResources` 打进安装包。`latest.yml` 和 `CYword-Setup-<version>.exe.blockmap` 是应用内更新元数据；三者来自同一次构建，必须一起发布到 GitHub Release 和官网 R2。当前版本未配置代码签名，首次下载或安装时 Windows 可能显示 SmartScreen；发布前如有证书，应在构建环境配置签名，不要把证书或密码写入仓库。
+主要安装文件是 `release/CYword-Setup-<version>.exe`。`data/` 不在 electron-builder 的 `files` 中，也不得通过 `extraResources` 整体打包；只有不含正文的 `curriculum.json` 排序元数据由前端编译引用，完整词书仍从 API 加载。`latest.yml` 和 `CYword-Setup-<version>.exe.blockmap` 是应用内更新元数据；三者来自同一次构建，必须一起发布到 GitHub Release 和官网 R2。当前版本未配置代码签名，首次下载或安装时 Windows 可能显示 SmartScreen；发布前如有证书，应在构建环境配置签名，不要把证书或密码写入仓库。
 
 安装器为交互式 NSIS：首次安装可选择目录；手动运行新版安装包时会从注册表读取旧目录作为默认值，用户仍可修改。应用内更新使用同一个安装器静默覆盖旧版本，并保留 Electron `userData` 中的学习进度。
 
@@ -69,21 +71,21 @@ npm run upload:book-data
 
 `upload:book-data` 会重新校验并编译数据，在 `.work/book-api/cet6/` 生成基于内容哈希的版本、目录、清单和 30 个学习日分片。上传脚本先上传全部不可变版本对象，最后更新 `books/cet6/current.json`。上传成功后还必须执行 `npm run deploy:site`，使生产 Pages Functions 使用 `BOOKS` 绑定；只上传数据不会发布新接口代码。
 
-桌面端启动时 GET `/api/books/cet6/catalog`；学习日、累计复习日和生词本都向 `/api/books/cet6/words` 发一次 POST，提交当前数据版本、计划日、请求类型和唯一单词 ID。接口当前公开可读且不含账号鉴权。旧版本对象应至少保留到使用该数据版本的桌面会话自然结束，不要只删分片而留下目录或清单。
+桌面端启动时 GET `/api/books/cet6/catalog`；学习日、累计复习日和词汇掌握详情均向 `/api/books/cet6/words` 发 POST，提交当前数据版本、计划日、请求类型和唯一单词 ID。词汇掌握按选中词加载详情，为兼容线上接口继续使用 `bookmarks` 请求类型（不代表手动收藏）。接口当前公开可读且不含账号鉴权。旧版本对象应至少保留到使用该数据版本的桌面会话自然结束，不要只删分片而留下目录或清单。
 
 ## 启动故障
 
 - 双击无窗口：优先使用 NSIS 安装包，不再发布旧 portable 版本；查看任务管理器中是否已有单实例正在运行。
 - 开发模式不启动：先单独运行 `npm run data:verify`，再检查 Node.js 版本和 `npm ci` 是否成功。
 - 界面加载失败：先确认网络和 `/api/books/cet6/catalog` 返回 200；开发模式再运行 `npm run build` 检查 TypeScript、Vite 和本地数据生成。
-- 进度异常：先备份 Electron 用户数据目录中的 `progress.json`，再检查其 `version` 是否为 2。除非用户明确要求，不要删除进度文件。
+- 进度异常：先备份 Electron 用户数据目录中的 `accounts/<账号哈希>/progress.json` 和旧 `progress.json`，再检查其 `version` 是否为 2。除非用户明确要求，不要删除进度文件。同步检查、安卓构建和签名恢复见 [安卓与同步说明](ANDROID.md)。
 
 ## 发布前清单
 
 1. `npm ci` 能在干净依赖环境完成。
 2. `npm run data:verify`、`npm test`、`npm run build:web` 全部通过。
 3. 解包目录不存在 `resources/data`，安装后联网启动并读取 5166 词目录；断网时明确提示词书加载失败，且不损坏本机进度。
-4. 学习日以一次请求返回当天全部唯一词；累计复习以一次请求返回本机提交的动态词表。
+4. 学习日首词可先显示，剩余词后台批量加载；累计复习返回本机提交的动态词表。
 5. `release/` 中存在安装器、`latest.yml` 和对应 `.exe.blockmap`；`data/`、`dist/`、`release/` 和检查截图不提交。
 
 ## 官网运行与部署
@@ -110,9 +112,11 @@ npm run test:site:download
 npm run deploy:site
 ```
 
+部署 0.5.0 前先按 [安卓与同步说明](ANDROID.md) 完成 D1 授权和 `learning_progress` 建表；截至 2026-09-20 该项尚未完成。
+
 部署脚本显式指定 Pages 生产分支 `main`，与当前 Git 分支无关；会上传静态页面、下载函数、词书函数和路由配置。普通提交推送不会自动更新官网代码；版本标签工作流只更新 R2 发布资产和最新版指针。不要上传纯静态 ZIP，以免遗漏函数和 R2 绑定；词书只能上传到 `BOOKS` 对应的私有 R2 桶，不得放进 Pages 静态产物。
 
-NSIS 安装包只收录 `dist/`、`electron/` 和发布用 `package.json`。邮箱和登录态位于已安装应用自己的 Electron `userData/session.json`，学习进度位于 `userData/progress.json`，两者都不参与打包。覆盖安装会继续使用同一台电脑原有的 `userData`；验证“全新用户”体验时应使用临时 `--user-data-dir`，不要误把本机既有会话当成安装包内容。
+NSIS 安装包只收录 `dist/`、`electron/` 和发布用 `package.json`。邮箱和登录态位于 `userData/session.json`，0.5.0 学习进度位于 `userData/accounts/<账号哈希>/progress.json`，均不参与打包。旧 `progress.json` 保留，启动时已登录账号符合归属条件才迁移。覆盖安装继续使用原有 `userData`；验证“全新用户”体验使用临时 `--user-data-dir`。
 
 需要线上预览时，先构建，再执行 `npx wrangler pages deploy --cwd website --project-name cyword --branch preview --commit-dirty=true`。`--branch` 是 Pages 环境标签，不会创建 Git 分支；预览函数只读同一发布桶。确认主下载可用后才更新生产。
 

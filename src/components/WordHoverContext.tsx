@@ -12,6 +12,7 @@ import { createPortal } from "react-dom";
 import DOMPurify from "dompurify";
 import { marked } from "marked";
 import type { Catalog, WordDetail, WordSummary } from "../types";
+import { buildPlan, studyExposures } from "../progress";
 
 interface WordAppearance {
   day: number;
@@ -72,12 +73,14 @@ function PopoverCard({
   summary,
   onMouseEnter,
   onMouseLeave,
+  onClose,
 }: {
   state: HoverState;
   detail?: WordDetail;
   summary?: WordSummary;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
+  onClose: () => void;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState<{ top: number; left: number; placement: "bottom" | "top" }>({
@@ -147,6 +150,7 @@ function PopoverCard({
       onWheel={(e) => e.stopPropagation()}
     >
       <div className="popover-header">
+        <button className="popover-close" onClick={onClose} aria-label="关闭关联词">×</button>
         <div className="popover-meta">
           {state.isUnlearned ? (
             <span className="popover-badge unlearned">未学单词 · 第 {state.targetDay} 天</span>
@@ -244,30 +248,26 @@ export function WordHoverProvider({
     if (!catalog || !catalog.schedule) return { appearanceMap: appearance, spellingToIdMap: spellingMap };
 
     let globalIdx = 0;
-    for (const day of catalog.schedule) {
-      for (const groupId of day.groupIds) {
-        const group = catalog.groups.find((g) => g.id === groupId);
-        if (group) {
-          for (const wId of group.wordIds) {
-            const wordSummary = catalog.words[wId];
-            const lowerSpelling = wordSummary ? wordSummary.spelling.toLowerCase() : "";
-            if (lowerSpelling) spellingMap.set(lowerSpelling, wId);
+    for (const day of buildPlan(catalog)) {
+      if (day.kind !== "study") continue;
+      for (const { wordId: wId } of studyExposures(day, catalog.groups)) {
+        const wordSummary = catalog.words[wId];
+        const lowerSpelling = wordSummary ? wordSummary.spelling.toLowerCase() : "";
+        if (lowerSpelling) spellingMap.set(lowerSpelling, wId);
 
-            if (!appearance.has(wId)) {
-              const item: WordAppearance = {
-                day: day.day,
-                index: globalIdx,
-                wordId: wId,
-                spelling: wordSummary?.spelling || "",
-              };
-              appearance.set(wId, item);
-              if (lowerSpelling && !appearance.has(lowerSpelling)) {
-                appearance.set(lowerSpelling, item);
-              }
-            }
-            globalIdx++;
+        if (!appearance.has(wId)) {
+          const item: WordAppearance = {
+            day: day.day,
+            index: globalIdx,
+            wordId: wId,
+            spelling: wordSummary?.spelling || "",
+          };
+          appearance.set(wId, item);
+          if (lowerSpelling && !appearance.has(lowerSpelling)) {
+            appearance.set(lowerSpelling, item);
           }
         }
+        globalIdx++;
       }
     }
     return { appearanceMap: appearance, spellingToIdMap: spellingMap };
@@ -433,13 +433,14 @@ export function WordHoverProvider({
       {children}
       {hoverState &&
         createPortal(
-          <PopoverCard
+          <><div className="popover-backdrop" onClick={() => { clearTimers(); setHoverState(null); }} /><PopoverCard
             state={hoverState}
             detail={details[hoverState.wordId]}
             summary={catalog?.words[hoverState.wordId]}
             onMouseEnter={keepHover}
             onMouseLeave={hideHover}
-          />,
+            onClose={() => { clearTimers(); setHoverState(null); }}
+          /></>,
           document.body,
         )}
     </WordHoverContext.Provider>

@@ -195,8 +195,6 @@ h1, h2, h3 { text-wrap: balance; }
 
 .study-hero-side { text-align: right; }
 .study-definition { margin: 0 0 8px; font-size: 13.5px; font-weight: 600; color: #3c382d; line-height: 1.5; }
-.study-bookmark-btn { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border: 1px solid var(--line); border-radius: 6px; background: transparent; font-size: 10px; color: var(--muted); cursor: pointer; transition: all .15s; }
-.study-bookmark-btn.saved { border-color: #dcb3a0; color: var(--clay-dark); background: #fff5f0; }
 
 .session-section { padding: 12px 0; border-bottom: 1px solid #ede7dc; }
 .session-section > header { display: flex; align-items: baseline; gap: 7px; margin-bottom: 7px; }
@@ -819,3 +817,5 @@ summary::-webkit-details-marker { display: none; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+.study-mastery-state { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.7; }

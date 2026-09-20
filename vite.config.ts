@@ -1,6 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { validProgress } from "./website/server/progress-sync.ts";
+import { emptyProgress } from "./src/progress.ts";
+import type { AppProgress } from "./src/types.ts";
 
 async function readRequestJson(request: IncomingMessage, timeoutMs = 5_000): Promise<unknown> {
   if ((request as unknown as { body?: unknown }).body) {
@@ -29,7 +32,7 @@ async function readRequestJson(request: IncomingMessage, timeoutMs = 5_000): Pro
     const onData = (chunk: Buffer) => {
       if (finished) return;
       size += chunk.length;
-      if (size > 400_000) {
+      if (size > 12_000_000) {
         cleanup();
         reject(new Error("Request is too large"));
         return;
@@ -68,6 +71,8 @@ async function readRequestJson(request: IncomingMessage, timeoutMs = 5_000): Pro
 
 const devOtpCodes = new Map<string, { code: string; createdAt: number }>();
 const devUsers = new Map<string, { id: string; email: string; createdAt: number; lastLoginAt: number; loginCount: number }>();
+const devProgress = new Map<string, { revision: number; progress: AppProgress }>();
+const realAuth = process.env.CYWORD_REAL_AUTH === "1";
 
 function localDataPreview() {
   return {
@@ -75,9 +80,24 @@ function localDataPreview() {
     configureServer(server: { middlewares: { use: (handler: (request: IncomingMessage, response: ServerResponse, next: () => void) => void) => void } }) {
       server.middlewares.use(async (request, response, next) => {
         const url = request.url ?? "";
+        if (realAuth) return next();
         try {
           let payload: unknown;
-          if (request.method === "POST" && url === "/api/auth/send-code") {
+          if (url === "/api/progress") {
+            const token = (request.headers.authorization || "").replace(/^Bearer /, "");
+            const user = Array.from(devUsers.values()).find((item) => `dev-jwt-token-${item.id}` === token);
+            if (!user) { response.statusCode = 401; payload = { error: "登录已过期，请重新登录后同步" }; }
+            else {
+              const current = devProgress.get(user.id) ?? { revision: 0, progress: emptyProgress() };
+              if (request.method === "GET") payload = current;
+              else if (request.method === "PUT") {
+                const input = await readRequestJson(request) as { revision: number; progress: AppProgress };
+                if (!validProgress(input.progress) || !Number.isSafeInteger(input.revision)) { response.statusCode = 400; payload = { error: "学习进度格式无效" }; }
+                else if (current.revision !== input.revision) { response.statusCode = 409; payload = current; }
+                else { payload = { revision: current.revision + 1, progress: input.progress }; devProgress.set(user.id, payload as typeof current); }
+              } else { response.statusCode = 405; payload = { error: "Method not allowed" }; }
+            }
+          } else if (request.method === "POST" && url === "/api/auth/send-code") {
             const input = await readRequestJson(request) as { email?: string };
             const email = (input.email || "").trim().toLowerCase();
             if (!email || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
@@ -159,11 +179,17 @@ function localDataPreview() {
 export default defineConfig({
   plugins: [react(), localDataPreview()],
   base: "./",
+  optimizeDeps: { entries: ["index.html"] },
   server: {
+    watch: { ignored: ["**/android/**", "**/.work/**", "**/dist-site/**", "**/release/**"] },
     host: "127.0.0.1",
     port: 5173,
     strictPort: true,
     proxy: {
+      ...(realAuth ? {
+        "/api/auth": { target: "https://cyword.chengyi.me", changeOrigin: true },
+        "/api/progress": { target: "https://cyword.chengyi.me", changeOrigin: true },
+      } : {}),
       "/api/books": {
         target: "https://cyword.chengyi.me",
         changeOrigin: true,

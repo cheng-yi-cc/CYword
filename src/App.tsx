@@ -1,11 +1,11 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import DOMPurify from "dompurify";
 import { marked } from "marked";
 import {
   buildPlan,
   currentPlanDayNumber,
   isPlanDayComplete,
-  normalizeProgress,
   planDayFraction,
   proficiencyCopy,
   proficiencyCounts,
@@ -13,9 +13,13 @@ import {
   rateStudyWord,
   reviewCandidates,
   startReviewDay,
-  toggleBookmark,
+  studyExposures,
+  updateWordProficiency,
+  vocabularyOverview,
 } from "./progress";
 import { AuthModal } from "./components/AuthModal";
+import { useSyncedProgress } from "./useSyncedProgress";
+import { applyCurriculum } from "./curriculum";
 import { WordHoverProvider, useWordHover } from "./components/WordHoverContext";
 import type {
   AppProgress,
@@ -33,7 +37,7 @@ const navItems: Array<{ id: ViewName; label: string; glyph: string }> = [
   { id: "home", label: "首页", glyph: "⌂" },
   { id: "plan", label: "词书计划", glyph: "▦" },
   { id: "today", label: "今日学习", glyph: "▷" },
-  { id: "vocabulary", label: "生词本", glyph: "◇" },
+  { id: "vocabulary", label: "词汇掌握", glyph: "◇" },
 ];
 
 type ViewTransitionDocument = Document & {
@@ -79,14 +83,15 @@ function useSoftTransitionState<T>(initialValue: T): [T, (nextValue: T) => void,
 
 function MarkdownBlock({ value, empty = "当前数据没有提供这部分内容。" }: { value?: string; empty?: string }) {
   const hover = useWordHover();
-  if (!value?.trim()) return <p className="empty-copy">{empty}</p>;
 
   const html = useMemo(() => {
+    if (!value?.trim()) return "";
     const parsedMarkdown = hover
       ? hover.renderWordMarkup(value)
       : value.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, "**$2**").replace(/\[\[([^\]]+)\]\]/g, "**$1**");
     return DOMPurify.sanitize(marked.parse(parsedMarkdown, { breaks: true }) as string);
   }, [value, hover]);
+  if (!html) return <p className="empty-copy">{empty}</p>;
 
   const handleMouseOver = (e: React.MouseEvent) => {
     const target = (e.target as HTMLElement).closest("[data-word-ref]") as HTMLElement | null;
@@ -109,6 +114,7 @@ function MarkdownBlock({ value, empty = "当前数据没有提供这部分内容
       dangerouslySetInnerHTML={{ __html: html }}
       onMouseOver={handleMouseOver}
       onMouseOut={handleMouseOut}
+      onClick={handleMouseOver}
     />
   );
 }
@@ -154,29 +160,23 @@ function FittedWordTitle({ word }: { word: string }) {
   return <h1 ref={titleRef}>{word}</h1>;
 }
 
-function BookmarkButton({ active, onClick }: { active: boolean; onClick: () => void }) {
-  return (
-    <button className={`bookmark-button ${active ? "active" : ""}`} onClick={onClick}>
-      <span>{active ? "◆" : "◇"}</span>{active ? "已加入生词本" : "加入生词本"}
-    </button>
-  );
-}
-
 function ProficiencyPicker({
   value,
   onChange,
   title = "学完后，标记当前熟练度",
+  disabled = false,
 }: {
   value?: Proficiency;
   onChange: (value: Proficiency) => void;
   title?: string;
+  disabled?: boolean;
 }) {
   return (
     <div className="proficiency-picker">
       <span>{title}</span>
       <div>
         {(Object.keys(proficiencyCopy) as Proficiency[]).map((level) => (
-          <button className={`${level} ${value === level ? "active" : ""}`} key={level} onClick={() => onChange(level)}>
+          <button className={`${level} ${value === level ? "active" : ""}`} key={level} disabled={disabled} onClick={() => onChange(level)}>
             <b>{proficiencyCopy[level].label}</b>
             <small>{proficiencyCopy[level].hint}</small>
           </button>
@@ -273,14 +273,10 @@ function SentenceSpotlight({
 
 function WordDetailPanel({
   detail,
-  bookmarked,
-  onToggleBookmark,
   footer,
   compact = false,
 }: {
   detail: WordDetail | null;
-  bookmarked: boolean;
-  onToggleBookmark: () => void;
   footer?: React.ReactNode;
   compact?: boolean;
 }) {
@@ -300,7 +296,7 @@ function WordDetailPanel({
           <h2>{detail.spelling}</h2>
           <div className="pronunciation"><strong>{detail.pronunciation || "音标未提供"}</strong><AudioButton url={detail.audioUrl} /></div>
         </div>
-        <div className="word-meaning"><p>{detail.definitionCn}</p><BookmarkButton active={bookmarked} onClick={onToggleBookmark} /></div>
+        <div className="word-meaning"><p>{detail.definitionCn}</p></div>
       </header>
       <div className="detail-tabs">
         <button className={tab === "core" ? "active" : ""} onClick={() => setTab("core")}>核心记忆</button>
@@ -471,11 +467,18 @@ function HomeView({
 }
 
 function PlanView({ plan, progress, current, onSelectDay }: { plan: PlanDay[]; progress: AppProgress; current: PlanDay; onSelectDay: (dayNumber: number) => void }) {
+  const today = progress.planDays[String(current.day)];
+  const todayTotal = current.kind === "study" ? current.appearanceCount : (today?.reviewWordIds.length ?? reviewCandidates(progress, true).length);
+  const todayDone = current.kind === "study" ? (today?.ratedExposureKeys.length ?? 0) : (today?.reviewedWordIds.length ?? 0);
+  const todayFraction = todayTotal ? Math.min(1, todayDone / todayTotal) : (today?.completedAt ? 1 : 0);
   return (
     <div className="page plan-page">
-      <PageHeader eyebrow="40 DAY PLAN" title="词书计划" description="每三个学习日插入一个集中复习日；复习范围会随已学单词动态增长。" aside={<div className="plan-legend"><span><i className="study" />学习日</span><span><i className="review" />复习日</span></div>} />
-      <div className="plan-overview"><div><span>当前进度</span><b>Day {current.day}</b></div><div><span>学习日</span><b>30</b></div><div><span>复习日</span><b>10</b></div><div><span>学习曝光</span><b>{plan.filter((day) => day.kind === "study").reduce((sum, day) => sum + day.appearanceCount, 0)}</b></div></div>
-      <div className="plan-grid">
+      <header className="plan-heading"><h1>词书计划</h1></header>
+      <div className="plan-overview">
+        <div><span>总进度</span><b>{current.day}<span>/{plan.length}</span></b><div className="plan-progress-track" role="progressbar" aria-label="总进度" aria-valuenow={current.day} aria-valuemin={0} aria-valuemax={plan.length}><i style={{ width: `${current.day / plan.length * 100}%` }} /></div></div>
+        <div><span>当日进度</span><b>{todayDone}<span>/{todayTotal}</span></b><div className="plan-progress-track" role="progressbar" aria-label="当日进度" aria-valuenow={Math.round(todayFraction * 100)} aria-valuemin={0} aria-valuemax={100}><i style={{ width: `${todayFraction * 100}%` }} /></div></div>
+      </div>
+      <div className="plan-calendar" role="region" aria-label="日期卡片" tabIndex={0}><div className="plan-grid">
         {plan.map((day) => {
           const fraction = planDayFraction(progress, day);
           const dayProgress = progress.planDays[String(day.day)];
@@ -492,12 +495,12 @@ function PlanView({ plan, progress, current, onSelectDay }: { plan: PlanDay[]; p
               <span>{day.kind === "study" ? `学习 ${day.studyDay}` : "集中复习"}</span>
               <b>Day {day.day}</b>
               <p>{count}</p>
-              <div><i style={{ width: `${fraction * 100}%` }} /></div>
               <small>{Math.round(fraction * 100)}%</small>
+              <div role="progressbar" aria-label={`Day ${day.day} 进度`} aria-valuenow={Math.round(fraction * 100)} aria-valuemin={0} aria-valuemax={100}><i style={{ width: `${fraction * 100}%` }} /></div>
             </button>
           );
         })}
-      </div>
+      </div></div>
     </div>
   );
 }
@@ -509,7 +512,6 @@ function StudyToday({
   details,
   loadWords,
   saveProgress,
-  onToggleBookmark,
 }: {
   catalog: Catalog;
   progress: AppProgress;
@@ -517,17 +519,12 @@ function StudyToday({
   details: Record<string, WordDetail>;
   loadWords: (ids: string[], kind: "study" | "review" | "bookmarks", planDay: number) => Promise<boolean>;
   saveProgress: (progress: AppProgress) => Promise<void>;
-  onToggleBookmark: (wordId: string) => void;
 }) {
   const groupsById = useMemo(() => new Map(catalog.groups.map((group) => [group.id, group])), [catalog]);
   const groups = plan.groupIds.map((id) => groupsById.get(id)).filter(Boolean) as StudyGroup[];
   const dayState = progress.planDays[String(plan.day)];
   const completedGroups = new Set(dayState?.completedGroupIds ?? []);
-  const exposures = useMemo(() => groups.flatMap((group) => group.wordIds.map((wordId) => ({
-    groupId: group.id,
-    wordId,
-    key: `${group.id}:${wordId}`,
-  }))), [groups]);
+  const exposures = useMemo(() => studyExposures(plan, groups), [plan, groups]);
   const completedCount = dayState?.ratedExposureKeys.length ?? 0;
   const finished = isPlanDayComplete(progress, plan.day);
   const [sessionActive, transitionSession, sessionTransitionPhase] = useSoftTransitionState(false);
@@ -536,6 +533,8 @@ function StudyToday({
   const [examExampleIndex, setExamExampleIndex] = useState(0);
   const [longSentenceIndex, setLongSentenceIndex] = useState(0);
   const [ratingBusy, setRatingBusy] = useState(false);
+  const [mobilePanel, setMobilePanel] = useState<"word" | "roots" | "sentences">("word");
+  const ratingLock = useRef(false);
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(() => new Set());
   const exposure = exposures[activeIndex];
   const group = exposure ? groupsById.get(exposure.groupId) : undefined;
@@ -553,6 +552,13 @@ function StudyToday({
     return () => {
       document.body.classList.remove("study-mode-active");
     };
+  }, [sessionActive]);
+
+  useEffect(() => {
+    if (!sessionActive) return;
+    const back = (event: Event) => { event.preventDefault(); event.stopImmediatePropagation(); transitionSession(false); };
+    window.addEventListener("cyword-back", back);
+    return () => window.removeEventListener("cyword-back", back);
   }, [sessionActive]);
 
   const openWordSession = async (targetGroupId: string, targetWordId: string) => {
@@ -602,23 +608,29 @@ function StudyToday({
     setSimpleExampleIndex(0);
     setExamExampleIndex(0);
     setLongSentenceIndex(0);
+    setMobilePanel("word");
+    document.querySelectorAll(".study-center-scroll, .study-column-scroll").forEach((element) => element.scrollTo(0, 0));
   }, [exposure?.key]);
 
   const rate = async (level: Proficiency) => {
-    if (!group || !activeDetail || !exposure || ratingBusy) return;
+    if (!group || !activeDetail || !exposure || ratingLock.current) return;
+    ratingLock.current = true;
     setRatingBusy(true);
     const next = rateStudyWord(progress, plan, group, exposure.wordId, level);
-    await saveProgress(next);
-    if (activeIndex < exposures.length - 1) {
-      setActiveIndex(activeIndex + 1);
-    } else {
-      const ratedKeys = next.planDays[String(plan.day)]?.ratedExposureKeys ?? [];
-      const anyUnrated = exposures.findIndex((item) => !ratedKeys.includes(item.key));
-      if (anyUnrated >= 0) {
-        setActiveIndex(anyUnrated);
+    try {
+      await saveProgress(next);
+      if (activeIndex < exposures.length - 1) {
+        setActiveIndex(activeIndex + 1);
+      } else {
+        const ratedKeys = next.planDays[String(plan.day)]?.ratedExposureKeys ?? [];
+        const anyUnrated = exposures.findIndex((item) => !ratedKeys.includes(item.key));
+        if (anyUnrated >= 0) {
+          setActiveIndex(anyUnrated);
+        } else {
+          transitionSession(false);
+        }
       }
-    }
-    setRatingBusy(false);
+    } finally { ratingLock.current = false; setRatingBusy(false); }
   };
 
   useEffect(() => {
@@ -707,13 +719,16 @@ function StudyToday({
         <button className="floating-study-start" aria-label={!exposures.length ? "今日无学习内容" : finished ? "回顾今日内容" : completedCount ? "继续学习" : "开始学习"} title={!exposures.length ? "今日无学习内容" : finished ? "回顾今日内容" : completedCount ? "继续学习" : "开始学习"} onClick={() => void startSession()} disabled={!exposures.length}><i /></button>
       </div>
 
-      {sessionActive && exposure && <div className="study-session-overlay" role="dialog" aria-modal="true" aria-label="今日单词学习">
+      {sessionActive && exposure && <div className={`study-session-overlay mobile-panel-${mobilePanel}`} role="dialog" aria-modal="true" aria-label="今日单词学习">
         <header className="study-session-topbar">
           <div><span>大学英语六级</span><b>Day {plan.day} · {group?.kind === "root" ? group.spelling : "独立词"}</b></div>
           <div className="session-progress"><i style={{ width: `${Math.max(completedCount / Math.max(1, plan.appearanceCount), 1 / Math.max(1, plan.appearanceCount)) * 100}%` }} /></div>
           <strong>{activeIndex + 1} / {exposures.length}</strong>
-          <button onClick={() => transitionSession(false)}><kbd>Esc</kbd> 退出学习</button>
+          <button onClick={() => transitionSession(false)}><kbd>Esc</kbd> 返回</button>
         </header>
+        <nav className="study-session-tabs" aria-label="学习内容">
+          {([['word', '单词'], ['roots', '词根'], ['sentences', '长难句']] as const).map(([id, label]) => <button key={id} aria-pressed={mobilePanel === id} onClick={() => setMobilePanel(id)}>{label}</button>)}
+        </nav>
 
         <div className="study-session-grid">
           <aside className="study-morpheme-column">
@@ -732,12 +747,12 @@ function StudyToday({
               {activeDetail ? <>
                 <header className="study-word-hero">
                   <div><span>{group?.kind === "root" ? `${group.spelling} 词根家族` : "独立单词"}</span><FittedWordTitle word={activeDetail.spelling} /><div><strong>{activeDetail.pronunciation || "音标未提供"}</strong><AudioButton url={activeDetail.audioUrl} /></div></div>
-                  <div><p>{activeDetail.definitionCn}</p><BookmarkButton active={Boolean(progress.bookmarks[activeDetail.id])} onClick={() => onToggleBookmark(activeDetail.id)} /></div>
+                  <div><p>{activeDetail.definitionCn}</p></div>
                 </header>
                 <section className="session-section"><header><div><span>MEMORY</span><h3>巧记</h3></div></header><MarkdownBlock value={activeDetail.memoryMarkup} /></section>
                 <section className="session-section etymology-study"><header><div><span>WORD BUILDING</span><h3>词根词缀分析</h3></div></header>
                   {orderedParts.length > 0 && <div className="study-word-equation">{orderedParts.map((part, index) => <div className="study-word-equation-piece" key={`${part.id}-${part.order}`}>{index > 0 && <i aria-hidden="true">＋</i>}<span><b>{part.spelling}</b><small>{part.meaning}</small></span></div>)}</div>}
-                  <MarkdownBlock value={activeDetail.etymologyMarkup} empty="暂无独立构词分析，请结合左栏词根词缀巧记整体记忆。" />
+                  <MarkdownBlock value={activeDetail.etymologyMarkup} empty="暂无独立构词分析，请结合词根词缀巧记整体记忆。" />
                 </section>
                 <SentenceSpotlight eyebrow="EXAMPLE" title="简单例句" rows={activeDetail.examples} index={simpleExampleIndex} onNext={() => setSimpleExampleIndex((simpleExampleIndex + 1) % activeDetail.examples.length)} />
                 <SentenceSpotlight eyebrow="EXAM" title="真题例句" rows={activeDetail.examExamples} index={examExampleIndex} onNext={() => setExamExampleIndex((examExampleIndex + 1) % activeDetail.examExamples.length)} exam />
@@ -800,7 +815,6 @@ function ReviewToday({
   details,
   loadWords,
   saveProgress,
-  onToggleBookmark,
 }: {
   catalog: Catalog;
   progress: AppProgress;
@@ -808,10 +822,10 @@ function ReviewToday({
   details: Record<string, WordDetail>;
   loadWords: (ids: string[], kind: "study" | "review" | "bookmarks", planDay: number) => Promise<boolean>;
   saveProgress: (progress: AppProgress) => Promise<void>;
-  onToggleBookmark: (wordId: string) => void;
 }) {
   const [skipMastered, setSkipMastered] = useState(true);
   const [revealed, setRevealed] = useState(false);
+  const reviewLock = useRef(false);
   const day = progress.planDays[String(plan.day)];
   const candidates = reviewCandidates(progress, skipMastered);
   const queue = day?.reviewWordIds.filter((id) => !day.reviewedWordIds.includes(id)) ?? [];
@@ -822,7 +836,7 @@ function ReviewToday({
   useEffect(() => {
     setRevealed(false);
     if (hover && currentId) hover.setCurrentWordId(currentId);
-  }, [currentId, hover]);
+  }, [currentId]);
 
   useEffect(() => {
     if (day?.reviewWordIds.length) void loadWords(day.reviewWordIds, "review", plan.day);
@@ -833,9 +847,12 @@ function ReviewToday({
     await saveProgress(startReviewDay(progress, plan.day, candidates, skipMastered));
   };
   const rate = async (level: Proficiency) => {
-    if (!currentId) return;
-    await saveProgress(rateReviewWord(progress, plan.day, currentId, level));
-    setRevealed(false);
+    if (!currentId || reviewLock.current) return;
+    reviewLock.current = true;
+    try {
+      await saveProgress(rateReviewWord(progress, plan.day, currentId, level));
+      setRevealed(false);
+    } finally { reviewLock.current = false; }
   };
 
   if (!day) {
@@ -846,20 +863,181 @@ function ReviewToday({
   if (finished) return <div className="page review-finished"><PageHeader eyebrow={`DAY ${plan.day} · COMPLETE`} title="今天的复习判断已经完成" description={`共重新判断 ${day.reviewedWordIds.length} 个单词，新的熟练度已经保存。`} /><div className="review-finished-mark">✓<span>REVIEW COMPLETE</span></div></div>;
   const word = currentId ? catalog.words[currentId] : null;
   const detail = currentId ? details[currentId] ?? null : null;
-  return <div className="page review-session"><PageHeader eyebrow={`DAY ${plan.day} · REVIEW`} title="先回想，再点击查看详情" description={`本轮剩余 ${queue.length} 个单词；同一个单词只出现一次。`} aside={<div className="today-progress"><b>{day.reviewedWordIds.length}</b><span>/ {day.reviewWordIds.length}</span></div>} /><div className={`judgment-card ${revealed ? "revealed" : ""}`}>{!revealed && word ? <button className="judgment-front" onClick={() => setRevealed(true)}><span>点击屏幕查看详细情况</span><h2>{word.spelling}</h2><p>{word.pronunciation}</p><i>CLICK TO REVEAL</i></button> : <WordDetailPanel detail={detail} bookmarked={Boolean(detail && progress.bookmarks[detail.id])} onToggleBookmark={() => detail && onToggleBookmark(detail.id)} footer={<ProficiencyPicker value={currentId ? progress.words[currentId]?.proficiency : undefined} onChange={rate} title="重新判断这个单词的熟练度" />} />}</div></div>;
+  return <div className="page review-session"><PageHeader eyebrow={`DAY ${plan.day} · REVIEW`} title="先回想，再点击查看详情" description={`本轮剩余 ${queue.length} 个单词；同一个单词只出现一次。`} aside={<div className="today-progress"><b>{day.reviewedWordIds.length}</b><span>/ {day.reviewWordIds.length}</span></div>} /><div className={`judgment-card ${revealed ? "revealed" : ""}`}>{!revealed && word ? <button className="judgment-front" onClick={() => setRevealed(true)}><span>点击屏幕查看详细情况</span><h2>{word.spelling}</h2><p>{word.pronunciation}</p><i>CLICK TO REVEAL</i></button> : <WordDetailPanel detail={detail} footer={<ProficiencyPicker value={currentId ? progress.words[currentId]?.proficiency : undefined} onChange={rate} title="重新判断这个单词的熟练度" />} />}</div></div>;
 }
 
-function VocabularyView({ catalog, progress, details, loadWords, planDay, onToggleBookmark }: { catalog: Catalog; progress: AppProgress; details: Record<string, WordDetail>; loadWords: (ids: string[], kind: "study" | "review" | "bookmarks", planDay: number) => Promise<boolean>; planDay: number; onToggleBookmark: (id: string) => void }) {
-  const [query, setQuery] = useState("");
-  const [selectedId, setSelectedId] = useState("");
-  const ids = useMemo(() => Object.entries(progress.bookmarks).sort((a, b) => b[1].localeCompare(a[1])).map(([id]) => id).filter((id) => { const term = query.trim().toLowerCase(); const word = catalog.words[id]; return !term || word.spelling.toLowerCase().includes(term) || word.definitionCn.includes(term); }), [catalog, progress.bookmarks, query]);
+function VocabularySession({ wordIds, initialIndex, category, progress, details, loadWords, planDay, saveProgress, onClose }: {
+  wordIds: string[];
+  initialIndex: number;
+  category: "unmastered" | "unclear";
+  progress: AppProgress;
+  details: Record<string, WordDetail>;
+  loadWords: (ids: string[], kind: "study" | "review" | "bookmarks", planDay: number) => Promise<boolean>;
+  planDay: number;
+  saveProgress: (next: AppProgress) => Promise<void>;
+  onClose: () => void;
+}) {
+  const [index, setIndex] = useState(initialIndex);
+  const [ratedIds, setRatedIds] = useState<Set<string>>(() => new Set());
+  const [busy, setBusy] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const [saveError, setSaveError] = useState("");
+  const ratingLock = useRef(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const backRef = useRef<HTMLButtonElement>(null);
+  const wordId = wordIds[index];
+  const detail = details[wordId] ?? null;
+  const rated = ratedIds.has(wordId);
+  const requestClose = () => { if (!ratingLock.current) setClosing(true); };
+
+  useLayoutEffect(() => {
+    const shell = document.querySelector<HTMLElement>(".app-shell");
+    const main = document.querySelector<HTMLElement>(".app-content");
+    const trigger = document.activeElement as HTMLElement | null;
+    const oldInert = shell?.inert ?? false;
+    const oldOverflow = main?.style.overflow ?? "";
+    const scrollTop = main?.scrollTop ?? 0;
+    if (shell) shell.inert = true;
+    if (main) main.style.overflow = "hidden";
+    document.body.classList.add("vocabulary-session-active");
+    backRef.current?.focus({ preventScroll: true });
+    return () => {
+      if (shell) shell.inert = oldInert;
+      if (main) { main.style.overflow = oldOverflow; main.scrollTop = scrollTop; }
+      document.body.classList.remove("vocabulary-session-active");
+      const target = trigger?.isConnected ? trigger : document.querySelector<HTMLElement>('.vocabulary-filters [aria-pressed="true"]');
+      target?.focus({ preventScroll: true });
+    };
+  }, []);
   useEffect(() => {
-    if (!ids.length) return;
-    if (!ids.includes(selectedId)) setSelectedId(ids[0]);
-    void loadWords(ids, "bookmarks", planDay);
-  }, [ids.join("|"), planDay]);
-  const detail = selectedId ? details[selectedId] ?? null : null;
-  return <div className="page vocabulary-page"><PageHeader eyebrow="VOCABULARY BOOK" title="生词本" description="学习或复习时随手收藏，集中查看仍需要额外注意的单词。" aside={<label className="search-box"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索生词" /></label>} />{ids.length ? <div className="vocabulary-layout"><aside>{ids.map((id) => <button className={selectedId === id ? "active" : ""} key={id} onClick={() => setSelectedId(id)}><b>{catalog.words[id].spelling}</b><span>{catalog.words[id].pronunciation}</span><small>{catalog.words[id].definitionCn}</small><i className={progress.words[id]?.proficiency}>{progress.words[id] ? proficiencyCopy[progress.words[id].proficiency].label : "未学习"}</i></button>)}</aside><WordDetailPanel detail={detail} bookmarked={Boolean(detail && progress.bookmarks[detail.id])} onToggleBookmark={() => detail && onToggleBookmark(detail.id)} /></div> : <div className="vocabulary-empty"><span>◇</span><h2>生词本还是空的</h2><p>在单词详情中点击“加入生词本”，它会出现在这里。</p></div>}</div>;
+    let active = true;
+    setLoadFailed(false);
+    void loadWords([wordId], "bookmarks", planDay).then((ok) => {
+      if (!active) return;
+      setLoadFailed(!ok);
+      if (ok && wordIds[index + 1]) void loadWords([wordIds[index + 1]], "bookmarks", planDay);
+    });
+    return () => { active = false; };
+  }, [wordId, planDay, retry]);
+  useEffect(() => {
+    if (!closing) return;
+    document.querySelector<HTMLButtonElement>(".popover-close")?.click();
+    const timer = window.setTimeout(onClose, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 180);
+    return () => window.clearTimeout(timer);
+  }, [closing, onClose]);
+  const move = (delta: number) => {
+    if (ratingLock.current || closing || (delta > 0 && !rated)) return;
+    setSaveError("");
+    setIndex((value) => Math.max(0, Math.min(wordIds.length - 1, value + delta)));
+  };
+  const rate = async (level: Proficiency) => {
+    if (!detail || !progress.words[wordId] || ratingLock.current || closing) return;
+    ratingLock.current = true; setBusy(true); setSaveError("");
+    try {
+      await saveProgress(updateWordProficiency(progress, wordId, level));
+      setRatedIds((previous) => new Set([...previous, wordId]));
+      if (index < wordIds.length - 1) setIndex(index + 1);
+      else setClosing(true);
+    } catch { setSaveError("评级未保存，请重试。"); }
+    finally { ratingLock.current = false; setBusy(false); }
+  };
+  useEffect(() => {
+    const back = (event: Event) => {
+      if (event.defaultPrevented) return;
+      event.preventDefault(); requestClose();
+    };
+    const key = (event: KeyboardEvent) => {
+      const popupClose = document.querySelector<HTMLButtonElement>(".popover-close");
+      if (popupClose) {
+        if (event.key === "Escape") { event.preventDefault(); event.stopImmediatePropagation(); popupClose.click(); }
+        return;
+      }
+      if (event.key === "Escape") { event.preventDefault(); event.stopImmediatePropagation(); requestClose(); return; }
+      if (event.key === "Tab") {
+        const controls = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input, a[href], [tabindex="0"]') ?? []).filter((el) => el.getClientRects().length);
+        const first = controls[0], last = controls.at(-1);
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+        return;
+      }
+      if ((event.target as HTMLElement)?.closest('input, textarea, select, [contenteditable="true"]')) return;
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") { event.preventDefault(); move(event.key === "ArrowLeft" ? -1 : 1); }
+      const shortcut: Record<string, Proficiency> = { "1": "unmastered", "2": "unclear", "3": "mastered" };
+      if (shortcut[event.key] && !event.repeat) { event.preventDefault(); void rate(shortcut[event.key]); }
+      if (event.code === "Space" && event.target === document.body) { event.preventDefault(); if (detail?.audioUrl && !event.repeat) void new Audio(detail.audioUrl).play().catch(() => undefined); }
+    };
+    window.addEventListener("cyword-back", back);
+    window.addEventListener("keydown", key, true);
+    return () => { window.removeEventListener("cyword-back", back); window.removeEventListener("keydown", key, true); };
+  }, [index, detail, progress, rated, closing]);
+
+  return createPortal(<div ref={dialogRef} className={"vocabulary-session " + (closing ? "is-closing" : "")} role="dialog" aria-modal="true" aria-label="词汇掌握全屏详情">
+    <header className="vocabulary-session-header"><button ref={backRef} onClick={requestClose} disabled={busy}>‹ 返回列表</button><b>{proficiencyCopy[category].label}</b><span aria-live="polite">{index + 1} / {wordIds.length}</span></header>
+    <div className="vocabulary-session-content" key={wordId}>
+      {detail ? <WordDetailPanel detail={detail} /> : <div className="vocabulary-loading" role="status"><p>{loadFailed ? "单词详情加载失败，请重试。" : "正在加载单词详情…"}</p>{loadFailed && <button onClick={() => setRetry((value) => value + 1)}>重新加载</button>}</div>}
+    </div>
+    <footer className="vocabulary-session-controls">
+      {saveError && <p role="alert">{saveError}</p>}
+      <div className="session-rating">{(Object.keys(proficiencyCopy) as Proficiency[]).map((level) => <button className={level + (rated && progress.words[wordId]?.proficiency === level ? " active" : "")} key={level} disabled={busy || !detail || closing} onClick={() => void rate(level)}>{proficiencyCopy[level].label}</button>)}</div>
+      <nav className="vocabulary-session-navigation" aria-label="切换单词"><button onClick={() => move(-1)} disabled={index === 0 || busy || closing}>‹ 上一个</button><button onClick={() => move(1)} disabled={!rated || index === wordIds.length - 1 || busy || closing}>下一个 ›</button></nav>
+    </footer>
+  </div>, document.body);
+}
+
+function VocabularyView({ catalog, progress, details, loadWords, planDay, saveProgress }: {
+  catalog: Catalog;
+  progress: AppProgress;
+  details: Record<string, WordDetail>;
+  loadWords: (ids: string[], kind: "study" | "review" | "bookmarks", planDay: number) => Promise<boolean>;
+  planDay: number;
+  saveProgress: (next: AppProgress) => Promise<void>;
+}) {
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<"unmastered" | "unclear">("unmastered");
+  const [page, setPage] = useState(0);
+  const [selectedId, setSelectedId] = useState("");
+  const [session, setSession] = useState<{ wordIds: string[]; initialIndex: number; category: "unmastered" | "unclear" } | null>(null);
+  const overview = useMemo(() => vocabularyOverview(progress, catalog), [progress, catalog]);
+  const ids = useMemo(() => overview.ids.filter((id) => {
+    const word = catalog.words[id], term = query.trim().toLowerCase();
+    return progress.words[id].proficiency === filter
+      && (!term || word.spelling.toLowerCase().includes(term) || word.definitionCn.includes(term));
+  }), [overview, catalog, progress.words, query, filter]);
+  const pageCount = Math.max(1, Math.ceil(ids.length / 50));
+  const currentPage = Math.min(page, pageCount - 1);
+  const visibleIds = ids.slice(currentPage * 50, (currentPage + 1) * 50);
+  const statistics = [
+    { key: "mastered", label: "已掌握", count: overview.counts.mastered },
+    { key: "unmastered", label: "未掌握", count: overview.counts.unmastered },
+    { key: "unclear", label: "不清楚", count: overview.counts.unclear },
+    { key: "unlearned", label: "未学习", count: overview.counts.unlearned },
+  ];
+  return <div className="page vocabulary-page">
+    <PageHeader eyebrow="VOCABULARY PROGRESS" title="词汇掌握情况" description="看清整本词书的掌握情况，集中巩固还没记牢的词。" />
+    <section className="vocabulary-overview" aria-label="全书词汇掌握统计">
+      <header><span>全书 <b>{overview.total}</b> 词</span><span>已学习 <b>{overview.total - overview.counts.unlearned}</b> 词</span></header>
+      <div className="mastery-distribution" role="img" aria-label={statistics.map((item) => item.label + item.count + "词").join("，")}>
+        {statistics.map((item) => <i key={item.key} className={item.key} style={{ width: (item.count / Math.max(1, overview.total) * 100) + "%" }} />)}
+      </div>
+      <dl>{statistics.map((item) => <div className={item.key} key={item.key}><dt><i />{item.label}</dt><dd>{item.count}<small>词</small></dd></div>)}</dl>
+    </section>
+    <div className="vocabulary-toolbar">
+      <div className="vocabulary-filters" aria-label="筛选待巩固词汇">
+        {(["unmastered", "unclear"] as const).map((level) => <button key={level} aria-pressed={filter === level} onClick={() => { setFilter(level); setPage(0); }}>{proficiencyCopy[level].label}<b>{overview.counts[level]}</b></button>)}
+      </div>
+      <label className="search-box"><span aria-hidden="true">⌕</span><input aria-label="搜索待巩固词汇" value={query} onChange={(event) => { setQuery(event.target.value); setPage(0); }} placeholder="搜索单词或中文释义" /></label>
+    </div>
+    <p className="vocabulary-hint">未掌握、不清楚的已学词自动收录；改为已掌握后自动移出。</p>
+    {ids.length ? <>
+      <div className="vocabulary-layout">
+        <aside aria-label="词汇列表">{visibleIds.map((id) => <button className={selectedId === id ? "active" : ""} key={id} onClick={() => { setSelectedId(id); setSession({ wordIds: [...ids], initialIndex: ids.indexOf(id), category: filter }); }}><b>{catalog.words[id].spelling}</b><span>{catalog.words[id].pronunciation}</span><small>{catalog.words[id].definitionCn}</small><i className={progress.words[id].proficiency}>{proficiencyCopy[progress.words[id].proficiency].label}</i></button>)}</aside>
+      </div>
+      {pageCount > 1 && <nav className="vocabulary-pagination" aria-label="词汇列表翻页"><button disabled={currentPage === 0} onClick={() => { setPage(currentPage - 1); }}>上一页</button><span>{currentPage + 1} / {pageCount} · 共 {ids.length} 词</span><button disabled={currentPage + 1 === pageCount} onClick={() => { setPage(currentPage + 1); }}>下一页</button></nav>}
+    </> : <div className="vocabulary-empty"><span aria-hidden="true">◇</span><h2>{query.trim() ? "没有找到匹配的词" : overview.ids.length ? "当前分类没有待巩固词汇" : overview.counts.unlearned === overview.total ? "学过之后，在这里看见进步" : "已学词汇都已掌握"}</h2><p>{query.trim() ? "试试其他单词或中文释义。" : overview.ids.length ? "可以切换到其他分类查看。" : "学习或复习中标为“未掌握”“不清楚”的词，会自动出现在这里。"}</p></div>}
+    {session && <VocabularySession {...session} progress={progress} details={details} loadWords={loadWords} planDay={planDay} saveProgress={saveProgress} onClose={() => setSession(null)} />}
+  </div>;
 }
 
 function UpdateControl() {
@@ -932,8 +1110,9 @@ function UpdateControl() {
 
 function App() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
-  const [progress, setProgress] = useState<AppProgress | null>(null);
   const [session, setSession] = useState<UserSession | null>(null);
+  const synced = useSyncedProgress(session, catalog);
+  const progress = synced.progress;
   const [sessionChecked, setSessionChecked] = useState(false);
   const [view, transitionView, viewTransitionPhase] = useSoftTransitionState<ViewName>("home");
   const [details, setDetails] = useState<Record<string, WordDetail>>({});
@@ -946,6 +1125,17 @@ function App() {
 
   useEffect(() => {
     document.querySelector(".app-shell > main")?.scrollTo({ top: 0, behavior: "auto" });
+  }, [view]);
+
+  useEffect(() => {
+    const back = (event: Event) => {
+      const close = document.querySelector<HTMLButtonElement>(".popover-close");
+      if (close) { event.preventDefault(); event.stopImmediatePropagation(); close.click(); return; }
+      if (document.body.classList.contains("study-mode-active") || document.body.classList.contains("vocabulary-session-active")) return;
+      if (view !== "home") { event.preventDefault(); transitionView("home"); }
+    };
+    window.addEventListener("cyword-back", back);
+    return () => window.removeEventListener("cyword-back", back);
   }, [view]);
 
   useEffect(() => {
@@ -971,11 +1161,8 @@ function App() {
   }, []);
 
   useEffect(() => {
-    Promise.all([window.cyword.readCatalog(), window.cyword.readProgress()]).then(async ([nextCatalog, rawProgress]) => {
-      const nextProgress = normalizeProgress(rawProgress);
-      setCatalog(nextCatalog);
-      setProgress(nextProgress);
-      if ((rawProgress as { version?: number } | null)?.version !== 2) await window.cyword.writeProgress(nextProgress);
+    window.cyword.readCatalog().then((nextCatalog) => {
+      setCatalog(applyCurriculum(nextCatalog));
     }).catch((reason) => setError(reason instanceof Error ? reason.message : String(reason)));
   }, []);
 
@@ -1016,13 +1203,13 @@ function App() {
   };
 
   const saveProgress = async (next: AppProgress) => {
-    setProgress(next);
-    try { await window.cyword.writeProgress(next); }
-    catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); }
+    try { await synced.save(next); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); throw reason; }
   };
 
   const handleLogout = async () => {
     try {
+      await synced.flush();
       if (window.cyword?.clearSession) {
         await window.cyword.clearSession();
       } else {
@@ -1034,14 +1221,15 @@ function App() {
     setSession(null);
   };
 
-  if (error) return <div className="fatal-error"><span>CYWORD</span><h1>应用未能加载词书</h1><p>{error}</p></div>;
+  if (error) return <div className="fatal-error"><span>CYWORD</span><h1>暂时无法继续</h1><p>{error}</p><button onClick={() => location.reload()}>重新连接</button></div>;
+  if (sessionChecked && !session) return <AuthModal onSuccess={(s) => setSession(s)} />;
+  if (session && !progress && synced.status === "error") return <div className="fatal-error"><h1>进度读取失败</h1><p>{synced.message}</p><button onClick={() => location.reload()}>重试</button></div>;
   if (!catalog || !progress || !sessionChecked) return <div className="loading-screen"><div>Cy</div><p>正在铺开今天的词书计划…</p></div>;
 
   const plan = buildPlan(catalog);
   const currentDayNumber = currentPlanDayNumber(progress, plan.length);
   const activeDayNumber = selectedDayNumber ?? currentDayNumber;
   const current = plan[activeDayNumber - 1] ?? plan[0];
-  const toggleWordBookmark = (wordId: string) => saveProgress(toggleBookmark(progress, wordId));
 
   const navigate = (nextView: ViewName) => {
     if (nextView !== view) {
@@ -1072,11 +1260,13 @@ function App() {
     >
       <div className="app-wallpaper" aria-hidden="true" />
       <div className="app-shell">
+        <header className="mobile-header"><a className="mobile-brand" href="#" onClick={(event) => { event.preventDefault(); navigate("home"); }}>Cy<span>词根记忆</span></a><details className="mobile-account"><summary aria-label={`我的账号，${synced.message}`}><i className={`sync-dot ${synced.status}`} aria-hidden="true" /><span>我的</span><svg className="account-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg></summary><div><b>{session?.user.email}</b><p className="account-sync-message"><i className={`sync-dot ${synced.status}`} aria-hidden="true" />{synced.message}</p><button onClick={() => void synced.sync()}>立即同步</button><button onClick={() => void handleLogout()}>退出登录</button></div></details></header>
         <aside className="sidebar">
           <div className="brand"><div>Cy</div><span><b>词根记忆</b><small>Rooted recall</small></span></div>
-          <nav>{navItems.map((item) => <button className={view === item.id ? "active" : ""} key={item.id} onClick={() => navigate(item.id)}><i>{item.glyph}</i><b>{item.label}</b>{item.id === "vocabulary" && Object.keys(progress.bookmarks).length > 0 && <em>{Object.keys(progress.bookmarks).length}</em>}</button>)}</nav>
+          <nav>{navItems.map((item) => <button aria-label={item.label} aria-current={view === item.id ? "page" : undefined} className={view === item.id ? "active" : ""} key={item.id} onClick={() => navigate(item.id)}><i>{item.glyph}</i><b>{item.label}</b></button>)}</nav>
           {session && (
             <footer className="sidebar-user-footer">
+              <button className={`sync-status ${synced.status}`} title={synced.message} onClick={() => void synced.sync()}><i className={`sync-dot ${synced.status}`} />{synced.message}</button>
               <div className="sidebar-user-info">
                 <div className="sidebar-user-avatar">
                   {session.user.email.charAt(0).toUpperCase()}
@@ -1092,8 +1282,8 @@ function App() {
         <main className={`app-content soft-transition transition-${viewTransitionPhase}`}>
           {view === "home" && <HomeView catalog={catalog} progress={progress} plan={plan} current={current} goToday={() => handleSelectPlanDay(currentDayNumber)} />}
           {view === "plan" && <PlanView plan={plan} progress={progress} current={plan[currentDayNumber - 1] ?? current} onSelectDay={handleSelectPlanDay} />}
-          {view === "today" && (current.kind === "study" ? <StudyToday catalog={catalog} progress={progress} plan={current} details={details} loadWords={loadWords} saveProgress={saveProgress} onToggleBookmark={toggleWordBookmark} /> : <ReviewToday catalog={catalog} progress={progress} plan={current} details={details} loadWords={loadWords} saveProgress={saveProgress} onToggleBookmark={toggleWordBookmark} />)}
-          {view === "vocabulary" && <VocabularyView catalog={catalog} progress={progress} details={details} loadWords={loadWords} planDay={current.day} onToggleBookmark={toggleWordBookmark} />}
+          {view === "today" && (current.kind === "study" ? <StudyToday catalog={catalog} progress={progress} plan={current} details={details} loadWords={loadWords} saveProgress={saveProgress} /> : <ReviewToday catalog={catalog} progress={progress} plan={current} details={details} loadWords={loadWords} saveProgress={saveProgress} />)}
+          {view === "vocabulary" && <VocabularyView catalog={catalog} progress={progress} details={details} loadWords={loadWords} planDay={current.day} saveProgress={saveProgress} />}
         </main>
         {!session && <AuthModal onSuccess={(s) => setSession(s)} />}
         <UpdateControl />

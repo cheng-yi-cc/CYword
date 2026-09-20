@@ -1,0 +1,7 @@
+{
+  "appId": "me.chengyi.cyword",
+  "appName": "CYword",
+  "webDir": "dist",
+  "android": { "backgroundColor": "#f7f4ee" },
+  "plugins": { "SystemBars": { "style": "LIGHT", "insetsHandling": "css" } }
+}

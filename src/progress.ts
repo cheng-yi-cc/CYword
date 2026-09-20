@@ -5,7 +5,7 @@ import type {
   PlanDayProgress,
   Proficiency,
   StudyGroup,
-} from "./types";
+} from "./types.ts";
 
 export const proficiencyCopy: Record<Proficiency, { label: string; hint: string }> = {
   unmastered: { label: "未掌握", hint: "需要重点复习" },
@@ -75,6 +75,7 @@ export function buildPlan(catalog: Catalog): PlanDay[] {
       kind: "study",
       studyDay: study.day,
       groupIds: study.groupIds,
+      exposureOrder: study.exposureOrder,
       appearanceCount: study.appearanceCount,
       uniqueWordCount: study.uniqueWordCount,
     });
@@ -90,6 +91,14 @@ export function buildPlan(catalog: Catalog): PlanDay[] {
     }
   });
   return plan;
+}
+
+export function studyExposures(plan: Pick<PlanDay, "groupIds" | "exposureOrder">, groups: StudyGroup[]) {
+  const byId = new Map(groups.map(group => [group.id, group]));
+  const flat = plan.groupIds.flatMap(id => (byId.get(id)?.wordIds ?? []).map(wordId => ({
+    groupId: id, wordId, key: `${id}:${wordId}`,
+  })));
+  return plan.exposureOrder ? plan.exposureOrder.map(index => flat[index]) : flat;
 }
 
 export function currentPlanDayNumber(progress: AppProgress, totalDays: number): number {
@@ -198,11 +207,28 @@ export function rateReviewWord(
   return next;
 }
 
-export function toggleBookmark(progress: AppProgress, wordId: string): AppProgress {
+/** Reassessing a known word must not complete a study exposure or a planned review. */
+export function updateWordProficiency(progress: AppProgress, wordId: string, proficiency: Proficiency): AppProgress {
+  if (!progress.words[wordId]) return progress;
   const next = structuredClone(progress);
-  if (next.bookmarks[wordId]) delete next.bookmarks[wordId];
-  else next.bookmarks[wordId] = new Date().toISOString();
+  next.words[wordId].proficiency = proficiency;
+  next.words[wordId].lastSeenAt = new Date().toISOString();
   return next;
+}
+
+/** The vocabulary list is derived from ratings; legacy bookmarks never determine membership. */
+export function vocabularyOverview(progress: AppProgress, catalog: Catalog) {
+  const counts = { unmastered: 0, unclear: 0, mastered: 0, unlearned: 0 };
+  const ids: string[] = [];
+  for (const id of Object.keys(catalog.words)) {
+    const word = progress.words[id];
+    if (!word) { counts.unlearned += 1; continue; }
+    counts[word.proficiency] += 1;
+    if (word.proficiency !== "mastered") ids.push(id);
+  }
+  ids.sort((a, b) => Number(progress.words[a].proficiency === "unclear") - Number(progress.words[b].proficiency === "unclear")
+    || progress.words[a].lastSeenAt.localeCompare(progress.words[b].lastSeenAt) || a.localeCompare(b));
+  return { counts, ids, total: Object.keys(catalog.words).length };
 }
 
 export function planDayFraction(progress: AppProgress, plan: PlanDay): number {
@@ -219,4 +245,43 @@ export function proficiencyCounts(progress: AppProgress) {
   const counts: Record<Proficiency, number> = { unmastered: 0, unclear: 0, mastered: 0 };
   for (const word of Object.values(progress.words)) counts[word.proficiency] += 1;
   return counts;
+}
+
+export function reconcileCompletion(progress: AppProgress, catalog: Catalog): AppProgress {
+  const next = structuredClone(progress);
+  const groups = new Map(catalog.groups.map((group) => [group.id, group]));
+  // Exposure identity is group × word, independent of the day it used to belong to.
+  const exposures = new Map<string, string>();
+  for (const day of Object.values(progress.planDays)) {
+    if (day.kind !== "study") continue;
+    for (const key of day.ratedExposureKeys) {
+      const startedAt = exposures.get(key);
+      if (!startedAt || day.startedAt < startedAt) exposures.set(key, day.startedAt);
+    }
+  }
+  next.planDays = Object.fromEntries(Object.entries(next.planDays).filter(([, day]) => day.kind === "review"));
+  for (const plan of buildPlan(catalog)) {
+    if (plan.kind !== "study") continue;
+    const keys = plan.groupIds.flatMap((id) => groups.get(id)?.wordIds.map((wordId) => `${id}:${wordId}`) ?? []);
+    const ratedExposureKeys = keys.filter((key) => exposures.has(key)).sort();
+    if (!ratedExposureKeys.length) continue;
+    const previous = progress.planDays[String(plan.day)];
+    const day: PlanDayProgress = {
+      kind: "study",
+      startedAt: ratedExposureKeys.map((key) => exposures.get(key)!).sort()[0],
+      completedGroupIds: plan.groupIds.filter((id) => groups.get(id)?.wordIds.every((wordId) => exposures.has(`${id}:${wordId}`))).sort(),
+      ratedExposureKeys,
+      reviewWordIds: [],
+      reviewedWordIds: [],
+      skipMastered: previous?.skipMastered ?? true,
+    };
+    if (ratedExposureKeys.length === keys.length) {
+      const sameMembership = previous?.kind === "study" && previous.ratedExposureKeys.length === keys.length
+        && previous.ratedExposureKeys.every((key) => keys.includes(key));
+      day.completedAt = (sameMembership && previous.completedAt) || ratedExposureKeys
+        .map((key) => next.words[key.slice(key.lastIndexOf(":") + 1)]?.lastSeenAt).filter(Boolean).sort().at(-1) || day.startedAt;
+    }
+    next.planDays[String(plan.day)] = day;
+  }
+  return next;
 }

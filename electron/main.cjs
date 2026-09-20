@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, shell, dialog } = require("electron");
 const { autoUpdater } = require("electron-updater");
 const fs = require("node:fs/promises");
 const path = require("node:path");
+const { createHash, randomUUID } = require("node:crypto");
 
 const devUrl = process.env.VITE_DEV_SERVER_URL;
 const bookApiUrl = process.env.CYWORD_BOOK_API_URL || "https://cyword.chengyi.me/api/books/cet6";
@@ -76,7 +77,8 @@ function checkForUpdatesOnce() {
   });
 }
 
-function progressPath() {
+function progressPath(accountId) {
+  if (accountId) return path.join(app.getPath("userData"), "accounts", createHash("sha256").update(String(accountId)).digest("hex"), "progress.json");
   return path.join(app.getPath("userData"), "progress.json");
 }
 
@@ -124,7 +126,8 @@ async function readJson(filePath, fallback = null) {
   }
 }
 
-function registerIpc() {
+async function registerIpc() {
+  const legacySession = await readJson(sessionPath(), null);
   ipcMain.handle("catalog:read", () => fetchBookJson("/catalog"));
 
   ipcMain.handle("words:read", (_event, request) => {
@@ -187,9 +190,23 @@ function registerIpc() {
     return true;
   });
 
-  ipcMain.handle("progress:read", async () => {
+  ipcMain.handle("progress:read", async (_event, accountId) => {
+    if (accountId) {
+      const saved = await readJson(progressPath(accountId), null);
+      if (saved) return saved;
+      const ownerPath = path.join(app.getPath("userData"), "progress-owner.json");
+      const owner = await readJson(ownerPath, null);
+      if (!owner && legacySession?.user?.id === accountId) {
+        const legacy = await readJson(progressPath(), null);
+        // Claim the legacy data once, retaining the old file for recovery.
+        await fs.mkdir(path.dirname(progressPath(accountId)), { recursive: true });
+        if (legacy) await fs.writeFile(progressPath(accountId), JSON.stringify(legacy), "utf8");
+        await fs.writeFile(ownerPath, JSON.stringify({ accountId }), "utf8");
+        return legacy;
+      }
+    }
     return (
-      (await readJson(progressPath(), null)) ?? {
+      (await readJson(progressPath(accountId), null)) ?? {
         version: 2,
         planDays: {},
         words: {},
@@ -199,16 +216,28 @@ function registerIpc() {
     );
   });
 
-  ipcMain.handle("progress:write", async (_event, progress) => {
+  ipcMain.handle("progress:write", async (_event, progress, accountId) => {
     if (!progress || progress.version !== 2 || typeof progress.words !== "object") {
       throw new Error("学习进度格式无效");
     }
-    const target = progressPath();
-    const temporary = `${target}.tmp`;
+    const target = progressPath(accountId);
+    const temporary = `${target}.${randomUUID()}.tmp`;
     await fs.mkdir(path.dirname(target), { recursive: true });
     await fs.writeFile(temporary, JSON.stringify(progress, null, 2), "utf8");
     await fs.rename(temporary, target);
     return true;
+  });
+
+  ipcMain.handle("progress:sync", async (_event, token, payload) => {
+    if (typeof token !== "string" || token.length > 10000) throw new Error("登录状态无效");
+    const endpoint = devUrl ? `${devUrl.replace(/\/$/, "")}/api/progress` : "https://cyword.chengyi.me/api/progress";
+    const response = await fetch(endpoint, {
+      method: payload ? "PUT" : "GET",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: payload ? JSON.stringify(payload) : undefined,
+      signal: AbortSignal.timeout(30000),
+    });
+    return { status: response.status, data: await response.json() };
   });
 
   ipcMain.handle("update:get-state", () => updateState);
@@ -275,10 +304,10 @@ function createWindow() {
 const singleInstance = app.requestSingleInstanceLock();
 if (!singleInstance) app.quit();
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   app.setAppUserModelId("com.cyword.desktop");
   configureAutoUpdater();
-  registerIpc();
+  await registerIpc();
   createWindow();
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

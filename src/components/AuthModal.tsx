@@ -220,7 +220,7 @@ export function AuthModal({ onSuccess }: AuthModalProps) {
         </form>
 
         <div className="auth-footer">
-          <small>背单词学习进度保存在本机，登录用于识别用户身份与提供云端服务</small>
+          <small>使用同一邮箱登录，手机和电脑接着学。学习记录先保存在设备上，再自动同步到云端。</small>
         </div>
       </div>
     </div>

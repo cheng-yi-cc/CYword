@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { parse } from "csv-parse/sync";
+import { extractDependencies, buildLearningSchedule } from "./learning-schedule.mjs";
 
 const projectRoot = process.cwd();
 const bookCode = process.env.CYWORD_BOOK ?? process.argv[2] ?? "cet6";
@@ -66,45 +67,6 @@ function cleanWord(row) {
   };
 }
 
-function uniqueBy(rows, keyFn) {
-  return [...new Map(rows.map((item) => [keyFn(item), item])).values()];
-}
-
-function packStudyDays(groups, target = 190) {
-  const totalAppearances = groups.reduce((sum, group) => sum + group.wordIds.length, 0);
-  const minimumDayCount = Math.ceil(totalAppearances / target);
-  const plannedDayCount = Math.ceil(minimumDayCount / 3) * 3;
-  const days = [];
-  let unassignedAppearances = totalAppearances;
-  let day = { day: 1, groupIds: [], appearanceCount: 0, unique: new Set() };
-
-  for (const group of groups) {
-    const daysRemaining = plannedDayCount - days.length;
-    const balancedTarget = (day.appearanceCount + unassignedAppearances) / daysRemaining;
-    const currentDistance = Math.abs(balancedTarget - day.appearanceCount);
-    const nextDistance = Math.abs(balancedTarget - (day.appearanceCount + group.wordIds.length));
-    if (
-      day.groupIds.length > 0 &&
-      day.appearanceCount >= balancedTarget * 0.82 &&
-      nextDistance > currentDistance &&
-      days.length < plannedDayCount - 1
-    ) {
-      days.push(day);
-      day = { day: days.length + 1, groupIds: [], appearanceCount: 0, unique: new Set() };
-    }
-    day.groupIds.push(group.id);
-    day.appearanceCount += group.wordIds.length;
-    unassignedAppearances -= group.wordIds.length;
-    for (const wordId of group.wordIds) day.unique.add(wordId);
-  }
-  if (day.groupIds.length) days.push(day);
-
-  return days.map(({ unique, ...item }) => ({
-    ...item,
-    uniqueWordCount: unique.size,
-  }));
-}
-
 const wordsRaw = readCsv("words.csv");
 const rootsRaw = readCsv("root_markups.csv");
 const examples = indexMany(readCsv("examples.csv"));
@@ -120,109 +82,13 @@ const sentenceZones = indexMany(readCsv("sentence_zones.csv"));
 const rootsByWord = indexMany(rootsRaw);
 const wordMap = new Map(wordsRaw.map((row) => [row.word_id, cleanWord(row)]));
 
-const wordBySpelling = new Map(wordsRaw.map((row) => [row.spelling.toLowerCase(), cleanWord(row)]));
-
-const prereqPatterns = [
-  /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]\s*(?:为|是)?(?:已经|已)?(?:记忆过|学过|掌握|熟知)?(?:的)?(?:单词|熟词)/gu,
-  /(?:记忆|学过|学习|接触过|复习)?(?:单词)?\s*\[\[([^\]|]+)(?:\|[^\]]+)?\]\]\s*(?:时|中)?(?:已经|已)?(?:接触过|学过|记忆过|见过)/gu,
-  /在记忆(?:单词)?\s*\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/gu,
-  /由(?:熟词|单词)?\s*\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/gu,
-  /基于(?:已经记忆过的)?(?:单词)?\s*\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/gu,
-  /熟词\s*\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/gu,
-  /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]\s*为熟词/gu,
-  /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]\s*为已学/gu,
-];
-
-const wordDeps = [];
-const wordIncomingDeps = new Map();
-wordsRaw.forEach((w) => wordIncomingDeps.set(w.word_id, new Set()));
-
-for (const w of wordsRaw) {
-  const combined = `${w.memory_markup || ""}\n${w.etymology_markup || ""}`;
-  const foundPrereqs = new Set();
-
-  for (const pat of prereqPatterns) {
-    for (const m of combined.matchAll(pat)) {
-      if (m[1] && m[1].toLowerCase() !== w.spelling.toLowerCase()) {
-        foundPrereqs.add(m[1].toLowerCase());
-      }
-    }
-  }
-
-  const sentences = combined.split(/[。\n；]/);
-  for (const sentence of sentences) {
-    if (/已经记忆过|已经接触过|已学|记忆单词|在记忆.*时|已经学过|熟词/u.test(sentence)) {
-      for (const link of sentence.matchAll(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g)) {
-        const target = link[1].trim().toLowerCase();
-        if (!target.startsWith("-") && !target.endsWith("-") && target !== w.spelling.toLowerCase()) {
-          foundPrereqs.add(target);
-        }
-      }
-    }
-  }
-
-  for (const targetSpelling of foundPrereqs) {
-    const targetWord = wordBySpelling.get(targetSpelling);
-    if (targetWord && targetWord.id !== w.word_id) {
-      wordDeps.push({
-        sourceWordId: w.word_id,
-        targetWordId: targetWord.id,
-      });
-      wordIncomingDeps.get(w.word_id).add(targetWord.id);
-    }
-  }
-}
-
-function sortWordsInGroup(wordIds) {
-  if (wordIds.length <= 1) return wordIds;
-  const inGroupSet = new Set(wordIds);
-  const inDegree = new Map();
-  wordIds.forEach((id) => {
-    const deps = [...(wordIncomingDeps.get(id) || [])].filter((d) => inGroupSet.has(d));
-    inDegree.set(id, deps.length);
-  });
-
-  const sorted = [];
-  const visited = new Set();
-  while (sorted.length < wordIds.length) {
-    const available = wordIds.filter((id) => !visited.has(id) && inDegree.get(id) === 0);
-    if (available.length > 0) {
-      available.sort((a, b) => wordMap.get(a).originalOrder - wordMap.get(b).originalOrder);
-      const next = available[0];
-      visited.add(next);
-      sorted.push(next);
-      wordIds.forEach((id) => {
-        if (!visited.has(id) && wordIncomingDeps.get(id)?.has(next)) {
-          inDegree.set(id, inDegree.get(id) - 1);
-        }
-      });
-    } else {
-      const unvisited = wordIds.filter((id) => !visited.has(id));
-      unvisited.sort(
-        (a, b) =>
-          inDegree.get(a) - inDegree.get(b) ||
-          wordMap.get(a).originalOrder - wordMap.get(b).originalOrder,
-      );
-      const next = unvisited[0];
-      visited.add(next);
-      sorted.push(next);
-      wordIds.forEach((id) => {
-        if (!visited.has(id) && wordIncomingDeps.get(id)?.has(next)) {
-          inDegree.set(id, inDegree.get(id) - 1);
-        }
-      });
-    }
-  }
-  return sorted;
-}
-
 const trueRootRows = rootsRaw.filter((row) => row.root_type === "root" && row.root_id);
 const trueRootsById = indexMany(trueRootRows, "root_id");
 const wordsWithTrueRoots = new Set(trueRootRows.map((row) => row.word_id));
 
 const rootGroups = [...trueRootsById.entries()].map(([rootId, rows]) => {
   const rawWordIds = [...new Set(rows.map((row) => row.word_id))];
-  const wordIds = sortWordsInGroup(rawWordIds);
+  const wordIds = rawWordIds;
   const representative = rows.find((row) => row.memory_method) ?? rows[0];
   return {
     id: `root:${rootId}`,
@@ -254,83 +120,8 @@ const soloGroups = wordsRaw
     };
   });
 
-function topoSortGroups(allGroups) {
-  const groupsByWordId = new Map();
-  allGroups.forEach((group) => {
-    group.wordIds.forEach((wId) => {
-      if (!groupsByWordId.has(wId)) groupsByWordId.set(wId, []);
-      groupsByWordId.get(wId).push(group.id);
-    });
-  });
-
-  const outgoingEdges = new Map(allGroups.map((g) => [g.id, new Set()]));
-  const incomingEdges = new Map(allGroups.map((g) => [g.id, new Set()]));
-
-  for (const dep of wordDeps) {
-    const sourceGroupIds = groupsByWordId.get(dep.sourceWordId) || [];
-    const targetGroupIds = groupsByWordId.get(dep.targetWordId) || [];
-    for (const sgId of sourceGroupIds) {
-      for (const tgId of targetGroupIds) {
-        if (sgId !== tgId) {
-          outgoingEdges.get(tgId).add(sgId);
-          incomingEdges.get(sgId).add(tgId);
-        }
-      }
-    }
-  }
-
-  const prereqCount = new Map();
-  for (const [gId, targets] of outgoingEdges.entries()) {
-    prereqCount.set(gId, targets.size);
-  }
-
-  const currentInDegree = new Map();
-  allGroups.forEach((g) => currentInDegree.set(g.id, incomingEdges.get(g.id).size));
-  const sorted = [];
-  const visited = new Set();
-
-  while (sorted.length < allGroups.length) {
-    const available = allGroups.filter((g) => !visited.has(g.id) && currentInDegree.get(g.id) === 0);
-
-    if (available.length > 0) {
-      available.sort((a, b) => {
-        const pDiff = (prereqCount.get(b.id) || 0) - (prereqCount.get(a.id) || 0);
-        if (pDiff !== 0) return pDiff;
-        return a.firstOrder - b.firstOrder;
-      });
-
-      const next = available[0];
-      visited.add(next.id);
-      sorted.push(next);
-
-      for (const depId of outgoingEdges.get(next.id)) {
-        currentInDegree.set(depId, currentInDegree.get(depId) - 1);
-      }
-    } else {
-      const unvisited = allGroups.filter((g) => !visited.has(g.id));
-      unvisited.sort((a, b) => {
-        const inA = currentInDegree.get(a.id);
-        const inB = currentInDegree.get(b.id);
-        if (inA !== inB) return inA - inB;
-        const pDiff = (prereqCount.get(b.id) || 0) - (prereqCount.get(a.id) || 0);
-        if (pDiff !== 0) return pDiff;
-        return a.firstOrder - b.firstOrder;
-      });
-
-      const next = unvisited[0];
-      visited.add(next.id);
-      sorted.push(next);
-
-      for (const depId of outgoingEdges.get(next.id)) {
-        currentInDegree.set(depId, currentInDegree.get(depId) - 1);
-      }
-    }
-  }
-  return sorted;
-}
-
-const groups = topoSortGroups([...rootGroups, ...soloGroups]);
-const schedule = packStudyDays(groups);
+const dependencies = extractDependencies([...wordMap.values()]);
+const { groups, schedule } = buildLearningSchedule([...rootGroups, ...soloGroups], [...wordMap.values()], dependencies);
 
 const summaryWords = Object.fromEntries(
   [...wordMap.values()].map((word) => [
@@ -438,6 +229,9 @@ const catalog = {
   words: summaryWords,
 };
 fs.writeFileSync(path.join(outDir, "catalog.json"), JSON.stringify(catalog), "utf8");
+// Only identifiers and ordering are bundled. Word content continues to come from the book API.
+const curriculum = { bookCode, groups: groups.map(({ id, wordIds }) => ({ id, wordIds })), schedule };
+fs.writeFileSync(path.join(outDir, "curriculum.json"), JSON.stringify(curriculum), "utf8");
 
 console.log(
   `Built ${wordsRaw.length} word files, ${groups.length} study groups, ${schedule.length} study days.`,

@@ -3,8 +3,9 @@ const { contextBridge, ipcRenderer } = require("electron");
 contextBridge.exposeInMainWorld("cyword", {
   readCatalog: () => ipcRenderer.invoke("catalog:read"),
   readWords: (request) => ipcRenderer.invoke("words:read", request),
-  readProgress: () => ipcRenderer.invoke("progress:read"),
-  writeProgress: (progress) => ipcRenderer.invoke("progress:write", progress),
+  readProgress: (accountId) => ipcRenderer.invoke("progress:read", accountId),
+  writeProgress: (progress, accountId) => ipcRenderer.invoke("progress:write", progress, accountId),
+  syncProgress: (token, payload) => ipcRenderer.invoke("progress:sync", token, payload),
   sendAuthCode: (email) => ipcRenderer.invoke("auth:send-code", email),
   verifyAuthCode: (email, code) => ipcRenderer.invoke("auth:verify-code", email, code),
   getAuthUser: (token) => ipcRenderer.invoke("auth:me", token),

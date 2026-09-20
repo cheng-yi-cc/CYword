@@ -79,7 +79,7 @@ body.study-mode-active .app-wallpaper {
 .sidebar nav button.active { color: var(--ink); background: rgba(255, 253, 249, 0.88); box-shadow: 0 4px 18px rgba(74,65,47,.08), inset 3px 0 var(--terracotta); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 .sidebar nav i { color: #8f8878; font: normal 19px/1 Georgia, serif; }
 .sidebar nav b { font-size: 13px; font-weight: 600; }
-.sidebar nav em { display: grid; min-width: 22px; height: 22px; padding: 0 5px; place-items: center; border-radius: 12px; color: #fff; background: var(--terracotta); font: normal 9px "Cascadia Mono", monospace; }
+
 .sidebar footer { margin-top: auto; padding: 20px; border-top: 1px solid var(--glass-border); }
 .sidebar footer > span { color: var(--muted); font-size: 10px; }
 .sidebar footer p { margin: 7px 0 11px; font: 600 14px "Cascadia Mono", monospace; }
@@ -139,18 +139,21 @@ body.study-mode-active .app-wallpaper {
 .review-setup-card > button:hover { background: var(--terracotta-dark); }
 
 /* Plan */
-.plan-page { max-width: 1450px; margin: 0 auto; }
-.plan-legend { display: flex; gap: 14px; color: var(--muted); font-size: 9px; }
-.plan-legend span { display: flex; align-items: center; gap: 6px; }
-.plan-legend i { width: 8px; height: 8px; border-radius: 50%; background: var(--terracotta); }
-.plan-legend i.review { background: var(--olive); }
-.plan-overview { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); margin: 18px 0 12px; border: 1px solid var(--glass-border); border-radius: 14px; overflow: hidden; background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: var(--glass-shadow); }
-.plan-overview > div { padding: 14px 17px; border-right: 1px solid var(--glass-border); }
+.plan-page { display: grid; grid-template-rows: auto auto minmax(0,1fr); height: 100%; min-height: 0; max-width: 1450px; margin: 0 auto; overflow: hidden; }
+.plan-heading { padding: 4px 0 18px; }
+.plan-heading h1 { margin: 0; font: 600 clamp(29px,3vw,43px)/1.2 Georgia,"Microsoft YaHei UI",serif; letter-spacing: -.04em; }
+.plan-overview { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); margin: 0 0 18px; border: 1px solid var(--glass-border); border-radius: 14px; overflow: hidden; background: var(--glass-bg-heavy); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: var(--glass-shadow); }
+.plan-overview > div { min-width: 0; padding: 20px 24px; border-right: 1px solid var(--glass-border); }
 .plan-overview > div:last-child { border: 0; }
-.plan-overview span { display: block; color: var(--muted); font-size: 8px; }
-.plan-overview b { display: block; margin-top: 4px; font: 600 19px "Cascadia Mono", monospace; }
+.plan-overview > div > span { display: block; color: var(--muted); font-size: 14px; }
+.plan-overview b { display: flex; align-items: baseline; gap: 6px; margin: 12px 0 16px; font: 600 38px/1.1 "Cascadia Mono", monospace; white-space: nowrap; }
+.plan-overview b span { color: var(--muted); font-size: .65em; font-weight: 400; }
+.plan-progress-track { height: 5px; overflow: hidden; border-radius: 4px; background: #ded8cc; }
+.plan-progress-track i { display: block; height: 100%; background: var(--terracotta); }
+.plan-calendar { min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; padding: 4px 4px 12px; scrollbar-gutter: stable; }
+.plan-calendar:focus-visible { outline: 2px solid var(--terracotta); outline-offset: -2px; border-radius: 8px; }
 .plan-grid { display: grid; grid-template-columns: repeat(8, minmax(108px, 1fr)); gap: 8px; }
-.plan-grid > button { position: relative; min-height: 118px; padding: 13px; border: 1px solid var(--glass-border); border-radius: 11px 9px 12px 8px; background: rgba(252,251,248,.68); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); text-align: left; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease; }
+.plan-grid > button { position: relative; display: flex; flex-direction: column; align-items: stretch; min-width: 0; min-height: 138px; padding: 13px; border: 1px solid var(--glass-border); border-radius: 11px 9px 12px 8px; background: rgba(252,251,248,.68); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); text-align: left; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease; }
 .plan-grid > button:hover { transform: translateY(-2px); border-color: #d8b29f; background: rgba(255,253,249,.92); box-shadow: 0 8px 24px rgba(97,76,54,.12); }
 .plan-grid > button.review { background: rgba(240,240,233,.68); }
 .plan-grid > button.review:hover { background: rgba(251,251,246,.92); border-color: #abb39e; }
@@ -158,12 +161,12 @@ body.study-mode-active .app-wallpaper {
 .plan-grid > button.current::after { position: absolute; top: -1px; right: 14px; width: 11px; height: 22px; border-radius: 0 0 5px 5px; content: ""; background: var(--terracotta); }
 .plan-grid > button.finished { background: rgba(240,237,230,.65); }
 .plan-grid > button > span { color: var(--muted); font-size: 8px; }
-.plan-grid > button > b { display: block; margin: 11px 0 5px; font: 600 20px Georgia, serif; }
+.plan-grid > button > b { display: block; margin: 11px 0 5px; font: 600 20px Georgia, serif; white-space: nowrap; }
 .plan-grid > button > p { margin: 0; color: var(--muted); font-size: 8px; }
-.plan-grid > button > div { position: absolute; right: 13px; bottom: 13px; left: 13px; height: 3px; overflow: hidden; border-radius: 3px; background: #ded8cc; }
+.plan-grid > button > div { flex: 0 0 3px; height: 3px; margin-top: 6px; overflow: hidden; border-radius: 3px; background: #ded8cc; }
 .plan-grid > button > div i { display: block; height: 100%; background: var(--terracotta); }
 .plan-grid > button.review > div i { background: var(--olive); }
-.plan-grid > button > small { position: absolute; right: 13px; bottom: 20px; color: var(--faint); font: 7px "Cascadia Mono", monospace; }
+.plan-grid > button > small { display: block; margin-top: auto; padding-top: 12px; color: var(--faint); font: 7px "Cascadia Mono", monospace; text-align: right; }
 
 /* Today's learning */
 .today-progress { display: flex; align-items: baseline; gap: 5px; padding-left: 22px; border-left: 1px solid var(--line); }
@@ -328,8 +331,6 @@ body.study-mode-active .app-wallpaper {
 .audio-button:hover { background: #feebe0; border-color: #d2a48f; }
 .word-meaning { align-self: center; padding-left: 24px; border-left: 1px solid var(--glass-border); }
 .word-meaning p { margin: 0 0 12px; color: #444033; font-size: 14px; line-height: 1.65; }
-.bookmark-button { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); background: transparent; font-size: 10px; }
-.bookmark-button.active { border-color: #d59a83; color: var(--terracotta-dark); background: #fff3ed; }
 .detail-tabs { display: flex; padding: 0 20px; border-block: 1px solid var(--glass-border); background: rgba(247, 243, 237, 0.75); }
 .detail-tabs button { position: relative; padding: 12px 12px 11px; border: 0; color: var(--muted); background: transparent; font-size: 11px; font-weight: 500; }
 .detail-tabs button.active { color: var(--ink); font-weight: 700; }
@@ -392,13 +393,36 @@ body.study-mode-active .app-wallpaper {
 .judgment-card.revealed .proficiency-picker { flex-shrink: 0; }
 .review-finished-mark { display: grid; width: 240px; height: 240px; margin: 70px auto 0; place-items: center; border: 1px solid #aeb4a4; border-radius: 50%; color: var(--olive); font: 600 75px Georgia,serif; }.review-finished-mark span { margin-top: -70px; font: 8px "Cascadia Mono",monospace; letter-spacing: .15em; }
 
-/* Vocabulary book */
+/* Vocabulary mastery: counts describe the full book; the list contains weak words only. */
+.vocabulary-overview { padding: 20px 24px; border: 1px solid var(--glass-border); border-radius: 14px; background: var(--glass-bg-heavy); }
+.vocabulary-overview > header { display: flex; justify-content: space-between; gap: 16px; color: var(--muted); font-size: 12px; }
+.vocabulary-overview > header b { color: var(--ink); }
+.mastery-distribution { display: flex; height: 7px; overflow: hidden; margin: 16px 0 20px; border-radius: 4px; background: #ded8cc; }
+.mastery-distribution i { display: block; height: 100%; }
+.mastery-distribution .mastered,.vocabulary-overview .mastered dt i { background: #6e855e; }
+.mastery-distribution .unmastered,.vocabulary-overview .unmastered dt i { background: #b96249; }
+.mastery-distribution .unclear,.vocabulary-overview .unclear dt i { background: #c5a05a; }
+.mastery-distribution .unlearned,.vocabulary-overview .unlearned dt i { background: #ded8cc; }
+.vocabulary-overview dl { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 14px; margin: 0; }
+.vocabulary-overview dt { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
+.vocabulary-overview dt i { width: 7px; height: 7px; border-radius: 50%; }
+.vocabulary-overview dd { margin: 8px 0 0; font: 600 30px Georgia,serif; }
+.vocabulary-overview dd small { margin-left: 6px; color: var(--muted); font: 11px "Microsoft YaHei",sans-serif; }
+.vocabulary-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-top: 24px; }
+.vocabulary-filters { display: flex; gap: 6px; }
+.vocabulary-filters button { display: flex; align-items: center; gap: 9px; min-height: 42px; padding: 9px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--muted); font-size: 12px; }
+.vocabulary-filters button[aria-pressed="true"] { border-color: var(--terracotta); color: var(--terracotta-dark); background: #fff3ed; }
+.vocabulary-filters b { font-size: 11px; }
+.vocabulary-hint,.vocabulary-feedback { margin: 12px 0 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.vocabulary-feedback:empty { display: none; }
+.vocabulary-feedback { color: var(--terracotta-dark); }
+.vocabulary-pagination { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 18px; font-size: 12px; }
+.vocabulary-pagination button,.vocabulary-loading button { min-height: 44px; padding: 10px 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
+.vocabulary-pagination button:disabled,.proficiency-picker button:disabled { opacity: .5; cursor: wait; }
+.vocabulary-pagination button:disabled { cursor: default; }
+.vocabulary-loading { display: grid; align-content: center; justify-items: center; padding: 30px; color: var(--muted); font-size: 14px; text-align: center; }
 .search-box { display: flex; align-items: center; width: 290px; padding: 9px 12px; border: 1px solid var(--glass-border); border-radius: 10px; background: rgba(252,251,248,.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }.search-box span { color: var(--terracotta-dark); font-size: 18px; }.search-box input { width: 100%; padding: 0 7px; border: 0; outline: 0; background: transparent; font-size: 10px; }
-.vocabulary-layout { display: grid; grid-template-columns: 280px minmax(520px,1fr); height: calc(100vh - 186px); min-height: 610px; margin-top: 18px; overflow: hidden; border: 1px solid var(--glass-border); border-radius: 14px; background: var(--glass-bg-heavy); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: var(--glass-shadow); }.vocabulary-layout > aside { min-height: 0; padding: 8px; overflow: auto; border-right: 1px solid var(--glass-border); background: rgba(242, 238, 231, 0.72); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }.vocabulary-layout > aside button { position: relative; display: grid; grid-template-columns: 1fr auto; width: 100%; padding: 12px 10px; border: 0; border-bottom: 1px solid rgba(225, 219, 208, 0.7); border-radius: 7px; background: transparent; text-align: left; transition: background .15s ease; }.vocabulary-layout > aside button.active { background: rgba(255, 253, 249, 0.92); box-shadow: inset 3px 0 var(--terracotta); }.vocabulary-layout > aside b { font: 600 18px Georgia,serif; }.vocabulary-layout > aside span { color: var(--muted); font-size: 8px; }.vocabulary-layout > aside small { grid-column: 1 / -1; overflow: hidden; margin-top: 4px; color: var(--muted); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }.vocabulary-layout > aside i { position: absolute; right: 10px; bottom: 9px; padding: 2px 5px; border-radius: 5px; font: normal 7px "Cascadia Mono",monospace; }.vocabulary-layout > aside i.unmastered { color: #9d483a; background: #f8ddd5; }.vocabulary-layout > aside i.unclear { color: #8a6a32; background: #f4e7c9; }.vocabulary-layout > aside i.mastered { color: #5e6953; background: #e3e7dc; }
-.vocabulary-layout > .word-detail { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-.vocabulary-layout > .word-detail .word-hero { flex-shrink: 0; }
-.vocabulary-layout > .word-detail .detail-tabs { flex-shrink: 0; }
-.vocabulary-layout > .word-detail .detail-scroll { flex: 1 1 0; min-height: 0; overflow-y: auto; }
+.vocabulary-layout { display: block; margin-top: 18px; overflow: hidden; border: 1px solid var(--glass-border); border-radius: 14px; background: var(--glass-bg-heavy); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: var(--glass-shadow); }.vocabulary-layout > aside { display: grid; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); gap: 8px; padding: 8px; background: rgba(242, 238, 231, 0.72); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }.vocabulary-layout > aside button { position: relative; display: grid; grid-template-columns: 1fr auto; width: 100%; padding: 12px 10px; border: 0; border-bottom: 1px solid rgba(225, 219, 208, 0.7); border-radius: 7px; background: transparent; text-align: left; transition: background .15s ease; }.vocabulary-layout > aside button.active { background: rgba(255, 253, 249, 0.92); box-shadow: inset 3px 0 var(--terracotta); }.vocabulary-layout > aside b { grid-column: 1 / -1; overflow-wrap: anywhere; font: 600 18px Georgia,serif; }.vocabulary-layout > aside span { grid-column: 1 / -1; margin-top: 5px; overflow-wrap: anywhere; color: var(--muted); font-size: 8px; }.vocabulary-layout > aside small { grid-column: 1 / -1; overflow: hidden; margin-top: 4px; color: var(--muted); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }.vocabulary-layout > aside i { grid-column: 1 / -1; justify-self: start; margin-top: 8px; padding: 2px 5px; border-radius: 5px; font: normal 7px "Cascadia Mono",monospace; }.vocabulary-layout > aside i.unmastered { color: #9d483a; background: #f8ddd5; }.vocabulary-layout > aside i.unclear { color: #8a6a32; background: #f4e7c9; }.vocabulary-layout > aside i.mastered { color: #5e6953; background: #e3e7dc; }
 .vocabulary-empty { display: grid; margin-top: 120px; place-items: center; text-align: center; }.vocabulary-empty span { color: var(--terracotta); font: 60px Georgia,serif; }.vocabulary-empty h2 { margin: 11px 0 6px; font-family: Georgia,"Microsoft YaHei UI",serif; }.vocabulary-empty p { margin: 0; color: var(--muted); font-size: 10px; }
 
 .loading-screen,.fatal-error { display: grid; width: 100%; height: 100%; place-content: center; place-items: center; background: var(--canvas); color: var(--ink); text-align: center; }.loading-screen > div { display: grid; width: 82px; height: 82px; place-items: center; border-radius: 24px 20px 26px 18px; color: #fff; background: var(--terracotta); font: 600 33px Georgia,serif; animation: breathe 1.8s ease-in-out infinite; }.loading-screen p { color: var(--muted); font-size: 10px; }.fatal-error span { color: var(--terracotta-dark); font: 8px "Cascadia Mono",monospace; letter-spacing: .15em; }.fatal-error h1 { margin: 11px; font-size: 23px; }.fatal-error p { color: var(--muted); font-size: 10px; }
@@ -500,3 +524,25 @@ body.study-mode-active .app-wallpaper {
 
 @keyframes popover-fade-in { from { opacity: 0; transform: translateY(4px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
+/* Vocabulary detail is a portal so page scrolling and filters remain intact. */
+.vocabulary-session { position: fixed; z-index: 500; inset: 0; display: grid; grid-template-rows: auto minmax(0,1fr) auto; width: 100%; height: 100dvh; padding-top: env(safe-area-inset-top); background: var(--paper); color: var(--ink); animation: vocabulary-expand .22s cubic-bezier(.2,.75,.25,1) both; }
+.vocabulary-session.is-closing { animation: vocabulary-collapse .18s ease both; pointer-events: none; }
+.vocabulary-session-header { display: flex; align-items: center; gap: 20px; min-height: 64px; padding: 8px 28px; border-bottom: 1px solid var(--line); background: var(--paper); }
+.vocabulary-session-header > button { min-height: 44px; padding: 9px 12px; border: 0; border-radius: 8px; background: var(--paper-deep); color: var(--ink); font-size: 14px; }
+.vocabulary-session-header > b { font-size: 15px; font-weight: 500; }
+.vocabulary-session-header > span { margin-left: auto; font: 14px "Cascadia Mono",monospace; }
+.vocabulary-session-content { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.vocabulary-session-content > .word-detail { max-width: 1100px; margin: auto; }
+.vocabulary-session-content .word-hero { padding: 28px 32px; }
+.vocabulary-session-content .detail-scroll { overflow: visible; padding: 0 32px 30px; }
+.vocabulary-session-content .word-loading { position: static; }
+.vocabulary-session-content > .vocabulary-loading { height: 100%; }
+.vocabulary-session-controls { display: grid; justify-items: center; gap: 6px; padding: 12px 24px calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--paper); }
+.vocabulary-session-controls .session-rating { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; width: 100%; max-width: 600px; }
+.vocabulary-session-controls .session-rating button { display: block; min-height: 48px; padding: 10px 6px; font-size: 15px; text-align: center; }
+.vocabulary-session-navigation { display: flex; justify-content: space-between; width: 100%; max-width: 600px; }
+.vocabulary-session-navigation button { min-width: 92px; min-height: 40px; padding: 8px 12px; border: 0; border-radius: 8px; color: var(--ink); background: transparent; font-size: 14px; }
+.vocabulary-session button:disabled { cursor: default; opacity: .4; }
+.vocabulary-session-controls > p { margin: 0 0 4px; color: var(--terracotta-dark); font-size: 13px; }
+@keyframes vocabulary-expand { from { opacity: 0; transform: translateY(22px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes vocabulary-collapse { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(18px) scale(.98); } }

@@ -135,7 +135,6 @@ function WebAudioButton({ url }: { url: string }) {
 
 function WordDemo() {
   const [activeRating, setActiveRating] = useState<number | null>(null);
-  const [isSaved, setIsSaved] = useState(false);
   const [activeLane, setActiveLane] = useState<"word" | "morpheme" | "sentence">("word");
   const [hoveredRole, setHoveredRole] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState("桌面端沉浸式学习体验：左栏探寻词根线索，中栏掌握音形巧记与真题，右栏深度拆解长难句语法结构");
@@ -143,13 +142,9 @@ function WordDemo() {
 
   const handleRate = (idx: number) => {
     setActiveRating(idx);
-    setStatusMsg(`已标记为「${levels[idx]}」。真实客户端中，系统将据此在复习日精准分流。`);
+    setStatusMsg(idx === 2 ? `${word.word} 已标记为“已掌握”，会自动移出待巩固列表。` : `${word.word} 已标记为“${levels[idx]}”，会自动收录到“词汇掌握”的待巩固列表。`);
   };
 
-  const handleToggleSave = () => {
-    setIsSaved(!isSaved);
-    setStatusMsg(!isSaved ? `${word.word} 已加入生词本，可在生词本单独集中回看。` : `已将 ${word.word} 从生词本移出。`);
-  };
 
   return (
     <div className="hero-demo" id="experience">
@@ -250,14 +245,7 @@ function WordDemo() {
                 </div>
                 <div className="study-hero-side">
                   <p className="study-definition">{word.definition}</p>
-                  <button
-                    className={`study-bookmark-btn ${isSaved ? "saved" : ""}`}
-                    onClick={handleToggleSave}
-                    aria-pressed={isSaved}
-                  >
-                    <span>{isSaved ? "◆" : "◇"}</span>
-                    <span>{isSaved ? "已在生词本" : "加入生词本"}</span>
-                  </button>
+                  <p className="study-mastery-state" aria-live="polite">{activeRating === null ? "评级后自动整理到词汇掌握情况" : activeRating === 2 ? "已掌握 · 已移出待巩固列表" : levels[activeRating] + " · 已自动收录到待巩固列表"}</p>
                 </div>
               </header>
 
@@ -438,7 +426,7 @@ function ProficiencyDemo() {
   const [ratings, setRatings] = useState<Record<string, number>>({ portable: 1, transport: 0, porter: 2 });
   const [skipMastered, setSkipMastered] = useState(true);
   const queue = demoWords.filter((word) => !skipMastered || ratings[word.word] !== 2);
-  return <div className="proficiency-preview"><div className="proficiency-explanation"><p>这一遍学完了，<br /><strong>你对它还有多大把握？</strong></p><dl>{levels.map((level, index) => <div key={level}><dt><span className={`level-dot level-${index}`} />{level}</dt><dd>{["还想不起来，需要重点再看。", "有印象，但含义还拿不准。", "能很快想起来，本轮可以先跳过。"][index]}</dd></div>)}</dl><p className="proficiency-note">复习时重新判断，熟练度可以调整。收藏的难词，也能随时去生词本回看。</p></div>
+  return <div className="proficiency-preview"><div className="proficiency-explanation"><p>这一遍学完了，<br /><strong>你对它还有多大把握？</strong></p><dl>{levels.map((level, index) => <div key={level}><dt><span className={`level-dot level-${index}`} />{level}</dt><dd>{["还想不起来，需要重点再看。", "有印象，但含义还拿不准。", "能很快想起来，本轮可以先跳过。"][index]}</dd></div>)}</dl><p className="proficiency-note">“词汇掌握”展示整本词书的掌握分布。已学过且标为“未掌握”“不清楚”的词自动收录，改为“已掌握”后自动移出，无需手动收藏。</p></div>
     <div className="review-simulator"><div className="review-simulator-header"><span className="micro">复习方式 · 试着改一改</span><span>3 个已学示例词</span></div><div className="review-word-settings">{demoWords.map((word) => <label key={word.word}><span>{word.word}</span><select aria-label={`${word.word} 的演示熟练度`} value={ratings[word.word]} onChange={(event) => setRatings({ ...ratings, [word.word]: Number(event.target.value) })}>{levels.map((level, index) => <option key={level} value={index}>{level}</option>)}</select></label>)}</div><label className="skip-mastered-option"><input type="checkbox" checked={skipMastered} onChange={(event) => setSkipMastered(event.target.checked)} /><span>本轮跳过「已掌握」</span><small>软件默认选项</small></label><div className="review-result" role="status" aria-live="polite" aria-atomic="true"><div><span>本轮要复习</span><strong>{queue.length}<small> 词</small></strong></div>{queue.length ? <ul>{queue.map((word) => <li key={word.word}>{word.word}</li>)}</ul> : <p>这三个示例词都已掌握，本轮没有待复习的词。</p>}<span>累计已学单词先去重，再按你的选项决定本轮复习内容。</span></div><p className="simulator-footnote">仅为官网演示，修改不会影响软件中的学习进度。</p></div>
   </div>;
 }
@@ -446,7 +434,7 @@ function ProficiencyDemo() {
 const dayDescriptions = [
   { title: "从一组词根，开始今天", body: "按当天计划逐组学习。同一词根下的单词会安排在同一天，把联系一起记住。", type: "学习日" },
   { title: "继续学习，新词也有线索", body: "跟着巧记建立联想，拆开构词理解含义，再结合例句看用法。为每个单词标记当前熟练度。", type: "学习日" },
-  { title: "完成这一轮新词学习", body: "继续完成当天的词根组。拿不准的词可以收藏，留在生词本里随时回看。", type: "学习日" },
+  { title: "完成这一轮新词学习", body: "继续完成当天的词根组。标为“未掌握”“不清楚”的词会自动进入“词汇掌握”，方便集中巩固。", type: "学习日" },
   { title: "回头看看，哪些真的记住了", body: "累计复习此前学过的单词。同一个词只出现一次，默认跳过已掌握的词，把时间留给还不熟悉的部分。", type: "复习日" },
 ];
 
@@ -463,11 +451,12 @@ function Rhythm() {
 const faqs = [
   { question: "每天的学习量大概是多少？", answer: "当前六级计划每个学习日安排约 180 次单词学习，具体为 178–187 次。同一个词涉及多个词根时，会在相关组里再次出现；复习时按单词去重。这是计划安排的学习量，实际耗时和记忆效果会受词汇基础、专注程度与后续复习影响。" },
   { question: "巧记里的联想，就是单词的真正构词吗？", answer: "两者会分开展示。谐音、熟词和画面联想用来帮助记忆，构词分析则说明词根词缀的联系。有真正词根的单词按词根成组，没有独立词根的词会单独安排，跟着逐词巧记学习。" },
-  { question: "需要注册账号，或者付费吗？", answer: "当前版本可以直接下载安装使用，无需注册账号，也没有内置付费步骤。打开软件后，就可以开始六级词书的学习计划。" },
-  { question: "断网也能背单词吗？", answer: "可以。内置词书、释义、例句和学习进度保存在本机，核心学习与复习功能可以离线使用。单词发音和检查软件更新需要联网。" },
-  { question: "支持手机、Mac，或者其他词书吗？", answer: "当前提供 Windows 10 / 11 桌面版，内置大学英语六级词书，包含 5,166 个唯一单词。暂不提供手机和 Mac 安装包，也未内置四级、考研等其他词书。你可以用手机浏览本页，再到 Windows 电脑上下载安装。" },
+  { question: "需要注册账号，或者付费吗？", answer: "使用邮箱验证码登录后即可学习，目前没有内置付费步骤。请使用你自己的邮箱接收验证码。" },
+  { question: "断网也能背单词吗？", answer: "当前版本需要联网获取词书和单词详情，邮箱登录、发音和更新检查也需要网络。学习记录会保存在当前设备，暂不提供离线学习模式。" },
+  { question: "支持手机、Mac，或者其他词书吗？", answer: "本页目前提供 Windows 10 / 11 桌面版下载；安卓版本已完成安装包构建，正在准备公开发布，使用与电脑端相同的记忆和词汇掌握规则。当前支持含 5,166 个唯一单词的六级词书，尚无 Mac 版、四级或考研词书。" },
   { question: "安装时出现 Windows 安全提示怎么办？", answer: "当前安装包尚未进行代码签名，Windows 可能提示无法识别发布者。这不等于已经确认软件安全。请先确认文件来自本页的官方发布地址、文件名和版本一致；不确定来源时不要运行，也无需关闭系统安全防护。下载区提供文件校验值，供需要时核对。" },
-  { question: "学习进度会保存吗？更新后还在吗？", answer: "学习进度、熟练度和生词本会自动保存在当前电脑。正常覆盖升级会保留进度，但不会自动同步到其他电脑。迁移电脑或清理应用数据前，请先备份用户数据目录中的 progress.json；当前版本没有内置云同步或一键导出功能。" },
+  { question: "词汇掌握页面会收录哪些词？", answer: "安卓端和电脑端按同一规则展示全书掌握统计：已掌握、未掌握、不清楚和未学习。待巩固列表只收录已学过且评级为“未掌握”或“不清楚”的词；改为“已掌握”后自动移出，学习记录仍然保留。尚未学习、未评级的词不会混入列表。" },
+  { question: "学习进度会保存吗？更新后还在吗？", answer: "学习记录和熟练度自动保存在当前设备。正常覆盖升级会保留进度，“词汇掌握”会根据最新评级自动更新，无需另存一份列表。云端同步服务尚未开放，请勿依赖跨设备同步；卸载或清理应用数据前，请先备份本机数据。" },
   { question: "下载没有开始，或者下载速度很慢？", answer: "主下载由本站通过 Cloudflare R2 提供，无需访问 GitHub，支持断点续传。跨境线路仍可能较慢，部分地区也可能无法连接。请先查看浏览器下载列表，尝试继续下载或稍后重试；也可以使用下载区的 GitHub 备用地址。两个地址提供的是同一份安装包，可核对下方 SHA-256。" },
 ];
 
@@ -480,7 +469,7 @@ function Download({ currentRelease }: { currentRelease: ReleaseInfo }) {
   };
   return <section className="download-section section-wrap" id="download" aria-labelledby="download-title"><div className="download-intro"><span className="brand-mark download-logo" aria-hidden="true">Cy</span><span className="eyebrow">MAKE ROOM FOR A LITTLE PROGRESS</span><h2 id="download-title">下一组单词，<br className="mobile-break" />从这里开始。</h2><p>巧记、构词、分组与复习，都已经准备好。</p></div>
     <div className="download-card"><div className="download-card-heading"><span className="windows-tile"><Icon name="windows" /></span><div><h3>CYword for Windows</h3><p>Windows 10 / 11 · 64 位</p></div><span className="version-label">v{currentRelease.version}</span></div><div className="download-meta"><span>内置大学英语六级词书</span><span>{currentRelease.size} <i>·</i> {currentRelease.date}</span></div>
-      <a className="button button-primary download-main" href={currentRelease.downloadUrl} onClick={() => setDownloadStarted(true)}><Icon name="download" />下载 Windows 安装包<Icon name="arrow" /></a><p className="download-reassurance">无需注册 · 下载后双击安装 · 可选择安装目录</p><p className="mobile-download-note">手机上先了解，安装请在 Windows 电脑上完成。</p>
+      <a className="button button-primary download-main" href={currentRelease.downloadUrl} onClick={() => setDownloadStarted(true)}><Icon name="download" />下载 Windows 安装包<Icon name="arrow" /></a><p className="download-reassurance">邮箱验证码登录 · 下载后双击安装 · 可选择安装目录</p><p className="mobile-download-note">手机上先了解，安装请在 Windows 电脑上完成。</p>
       <div className="download-links"><button onClick={copyLink}>{copyState === "done" ? "下载地址已复制" : "复制下载地址"}</button><span>·</span><a href="#guide">查看安装步骤</a><span>·</span><a href={currentRelease.githubDownloadUrl}>GitHub 备用下载 ↗</a><span>·</span><a href={currentRelease.notesUrl} target="_blank" rel="noreferrer">版本记录 ↗</a></div>
       <div className="download-feedback" role="status">{downloadStarted && <p>已向浏览器发起下载，请查看下载列表。如果没有开始，可复制地址后重试。<a href="#faq">查看下载帮助</a></p>}{copyState === "done" && <p>下载地址已复制，可粘贴到 Windows 电脑的浏览器中打开。</p>}{copyState === "failed" && <label>浏览器未允许复制，请手动选择下面的地址：<input readOnly aria-label="Windows 安装包下载地址" value={currentRelease.downloadUrl} onFocus={(event) => event.currentTarget.select()} /></label>}</div>
       <details className="checksum"><summary>安装包来源与文件校验<Icon name="plus" /></summary><div><p>本站主下载和 GitHub 备用下载提供同一份官方发布文件，无需登录。当前安装包未签名，安装前请确认来源并核对校验值。</p><p className="filename">{currentRelease.filename}</p><span>SHA-256</span><code>{currentRelease.sha256}</code></div></details>
@@ -501,7 +490,7 @@ export default function Website() {
     <a className="skip-link" href="#main">跳到正文</a>
     <header className="site-header"><div className="header-inner"><Brand /><nav id="main-navigation" aria-label="主导航" className={menuOpen ? "menu-open" : ""}><a href="#method" onClick={() => setMenuOpen(false)}>学习方式</a><a href="#plan" onClick={() => setMenuOpen(false)}>分级复习</a><a href="#guide" onClick={() => setMenuOpen(false)}>上手指南</a><a href="#faq" onClick={() => setMenuOpen(false)}>常见问题</a></nav><div className="header-actions"><a className="header-download" href="#download" onClick={() => setMenuOpen(false)}>下载软件<Icon name="download" /></a><button className="menu-toggle" aria-expanded={menuOpen} aria-controls="main-navigation" aria-label={menuOpen ? "收起导航" : "展开导航"} onClick={() => setMenuOpen(!menuOpen)}><Icon name={menuOpen ? "close" : "menu"} /></button></div></div></header>
     <main id="main">
-      <section className="hero section-wrap" aria-labelledby="hero-title"><div className="hero-copy"><span className="hero-kicker"><i /> 巧记 · 词根分组 · 分级复习</span><h1 id="hero-title">巧记带着学，<br /><em>单词成串记。</em></h1><p className="hero-description">5,166 个六级单词，逐词备好巧记思路。<br />拆开词根词缀，一组一组带着你记，<br />再按熟练度复习，把时间留给还不熟的词。</p><div className="hero-actions"><a className="button button-primary" href="#download"><Icon name="windows" />下载 Windows 版<Icon name="arrow" /></a><a className="text-link" href="#experience">先体验一下 <span aria-hidden="true">↗</span></a></div><div className="hero-availability"><span className="availability-dot" />v{currentRelease.version}<i>·</i>Windows 10 / 11<i>·</i>无需注册</div><div className="hero-note"><span aria-hidden="true">↳</span> 省下自己找词根、编巧记、排复习的准备时间。</div></div><WordDemo /></section>
+      <section className="hero section-wrap" aria-labelledby="hero-title"><div className="hero-copy"><span className="hero-kicker"><i /> 巧记 · 词根分组 · 分级复习</span><h1 id="hero-title">巧记带着学，<br /><em>单词成串记。</em></h1><p className="hero-description">5,166 个六级单词，逐词备好巧记思路。<br />拆开词根词缀，一组一组带着你记，<br />再按熟练度复习，把时间留给还不熟的词。</p><div className="hero-actions"><a className="button button-primary" href="#download"><Icon name="windows" />下载 Windows 版<Icon name="arrow" /></a><a className="text-link" href="#experience">先体验一下 <span aria-hidden="true">↗</span></a></div><div className="hero-availability"><span className="availability-dot" />v{currentRelease.version}<i>·</i>Windows 10 / 11<i>·</i>邮箱验证码登录</div><div className="hero-note"><span aria-hidden="true">↳</span> 省下自己找词根、编巧记、排复习的准备时间。</div></div><WordDemo /></section>
       <div className="facts-strip section-wrap"><div><span className="fact-number">5,166</span><span>每词都有巧记<span>从怎么记，就给你思路</span></span></div><div><Icon name="branch" /><span>词根成组学习<span>同根单词，在同一天串起来</span></span></div><div><span className="fact-number">3 <i>档</i></span><span>熟练度分级<span>让复习分清轻重</span></span></div></div>
       <MnemonicMethod />
       <Rhythm />

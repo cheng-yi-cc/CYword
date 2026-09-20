@@ -8,7 +8,8 @@ import {
   rateStudyWord,
   reviewCandidates,
   startReviewDay,
-  toggleBookmark,
+  updateWordProficiency,
+  vocabularyOverview,
 } from "../src/progress.ts";
 import type { Catalog, StudyGroup } from "../src/types.ts";
 
@@ -64,9 +65,34 @@ test("review defaults can skip mastered words and ratings remain adjustable", ()
   assert.ok(progress.planDays["4"].completedAt);
 });
 
-test("bookmarks are local toggles", () => {
-  let progress = toggleBookmark(emptyProgress(), "w1");
-  assert.ok(progress.bookmarks.w1);
-  progress = toggleBookmark(progress, "w1");
-  assert.equal(progress.bookmarks.w1, undefined);
+const vocabularyCatalog = { ...catalog, words: { w1: {}, w2: {}, w3: {} } } as Catalog;
+
+test("vocabulary membership follows learned ratings, not legacy bookmarks or other books", () => {
+  let progress = rateStudyWord(emptyProgress(), buildPlan(catalog)[0], groupA, "w1", "mastered");
+  progress = rateStudyWord(progress, buildPlan(catalog)[0], groupA, "w2", "unclear");
+  progress.bookmarks = { w1: "2026-09-17", w3: "2026-09-17" };
+  progress.words.oldBookWord = { ...progress.words.w2 };
+  const overview = vocabularyOverview(progress, vocabularyCatalog);
+  assert.deepEqual(overview.ids, ["w2"]);
+  assert.deepEqual(overview.counts, { mastered: 1, unclear: 1, unmastered: 0, unlearned: 1 });
+  assert.equal(overview.total, 3);
+  progress = startReviewDay(progress, 4, ["w2"], true);
+  progress = rateReviewWord(progress, 4, "w2", "mastered");
+  assert.deepEqual(vocabularyOverview(progress, vocabularyCatalog).ids, []);
+  assert.ok(progress.words.w2.learnedAt, "mastered words keep their learning records");
+});
+
+test("reassessing vocabulary updates mastery without crediting planned learning or review", () => {
+  let progress = rateStudyWord(emptyProgress(), buildPlan(catalog)[0], groupA, "w1", "unclear");
+  progress = startReviewDay(progress, 4, ["w1"], true);
+  progress.words.w1.lastSeenAt = "2026-01-01T00:00:00.000Z";
+  const next = updateWordProficiency(progress, "w1", "mastered");
+  assert.deepEqual(next.planDays, progress.planDays);
+  assert.deepEqual(next.reviewHistory, progress.reviewHistory);
+  assert.equal(next.words.w1.exposures, progress.words.w1.exposures);
+  assert.equal(next.words.w1.reviewCount, progress.words.w1.reviewCount);
+  assert.ok(next.words.w1.lastSeenAt > progress.words.w1.lastSeenAt);
+  assert.deepEqual(vocabularyOverview(next, vocabularyCatalog).ids, []);
+  assert.deepEqual(vocabularyOverview(updateWordProficiency(next, "w1", "unmastered"), vocabularyCatalog).ids, ["w1"]);
+  assert.equal(updateWordProficiency(next, "w3", "unmastered"), next, "unlearned words cannot acquire a rating here");
 });

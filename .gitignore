@@ -11,3 +11,12 @@ outputs/
 .wrangler/
 website/worker-configuration.d.ts
 .dev.vars*
+android/.gradle/
+android/.idea/
+android/local.properties
+android/**/build/
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+*.keystore
+*.jks

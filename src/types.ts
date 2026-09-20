@@ -23,6 +23,7 @@ export interface StudyGroup {
 export interface StudyDayPlan {
   day: number;
   groupIds: string[];
+  exposureOrder?: number[];
   appearanceCount: number;
   uniqueWordCount: number;
 }
@@ -32,6 +33,7 @@ export interface PlanDay {
   kind: "study" | "review";
   studyDay?: number;
   groupIds: string[];
+  exposureOrder?: number[];
   appearanceCount: number;
   uniqueWordCount: number;
   plannedReviewWordCount?: number;
@@ -127,6 +129,7 @@ export interface PlanDayProgress {
 
 export interface AppProgress {
   version: 2;
+  bookmarkChanges?: Record<string, { at: string; saved: boolean }>;
   planDays: Record<string, PlanDayProgress>;
   words: Record<string, WordProgress>;
   bookmarks: Record<string, string>;
@@ -179,8 +182,9 @@ declare global {
     cyword: {
       readCatalog: () => Promise<Catalog>;
       readWords: (request: WordsRequest) => Promise<WordsResponse>;
-      readProgress: () => Promise<unknown>;
-      writeProgress: (progress: AppProgress) => Promise<boolean>;
+      readProgress: (accountId?: string) => Promise<unknown>;
+      writeProgress: (progress: AppProgress, accountId?: string) => Promise<boolean>;
+      syncProgress?: (token: string, payload?: { revision: number; progress: AppProgress }) => Promise<{ status: number; data: { revision: number; progress: AppProgress; error?: string } }>;
       sendAuthCode?: (email: string) => Promise<SendCodeResponse>;
       verifyAuthCode?: (email: string, code: string) => Promise<VerifyCodeResponse>;
       getAuthUser?: (token: string) => Promise<{ success: boolean; user: AuthUser }>;
@@ -194,4 +198,3 @@ declare global {
     };
   }
 }
-
