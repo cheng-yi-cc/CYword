@@ -8,8 +8,8 @@ type ReleasePointer = {
   sizeBytes: number;
   sha256: string;
   assetPath: string;
-  blockmapPath: string;
-  updaterMetadataPath: string;
+  blockmapPath?: string;
+  updaterMetadataPath?: string;
   githubDownloadUrl: string;
   notesUrl: string;
   repositoryUrl: string;
@@ -83,31 +83,32 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function isReleasePointer(value: unknown): value is ReleasePointer {
+function isReleasePointer(value: unknown, android = false): value is ReleasePointer {
   if (!isRecord(value)) return false;
   const version = value.version;
   const sha256 = value.sha256;
   if (value.schemaVersion !== 1 || typeof version !== "string" || !/^\d+\.\d+\.\d+$/.test(version) ||
       typeof sha256 !== "string" || !/^[a-f0-9]{64}$/.test(sha256)) return false;
 
-  const filename = `CYword-Setup-${version}.exe`;
-  const basePath = `releases/${version}/${sha256}`;
+  const filename = android ? `CYword-Android-${version}.apk` : `CYword-Setup-${version}.exe`;
+  const basePath = `releases/${android ? "android/" : ""}${version}/${sha256}`;
+  const tag = `${android ? "android-v" : "v"}${version}`;
   return value.filename === filename && Number.isSafeInteger(value.sizeBytes) && Number(value.sizeBytes) > 0 &&
     typeof value.publishedAt === "string" && Number.isFinite(Date.parse(value.publishedAt)) &&
     value.assetPath === `${basePath}/${filename}` &&
-    value.blockmapPath === `${basePath}/${filename}.blockmap` &&
-    value.updaterMetadataPath === `${basePath}/latest.yml` &&
-    value.githubDownloadUrl === `${repositoryUrl}/releases/download/v${version}/${filename}` &&
-    value.notesUrl === `${repositoryUrl}/releases/tag/v${version}` &&
+    (android || (value.blockmapPath === `${basePath}/${filename}.blockmap` &&
+      value.updaterMetadataPath === `${basePath}/latest.yml`)) &&
+    value.githubDownloadUrl === `${repositoryUrl}/releases/download/${tag}/${filename}` &&
+    value.notesUrl === `${repositoryUrl}/releases/tag/${tag}` &&
     value.repositoryUrl === repositoryUrl;
 }
 
-async function readCurrentRelease(bucket: R2Bucket): Promise<ReleasePointer | null> {
-  const object = await bucket.get(currentReleaseKey);
+async function readCurrentRelease(bucket: R2Bucket, android = false): Promise<ReleasePointer | null> {
+  const object = await bucket.get(android ? "releases/android/current.json" : currentReleaseKey);
   if (!object) return null;
   if (object.size > 16 * 1024) throw new Error("Release pointer exceeds 16 KiB");
   const value = await object.json<unknown>();
-  if (!isReleasePointer(value)) throw new Error("Release pointer is invalid");
+  if (!isReleasePointer(value, android)) throw new Error("Release pointer is invalid");
   return value;
 }
 
@@ -151,6 +152,11 @@ function redirectToLatest(request: Request, release: PublicRelease): Response {
 }
 
 function resolveVersionedAsset(pathname: string): DownloadAsset | null {
+  const apk = /^\/downloads\/(releases\/android\/(\d+\.\d+\.\d+)\/[a-f0-9]{64}\/(CYword-Android-(\d+\.\d+\.\d+)\.apk))$/.exec(pathname);
+  if (apk && apk[2] === apk[4]) return {
+    key: apk[1], filename: apk[3], contentType: "application/vnd.android.package-archive",
+    immutable: true, allowRange: true,
+  };
   const match = /^\/downloads\/(releases\/(\d+\.\d+\.\d+)\/([a-f0-9]{64})\/(CYword-Setup-(\d+\.\d+\.\d+)\.exe(?:\.blockmap)?))$/.exec(pathname);
   if (!match || match[2] !== match[5]) return null;
   const filename = match[4];
@@ -244,6 +250,12 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
 
   const pathname = new URL(request.url).pathname;
   try {
+    if (pathname === "/downloads/android/latest" || pathname === "/downloads/android/latest.json") {
+      const pointer = await readCurrentRelease(env.DOWNLOADS, true);
+      if (!pointer) return errorResponse(request, 404, "Android release not published");
+      const release = toPublicRelease(pointer);
+      return pathname.endsWith(".json") ? jsonResponse(request, release) : redirectToLatest(request, release);
+    }
     if (pathname === "/downloads/latest" || pathname === "/downloads/latest.json") {
       const pointer = await readCurrentRelease(env.DOWNLOADS);
       const release = pointer ? toPublicRelease(pointer) : fallbackRelease;
@@ -252,7 +264,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
 
     if (pathname === "/downloads/latest.yml") {
       const pointer = await readCurrentRelease(env.DOWNLOADS);
-      if (!pointer) return errorResponse(request, 404, "Update metadata not published");
+      if (!pointer?.updaterMetadataPath) return errorResponse(request, 404, "Update metadata not published");
       return serveObject(request, env.DOWNLOADS, {
         key: pointer.updaterMetadataPath,
         contentType: "application/x-yaml; charset=utf-8",

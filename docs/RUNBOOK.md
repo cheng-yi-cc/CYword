@@ -112,11 +112,11 @@ npm run test:site:download
 npm run deploy:site
 ```
 
-部署 0.5.0 前先按 [安卓与同步说明](ANDROID.md) 完成 D1 授权和 `learning_progress` 建表；截至 2026-09-20 该项尚未完成。
+部署 0.4.4 前先按 [安卓与同步说明](ANDROID.md) 完成 D1 授权和 `learning_progress` 建表；截至 2026-09-20 该项尚未完成。
 
 部署脚本显式指定 Pages 生产分支 `main`，与当前 Git 分支无关；会上传静态页面、下载函数、词书函数和路由配置。普通提交推送不会自动更新官网代码；版本标签工作流只更新 R2 发布资产和最新版指针。不要上传纯静态 ZIP，以免遗漏函数和 R2 绑定；词书只能上传到 `BOOKS` 对应的私有 R2 桶，不得放进 Pages 静态产物。
 
-NSIS 安装包只收录 `dist/`、`electron/` 和发布用 `package.json`。邮箱和登录态位于 `userData/session.json`，0.5.0 学习进度位于 `userData/accounts/<账号哈希>/progress.json`，均不参与打包。旧 `progress.json` 保留，启动时已登录账号符合归属条件才迁移。覆盖安装继续使用原有 `userData`；验证“全新用户”体验使用临时 `--user-data-dir`。
+NSIS 安装包只收录 `dist/`、`electron/` 和发布用 `package.json`。邮箱和登录态位于 `userData/session.json`，0.4.4 学习进度位于 `userData/accounts/<账号哈希>/progress.json`，均不参与打包。旧 `progress.json` 保留，启动时已登录账号符合归属条件才迁移。覆盖安装继续使用原有 `userData`；验证“全新用户”体验使用临时 `--user-data-dir`。
 
 需要线上预览时，先构建，再执行 `npx wrangler pages deploy --cwd website --project-name cyword --branch preview --commit-dirty=true`。`--branch` 是 Pages 环境标签，不会创建 Git 分支；预览函数只读同一发布桶。确认主下载可用后才更新生产。
 

@@ -1,6 +1,6 @@
 {
   "name": "cyword",
-  "version": "0.5.0",
+  "version": "0.4.4",
   "private": true,
   "type": "module",
   "description": "词根驱动的本地英语记忆桌面应用",

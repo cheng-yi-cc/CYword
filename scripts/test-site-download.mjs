@@ -60,6 +60,18 @@ await put(assetKey, fixturePath);
 await put(blockmapKey, blockmapPath);
 await put(updaterKey, updaterPath);
 await put("releases/current.json", pointerPath);
+const androidName = "CYword-Android-0.1.0.apk";
+const androidKey = `releases/android/0.1.0/${fixtureDigest}/${androidName}`;
+const androidPointer = {
+  schemaVersion: 1, version: "0.1.0", publishedAt: pointer.publishedAt,
+  filename: androidName, sizeBytes: fixture.length, sha256: fixtureDigest, assetPath: androidKey,
+  githubDownloadUrl: `${pointer.repositoryUrl}/releases/download/android-v0.1.0/${androidName}`,
+  notesUrl: `${pointer.repositoryUrl}/releases/tag/android-v0.1.0`, repositoryUrl: pointer.repositoryUrl,
+};
+const androidPointerPath = path.join(work, "android-current.json");
+await writeFile(androidPointerPath, JSON.stringify(androidPointer));
+await put(androidKey, fixturePath);
+await put("releases/android/current.json", androidPointerPath);
 
 const listener = createServer();
 await new Promise((resolve) => listener.listen(0, "127.0.0.1", resolve));
@@ -96,6 +108,28 @@ try {
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
   assert.ok(ready, `Local download server did not start: ${logs}`);
+  await check("Android pointer and redirect are independent of Windows", async () => {
+    const latest = await request({}, "GET", `${origin}/downloads/android/latest.json`);
+    assert.equal(latest.status, 200);
+    assert.equal((await latest.json()).downloadPath, `/downloads/${androidKey}`);
+    const redirect = await fetch(`${origin}/downloads/android/latest`, { redirect: "manual" });
+    assert.equal(redirect.status, 302);
+    assert.equal(redirect.headers.get("location"), `${origin}/downloads/${androidKey}`);
+    const windows = await request({}, "GET", `${origin}/downloads/latest.json`);
+    assert.equal((await windows.json()).version, "0.0.0");
+  });
+  await check("APK streams with Android MIME, attachment and range support", async () => {
+    const apk = await request({ Range: "bytes=0-31" }, "GET", `${origin}/downloads/${androidKey}`);
+    assert.equal(apk.status, 206);
+    assert.equal(apk.headers.get("content-type"), "application/vnd.android.package-archive");
+    assert.equal(apk.headers.get("content-disposition"), `attachment; filename="${androidName}"`);
+    assert.deepEqual(await bytes(apk), fixture.subarray(0, 32));
+  });
+  await check("Android rejects mismatched versions and private pointer paths", async () => {
+    for (const target of [androidKey.replace(androidName, "CYword-Android-9.9.9.apk"), "releases/android/current.json"]) {
+      assert.equal((await request({}, "GET", `${origin}/downloads/${target}`)).status, 404);
+    }
+  });
   const head = await request({}, "HEAD");
   const etag = head.headers.get("etag");
   const modified = head.headers.get("last-modified");

@@ -1,10 +1,10 @@
 # 安卓与进度同步
 
-0.5.0 提供 Android 7.0（API 24）及以上安装包。界面与排课逻辑复用 `src/`，通过 Capacitor 打包成本机应用。首版需联网获取词书、登录和同步；没有完整词书离线下载功能。截至 2026-09-20，正式云同步尚未开通；以下跨设备使用流程须先完成“云端开通”步骤。本地模拟同步已验证，不等同于生产已上线。
+安卓 0.1.0 提供 Android 7.0（API 24）及以上安装包。界面与排课逻辑复用 `src/`，通过 Capacitor 打包成本机应用。首版需联网获取词书、登录和同步；没有完整词书离线下载功能。截至 2026-09-20，正式云同步尚未开通；以下跨设备使用流程须先完成“云端开通”步骤。本地模拟同步已验证，不等同于生产已上线。
 
 ## 使用与预览
 
-1. 安装 `release/CYword-Android-0.5.0.apk`；电脑端安装同目录的 0.5.0 Windows 安装器。
+1. 安装 `release/CYword-Android-0.1.0.apk`；电脑端安装同目录的 0.4.4 Windows 安装器。
 2. 两端使用同一邮箱登录。手机右上角“我的”显示同步状态，可点“立即同步”；电脑侧栏也显示同步状态。
 3. 学习评级后在约 800 毫秒无新操作时同步；切回应用、恢复网络或前台 15 秒轮询时拉取另一端记录。换设备前确认“已与云端同步”。
 4. 每个未评级词必须先选熟练度；回看已评级词可直接前进。词根分组和三学一复习规则不变。
@@ -67,3 +67,11 @@ $syncState = Invoke-RestMethod -Uri "https://cyword.chengyi.me/api/progress" -He
 `npm test` 覆盖原有规则、进度合并、修订冲突、上传期间继续评级、取消收藏、账号切换后的延迟响应，以及真实本地 Worker+D1 的授权与隔离。`npm run check:site` 验证函数类型。
 
 浏览器移动尺寸检查应覆盖首页、计划、学习、词根/长难句、回看、词汇掌握（筛选/搜索/重新评级）和复习；正式交付还需 APK 签名校验。本机没有连接的安卓设备时，仅能报告已完成构建与浏览器触屏模拟，真机的键盘、安全区域和音频须安装后确认。
+
+## 独立版本与官网发布
+
+安卓版本统一维护在 `android/version.json`；`versionName` 为公开版本号，`versionCode` 必须递增。首个公开版本为 0.1.0，内部序号为 501，以兼容此前序号 500 的本地测试包覆盖安装。桌面版本继续由 `package.json` 维护。
+
+正式签名构建后，创建 `android-v<versionName>` 标签及同名 GitHub Release，将对应 APK 上传并将该 Release 标为非最新（`--latest=false`），保留 Windows Release 的最新标识。`.github/workflows/publish-android.yml` 在 Android Release 发布后读取同一份 APK，上传到专用 R2 桶的 `releases/android/<版本>/<sha256>/`，验证长度后最后更新 `releases/android/current.json`。已有 Release 可手动触发工作流并传入标签重试上传，无需重新生成 APK。
+
+官网读取 `/downloads/android/latest.json`，稳定下载入口为 `/downloads/android/latest`；Windows 自动更新继续使用独立的 `/downloads/latest.yml`。第一次增加下载路由时必须另行部署官网，合并代码不会自动部署。

@@ -36,7 +36,7 @@ if (release) {
 const build = spawnSync(process.platform === 'win32' ? 'gradlew.bat' : './gradlew', [release ? 'assembleRelease' : 'assembleDebug', '--console=plain'], { cwd: path.join(root, 'android'), env, stdio: 'inherit', shell: process.platform === 'win32' });
 if (build.status !== 0) process.exit(build.status || 1);
 const variant = release ? 'release' : 'debug';
-const version = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')).version;
+const version = JSON.parse(readFileSync(path.join(root, 'android/version.json'), 'utf8')).versionName;
 mkdirSync(path.join(root, 'release'), { recursive: true });
 const target = path.join(root, 'release', `CYword-Android-${version}${release ? '' : '-debug'}.apk`);
 copyFileSync(path.join(root, `android/app/build/outputs/apk/${variant}/app-${variant}.apk`), target);

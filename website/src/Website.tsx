@@ -6,6 +6,7 @@ function Icon({ name, className = "" }: { name: string; className?: string }) {
     arrow: <path d="M4 12h15m-6-6 6 6-6 6" />,
     download: <><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" /></>,
     windows: <><path d="m3 5 8-1v7H3zm10-1 8-1v8h-8zM3 13h8v7l-8-1zm10 0h8v8l-8-1z" /></>,
+    phone: <><rect x="6" y="2" width="12" height="20" rx="2" /><path d="M10 18h4" /></>,
     book: <><path d="M12 5c-3-2-6-2-9-1v15c3-1 6-1 9 1m0-15c3-2 6-2 9-1v15c-3-1-6-1-9 1zm0 0v15" /></>,
     branch: <><path d="M12 4v5m-7 7v-4h14v4M12 9v7" /><circle cx="12" cy="3" r="2" /><circle cx="5" cy="19" r="2" /><circle cx="12" cy="19" r="2" /><circle cx="19" cy="19" r="2" /></>,
     bookmark: <path d="M6 3h12v18l-6-4-6 4z" />,
@@ -453,14 +454,29 @@ const faqs = [
   { question: "巧记里的联想，就是单词的真正构词吗？", answer: "两者会分开展示。谐音、熟词和画面联想用来帮助记忆，构词分析则说明词根词缀的联系。有真正词根的单词按词根成组，没有独立词根的词会单独安排，跟着逐词巧记学习。" },
   { question: "需要注册账号，或者付费吗？", answer: "使用邮箱验证码登录后即可学习，目前没有内置付费步骤。请使用你自己的邮箱接收验证码。" },
   { question: "断网也能背单词吗？", answer: "当前版本需要联网获取词书和单词详情，邮箱登录、发音和更新检查也需要网络。学习记录会保存在当前设备，暂不提供离线学习模式。" },
-  { question: "支持手机、Mac，或者其他词书吗？", answer: "本页目前提供 Windows 10 / 11 桌面版下载；安卓版本已完成安装包构建，正在准备公开发布，使用与电脑端相同的记忆和词汇掌握规则。当前支持含 5,166 个唯一单词的六级词书，尚无 Mac 版、四级或考研词书。" },
+  { question: "支持手机、Mac，或者其他词书吗？", answer: "本页提供 Windows 10 / 11 桌面版与 Android 7.0 及以上安卓安装包，使用相同的记忆和词汇掌握规则。当前支持含 5,166 个唯一单词的六级词书，尚无 Mac 版、四级或考研词书。" },
   { question: "安装时出现 Windows 安全提示怎么办？", answer: "当前安装包尚未进行代码签名，Windows 可能提示无法识别发布者。这不等于已经确认软件安全。请先确认文件来自本页的官方发布地址、文件名和版本一致；不确定来源时不要运行，也无需关闭系统安全防护。下载区提供文件校验值，供需要时核对。" },
   { question: "词汇掌握页面会收录哪些词？", answer: "安卓端和电脑端按同一规则展示全书掌握统计：已掌握、未掌握、不清楚和未学习。待巩固列表只收录已学过且评级为“未掌握”或“不清楚”的词；改为“已掌握”后自动移出，学习记录仍然保留。尚未学习、未评级的词不会混入列表。" },
-  { question: "学习进度会保存吗？更新后还在吗？", answer: "学习记录和熟练度自动保存在当前设备。正常覆盖升级会保留进度，“词汇掌握”会根据最新评级自动更新，无需另存一份列表。云端同步服务尚未开放，请勿依赖跨设备同步；卸载或清理应用数据前，请先备份本机数据。" },
+  { question: "学习进度会保存吗？更新后还在吗？", answer: "学习记录和熟练度自动保存在当前设备。正常覆盖升级会保留进度，“词汇掌握”会根据最新评级自动更新，无需另存一份列表。电脑与手机使用同一邮箱登录即可同步，换设备前请确认“已与云端同步”；卸载或清理应用数据前，请先备份本机数据。" },
   { question: "下载没有开始，或者下载速度很慢？", answer: "主下载由本站通过 Cloudflare R2 提供，无需访问 GitHub，支持断点续传。跨境线路仍可能较慢，部分地区也可能无法连接。请先查看浏览器下载列表，尝试继续下载或稍后重试；也可以使用下载区的 GitHub 备用地址。两个地址提供的是同一份安装包，可核对下方 SHA-256。" },
 ];
 
-function Download({ currentRelease }: { currentRelease: ReleaseInfo }) {
+function AndroidDownload({ currentRelease }: { currentRelease: ReleaseInfo | null }) {
+  const [downloadStarted, setDownloadStarted] = useState(false);
+  return <div className="download-card">
+    <div className="download-card-heading"><span className="windows-tile"><Icon name="phone" /></span><div><h3>CYword for Android</h3><p>Android 7.0 及以上</p></div>{currentRelease && <span className="version-label">v{currentRelease.version}</span>}</div>
+    {currentRelease ? <>
+      <div className="download-meta"><span>大学英语六级词书 · 联网学习</span><span>{currentRelease.size} <i>·</i> {currentRelease.date}</span></div>
+      <a className="button button-primary download-main" href={currentRelease.downloadUrl} onClick={() => setDownloadStarted(true)}><Icon name="download" />下载安卓安装包<Icon name="arrow" /></a>
+      <p className="download-reassurance">下载 APK 后打开安装 · 邮箱验证码登录</p>
+      <div className="download-links"><a href={currentRelease.githubDownloadUrl}>GitHub 备用下载 ↗</a><span>·</span><a href={currentRelease.notesUrl} target="_blank" rel="noreferrer">版本记录 ↗</a></div>
+      <div className="download-feedback" role="status">{downloadStarted && <p>已发起下载，请在浏览器下载列表中打开 APK，并按系统提示安装。</p>}</div>
+      <details className="checksum"><summary>安装说明与文件校验<Icon name="plus" /></summary><div><p>在安卓手机上打开 APK，按系统提示允许当前浏览器安装此应用。后续更新直接覆盖安装即可保留学习记录。</p><p className="filename">{currentRelease.filename}</p><span>SHA-256</span><code>{currentRelease.sha256}</code></div></details>
+    </> : <p className="download-reassurance" role="status">暂时无法读取安卓版本信息，请稍后刷新重试。</p>}
+  </div>;
+}
+
+function Download({ currentRelease, androidRelease }: { currentRelease: ReleaseInfo; androidRelease: ReleaseInfo | null }) {
   const [downloadStarted, setDownloadStarted] = useState(false);
   const [copyState, setCopyState] = useState<"idle" | "done" | "failed">("idle");
   const copyLink = async () => {
@@ -468,21 +484,24 @@ function Download({ currentRelease }: { currentRelease: ReleaseInfo }) {
     catch { setCopyState("failed"); }
   };
   return <section className="download-section section-wrap" id="download" aria-labelledby="download-title"><div className="download-intro"><span className="brand-mark download-logo" aria-hidden="true">Cy</span><span className="eyebrow">MAKE ROOM FOR A LITTLE PROGRESS</span><h2 id="download-title">下一组单词，<br className="mobile-break" />从这里开始。</h2><p>巧记、构词、分组与复习，都已经准备好。</p></div>
-    <div className="download-card"><div className="download-card-heading"><span className="windows-tile"><Icon name="windows" /></span><div><h3>CYword for Windows</h3><p>Windows 10 / 11 · 64 位</p></div><span className="version-label">v{currentRelease.version}</span></div><div className="download-meta"><span>内置大学英语六级词书</span><span>{currentRelease.size} <i>·</i> {currentRelease.date}</span></div>
-      <a className="button button-primary download-main" href={currentRelease.downloadUrl} onClick={() => setDownloadStarted(true)}><Icon name="download" />下载 Windows 安装包<Icon name="arrow" /></a><p className="download-reassurance">邮箱验证码登录 · 下载后双击安装 · 可选择安装目录</p><p className="mobile-download-note">手机上先了解，安装请在 Windows 电脑上完成。</p>
+    <div className="download-platforms"><AndroidDownload currentRelease={androidRelease} />
+    <div className="download-card"><div className="download-card-heading"><span className="windows-tile"><Icon name="windows" /></span><div><h3>CYword for Windows</h3><p>Windows 10 / 11 · 64 位</p></div><span className="version-label">v{currentRelease.version}</span></div><div className="download-meta"><span>大学英语六级词书 · 联网学习</span><span>{currentRelease.size} <i>·</i> {currentRelease.date}</span></div>
+      <a className="button button-primary download-main" href={currentRelease.downloadUrl} onClick={() => setDownloadStarted(true)}><Icon name="download" />下载 Windows 安装包<Icon name="arrow" /></a><p className="download-reassurance">邮箱验证码登录 · 下载后双击安装 · 可选择安装目录</p>
       <div className="download-links"><button onClick={copyLink}>{copyState === "done" ? "下载地址已复制" : "复制下载地址"}</button><span>·</span><a href="#guide">查看安装步骤</a><span>·</span><a href={currentRelease.githubDownloadUrl}>GitHub 备用下载 ↗</a><span>·</span><a href={currentRelease.notesUrl} target="_blank" rel="noreferrer">版本记录 ↗</a></div>
       <div className="download-feedback" role="status">{downloadStarted && <p>已向浏览器发起下载，请查看下载列表。如果没有开始，可复制地址后重试。<a href="#faq">查看下载帮助</a></p>}{copyState === "done" && <p>下载地址已复制，可粘贴到 Windows 电脑的浏览器中打开。</p>}{copyState === "failed" && <label>浏览器未允许复制，请手动选择下面的地址：<input readOnly aria-label="Windows 安装包下载地址" value={currentRelease.downloadUrl} onFocus={(event) => event.currentTarget.select()} /></label>}</div>
       <details className="checksum"><summary>安装包来源与文件校验<Icon name="plus" /></summary><div><p>本站主下载和 GitHub 备用下载提供同一份官方发布文件，无需登录。当前安装包未签名，安装前请确认来源并核对校验值。</p><p className="filename">{currentRelease.filename}</p><span>SHA-256</span><code>{currentRelease.sha256}</code></div></details>
-    </div>
+    </div></div>
   </section>;
 }
 
 export default function Website() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentRelease, setCurrentRelease] = useState(release);
+  const [androidRelease, setAndroidRelease] = useState<ReleaseInfo | null>(null);
   useEffect(() => {
     let active = true;
     fetchLatestRelease().then((latest) => { if (active) setCurrentRelease(latest); }).catch(() => {});
+    fetchLatestRelease(true).then((latest) => { if (active) setAndroidRelease(latest); }).catch(() => {});
     return () => { active = false; };
   }, []);
   return <>
@@ -490,12 +509,12 @@ export default function Website() {
     <a className="skip-link" href="#main">跳到正文</a>
     <header className="site-header"><div className="header-inner"><Brand /><nav id="main-navigation" aria-label="主导航" className={menuOpen ? "menu-open" : ""}><a href="#method" onClick={() => setMenuOpen(false)}>学习方式</a><a href="#plan" onClick={() => setMenuOpen(false)}>分级复习</a><a href="#guide" onClick={() => setMenuOpen(false)}>上手指南</a><a href="#faq" onClick={() => setMenuOpen(false)}>常见问题</a></nav><div className="header-actions"><a className="header-download" href="#download" onClick={() => setMenuOpen(false)}>下载软件<Icon name="download" /></a><button className="menu-toggle" aria-expanded={menuOpen} aria-controls="main-navigation" aria-label={menuOpen ? "收起导航" : "展开导航"} onClick={() => setMenuOpen(!menuOpen)}><Icon name={menuOpen ? "close" : "menu"} /></button></div></div></header>
     <main id="main">
-      <section className="hero section-wrap" aria-labelledby="hero-title"><div className="hero-copy"><span className="hero-kicker"><i /> 巧记 · 词根分组 · 分级复习</span><h1 id="hero-title">巧记带着学，<br /><em>单词成串记。</em></h1><p className="hero-description">5,166 个六级单词，逐词备好巧记思路。<br />拆开词根词缀，一组一组带着你记，<br />再按熟练度复习，把时间留给还不熟的词。</p><div className="hero-actions"><a className="button button-primary" href="#download"><Icon name="windows" />下载 Windows 版<Icon name="arrow" /></a><a className="text-link" href="#experience">先体验一下 <span aria-hidden="true">↗</span></a></div><div className="hero-availability"><span className="availability-dot" />v{currentRelease.version}<i>·</i>Windows 10 / 11<i>·</i>邮箱验证码登录</div><div className="hero-note"><span aria-hidden="true">↳</span> 省下自己找词根、编巧记、排复习的准备时间。</div></div><WordDemo /></section>
+      <section className="hero section-wrap" aria-labelledby="hero-title"><div className="hero-copy"><span className="hero-kicker"><i /> 巧记 · 词根分组 · 分级复习</span><h1 id="hero-title">巧记带着学，<br /><em>单词成串记。</em></h1><p className="hero-description">5,166 个六级单词，逐词备好巧记思路。<br />拆开词根词缀，一组一组带着你记，<br />再按熟练度复习，把时间留给还不熟的词。</p><div className="hero-actions"><a className="button button-primary" href="#download"><Icon name="download" />下载 CYword<Icon name="arrow" /></a><a className="text-link" href="#experience">先体验一下 <span aria-hidden="true">↗</span></a></div><div className="hero-availability"><span className="availability-dot" />v{currentRelease.version}<i>·</i>Windows / Android<i>·</i>邮箱验证码登录</div><div className="hero-note"><span aria-hidden="true">↳</span> 省下自己找词根、编巧记、排复习的准备时间。</div></div><WordDemo /></section>
       <div className="facts-strip section-wrap"><div><span className="fact-number">5,166</span><span>每词都有巧记<span>从怎么记，就给你思路</span></span></div><div><Icon name="branch" /><span>词根成组学习<span>同根单词，在同一天串起来</span></span></div><div><span className="fact-number">3 <i>档</i></span><span>熟练度分级<span>让复习分清轻重</span></span></div></div>
       <MnemonicMethod />
       <Rhythm />
       <section className="guide-section section-wrap" id="guide" aria-labelledby="guide-title"><div className="section-heading"><div><span className="eyebrow">A SMALL START IS STILL A START</span><h2 id="guide-title">装好，打开，<br className="mobile-break" />开始今天。</h2></div><p>不需要懂代码，也不用研究项目页面。<br />三个小步骤，就能开始学习。</p></div><ol className="guide-steps"><li><span className="step-number">01</span><div className="step-art installer-art"><Icon name="download" /><span>CYword-Setup<small>.exe</small></span><Icon name="check" /></div><h3>下载安装包</h3><p>在 Windows 电脑上点击下载，保存安装文件。无需下载源码，也不用注册账号。</p><a href="#download">前往下载 <Icon name="arrow" /></a></li><li><span className="step-number">02</span><div className="step-art install-art"><span className="mini-cy">Cy</span><div><span>选择安装位置</span><small>D:\CYword</small></div><span className="mini-install-label">安装</span></div><h3>双击，完成安装</h3><p>打开下载好的 .exe 文件，按提示选择安装位置。安装完成后，从桌面打开 CYword。</p><a href="#faq">遇到安全提示？ <Icon name="arrow" /></a></li><li><span className="step-number">03</span><div className="step-art first-day-art"><span>Day 1</span><span className="mini-start-label">开始学习 <Icon name="arrow" /></span></div><h3>从第一组词根开始</h3><p>点击首页的「继续今日学习」，进入今日计划后点击开始按钮，跟着巧记按组学习，标记熟练度。进度会自动保存。</p><a href="#experience">先试试学习体验 <Icon name="arrow" /></a></li></ol></section>
-      <Download currentRelease={currentRelease} />
+      <Download currentRelease={currentRelease} androidRelease={androidRelease} />
       <section className="faq-section section-wrap" id="faq" aria-labelledby="faq-title"><div><span className="eyebrow">A FEW THINGS TO KNOW</span><h2 id="faq-title">你可能还想知道</h2><p>开始之前，把这些小问题说清楚。</p></div><div className="faq-list">{faqs.map((faq, i) => <details name="faq" key={faq.question} open={i === 0 ? true : undefined}><summary>{faq.question}<Icon name="plus" /></summary><p>{faq.answer}</p></details>)}</div></section>
     </main>
     <footer className="site-footer section-wrap"><div className="footer-top"><Brand footer /><p>每个词有巧记，每一组有联系，学过之后有复习。</p><a href="#top">回到顶部 ↑</a></div><div className="footer-bottom"><span>© {new Date().getFullYear()} CYword · 词根记忆</span><span>巧记带着学，单词成串记。<a href={currentRelease.repositoryUrl} target="_blank" rel="noreferrer">开源项目 ↗</a></span></div></footer>

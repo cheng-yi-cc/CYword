@@ -9,6 +9,7 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const bucket = "cyword-downloads";
 const repositoryUrl = "https://github.com/cheng-yi-cc/CYword";
 const prepareOnly = process.argv.includes("--prepare-only");
+const android = process.argv.includes("--android");
 const positional = process.argv.slice(2).filter((argument) => !argument.startsWith("--"));
 const releaseDirectory = path.resolve(root, positional[0] ?? "release");
 
@@ -45,6 +46,27 @@ function replaceManifestAsset(manifest, filename, assetPath) {
 }
 
 async function prepareRelease() {
+  if (android) {
+    const { versionName: version } = JSON.parse(await readFile(path.join(root, "android/version.json"), "utf8"));
+    if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error("安卓版本号无效");
+    const filename = `CYword-Android-${version}.apk`;
+    const installer = path.join(releaseDirectory, filename);
+    const info = await stat(installer);
+    if (!info.isFile() || info.size === 0) throw new Error("安卓安装包无效");
+    const sha256 = await fileDigest(installer, "sha256", "hex");
+    const pointer = {
+      schemaVersion: 1, version, publishedAt: new Date().toISOString(), filename,
+      sizeBytes: info.size, sha256,
+      assetPath: `releases/android/${version}/${sha256}/${filename}`,
+      githubDownloadUrl: `${repositoryUrl}/releases/download/android-v${version}/${filename}`,
+      notesUrl: `${repositoryUrl}/releases/tag/android-v${version}`, repositoryUrl,
+    };
+    const work = path.join(root, ".work", "site-release", `android-${version}-${sha256.slice(0, 16)}`);
+    await mkdir(work, { recursive: true });
+    const pointerFile = path.join(work, "current.json");
+    await writeFile(pointerFile, `${JSON.stringify(pointer, null, 2)}\n`);
+    return { installer, pointerFile, pointer };
+  }
   const packageJson = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
   const version = packageJson.version;
   if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error(`不支持的 package.json 版本：${version}`);
@@ -169,9 +191,11 @@ if (prepareOnly) {
   const immutable = "public, max-age=31536000, immutable, no-transform";
 
   // 内容寻址资产先全部上传；current.json 是官网和自动更新共同的唯一发布开关，必须最后写入。
-  await upload(endpoint, prepared.installer, prepared.pointer.assetPath, "application/octet-stream", immutable);
-  await upload(endpoint, prepared.blockmap, prepared.pointer.blockmapPath, "application/octet-stream", immutable);
-  await upload(endpoint, prepared.updaterMetadataFile, prepared.pointer.updaterMetadataPath, "application/x-yaml", immutable);
-  await upload(endpoint, prepared.pointerFile, "releases/current.json", "application/json", "no-store");
+  await upload(endpoint, prepared.installer, prepared.pointer.assetPath, android ? "application/vnd.android.package-archive" : "application/octet-stream", immutable);
+  if (!android) {
+    await upload(endpoint, prepared.blockmap, prepared.pointer.blockmapPath, "application/octet-stream", immutable);
+    await upload(endpoint, prepared.updaterMetadataFile, prepared.pointer.updaterMetadataPath, "application/x-yaml", immutable);
+  }
+  await upload(endpoint, prepared.pointerFile, android ? "releases/android/current.json" : "releases/current.json", "application/json", "no-store");
   console.log(`官网最新版指针已切换到 v${prepared.pointer.version}。`);
 }

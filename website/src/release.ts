@@ -43,21 +43,22 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function isPublicRelease(value: unknown): value is PublicRelease {
+function isPublicRelease(value: unknown, android = false): value is PublicRelease {
   if (!isRecord(value)) return false;
   const version = value.version;
   if (typeof version !== "string" || !/^\d+\.\d+\.\d+$/.test(version)) return false;
-  const filename = `CYword-Setup-${version}.exe`;
-  const expectedGithubUrl = `${repositoryUrl}/releases/download/v${version}/${filename}`;
-  const versionedPath = new RegExp(`^/downloads/releases/${version.replace(/\./g, "\\.")}/[a-f0-9]{64}/${filename.replace(/\./g, "\\.")}$`);
+  const filename = android ? `CYword-Android-${version}.apk` : `CYword-Setup-${version}.exe`;
+  const tag = `${android ? "android-v" : "v"}${version}`;
+  const expectedGithubUrl = `${repositoryUrl}/releases/download/${tag}/${filename}`;
+  const versionedPath = new RegExp(`^/downloads/releases/${android ? "android/" : ""}${version.replace(/\./g, "\\.")}/[a-f0-9]{64}/${filename.replace(/\./g, "\\.")}$`);
   return value.filename === filename &&
     typeof value.publishedAt === "string" && Number.isFinite(Date.parse(value.publishedAt)) &&
     Number.isSafeInteger(value.sizeBytes) && Number(value.sizeBytes) > 0 &&
     typeof value.sha256 === "string" && /^[a-f0-9]{64}$/.test(value.sha256) &&
     typeof value.downloadPath === "string" &&
-      (value.downloadPath === `/downloads/${filename}` || versionedPath.test(value.downloadPath)) &&
+      ((!android && value.downloadPath === `/downloads/${filename}`) || versionedPath.test(value.downloadPath)) &&
     value.githubDownloadUrl === expectedGithubUrl &&
-    value.notesUrl === `${repositoryUrl}/releases/tag/v${version}` &&
+    value.notesUrl === `${repositoryUrl}/releases/tag/${tag}` &&
     value.repositoryUrl === repositoryUrl;
 }
 
@@ -72,11 +73,11 @@ function formatDate(publishedAt: string): string {
   return `${value.year}.${value.month}.${value.day}`;
 }
 
-export async function fetchLatestRelease(): Promise<ReleaseInfo> {
-  const response = await fetch("/downloads/latest.json", { cache: "no-store" });
+export async function fetchLatestRelease(android = false): Promise<ReleaseInfo> {
+  const response = await fetch(android ? "/downloads/android/latest.json" : "/downloads/latest.json", { cache: "no-store" });
   if (!response.ok) throw new Error(`Latest release request failed (${response.status})`);
   const value: unknown = await response.json();
-  if (!isPublicRelease(value)) throw new Error("Latest release response is invalid");
+  if (!isPublicRelease(value, android)) throw new Error("Latest release response is invalid");
   return {
     version: value.version,
     date: formatDate(value.publishedAt),

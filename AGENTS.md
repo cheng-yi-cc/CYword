@@ -3,6 +3,7 @@
 - 仓库包含 Windows Electron、`android/` Capacitor 安卓应用与 `website/` 独立官网；两端共用 React、TypeScript 和排课逻辑。
 - 正式词书数据放在 `books/<book-code>/`；`data/` 是构建生成物，不得手工修改或提交。
 - 原巧记内容严禁修改：不得改写、删减、替换或通过运行时覆盖改变单词的 `memory_markup` / `memoryMarkup`、词根等条目的 `memory_method` / `memoryMethod` 正文及其引用。排序冲突只能通过排课顺序、依赖识别和原有悬浮窗补充处理，不得为了消除依赖冲突修改原巧记。
+- 桌面版本由 `package.json` 维护；安卓版本由 `android/version.json` 独立维护，内部 `versionCode` 必须递增。安卓使用 `android-v<版本>` Release 与 `releases/android/current.json` 指针，不覆盖 Windows 最新版及自动更新元数据。
 - 默认词书是 `cet6`。新增四级、考研等词书时使用独立稳定代码，如 `cet4`、`kaoyan`，不要覆盖六级数据。
 - 元数据标称 5169 词，两个可枚举接口一致为 5166 词，差异 3 已在词书清单中保留，禁止擅自补造。
 - 每本词书必须包含 `book.json` 和 `csv/` 下的完整规范表；先运行 `npm run data:verify`，再构建应用。
