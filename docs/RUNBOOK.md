@@ -1,8 +1,21 @@
 # 运行手册
 
-本次版本为 Windows 0.4.6、Android 0.1.3（versionCode 504）。正式下载状态及核验结果见发布记录，历史记录保留如下。
+当前正式版本为 Windows 0.4.6、Android 0.1.3（versionCode 504），于 2026-09-21 发布。官网、两个独立下载指针和自动更新元数据已上线。
 
 Windows 0.4.6 / Android 0.1.3 实现登录后下载完整文字及发音、离线学习、本地进度和一次性旧云端导入。预览时首次完整下载后从 IndexedDB 读取；`CYWORD_REAL_AUTH=1` 不会启用上传，只有 `VITE_CYWORD_PROGRESS_MODE=cloud` 显式恢复双向同步。词书重编译后的本地重下载步骤和验证边界见 [OFFLINE.md](OFFLINE.md)。源码与 Release 已公开；官网更新源及生产资源均保留。
+
+## Windows 0.4.6 / Android 0.1.3 发布记录（2026-09-21）
+
+发布源码为 `84a81ae`，标签为 `v0.4.6` 和 `android-v0.1.3`；Windows 工作流 `35579723205`、Android 工作流 `35579809606` 均成功。官网生产部署为 `b4fcb06a.cyword.pages.dev`，包含分割交互、离线学习说明和已核验的 Windows 0.4.6 回退信息。
+
+| 平台 | 正式文件 | 字节数 | SHA-256 |
+| --- | --- | ---: | --- |
+| Windows 0.4.6 | `CYword-Setup-0.4.6.exe` | 130228479 | `337c77bb8afa96ce8e1ffbcdb1b4db904fae612fb6cbc4275b97ed9dd92f014a` |
+| Android 0.1.3 | `CYword-Android-0.1.3.apk` | 20605007 | `586547116fc15c1820533cb4972956b26215dc847dd54ef5354c21d1ba1f4210` |
+
+正式域名完整下载、HEAD、Range、稳定入口重定向与独立版本指针均通过；GitHub Release 的资产摘要与官网下载一致。Windows `latest.yml` 的 SHA-512 与安装器一致，blockmap 全部分块验证通过；安卓签名证书与 0.1.2 相同（SHA-256：`389ff03f29e59fcf25ad2c2969b132bff20e2635a0960f24afe176b1b9a578fa`），最低 API 24、目标 API 36。未登录认证及进度接口仍返回 401。
+
+103 项自动化测试、18 项应用界面回归、2 项官网桌面/手机交互回归和 22 项本地 R2 检查通过。官网生产环境的 1280/390 像素视口已实测真实音频播放、默认完整拼写、点击分割、播放后恢复与双端版本，页面无控制台异常和横向溢出。应用/官网构建及正式 APK 构建通过；之前的完整词书下载、断网冷启动验证见 [OFFLINE.md](OFFLINE.md)。未进行正式 Windows 安装器安装、安卓真机覆盖升级或真机离线播放验收。
 
 ## Android 0.1.2 发布记录（2026-09-20）
 
