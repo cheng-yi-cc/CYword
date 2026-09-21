@@ -132,6 +132,29 @@ async function readJson(filePath, fallback = null) {
 async function registerIpc() {
   const legacySession = await readJson(sessionPath(), null);
   const sessions = createSessionStore(sessionPath(), safeStorage);
+  ipcMain.handle("progress:import-read", async (_event, accountId) => {
+    if (typeof accountId !== "string" || !accountId) throw new Error("账号无效");
+    return Boolean(await readJson(path.join(path.dirname(progressPath(accountId)), "cloud-import.json")));
+  });
+  ipcMain.handle("progress:import-finish", async (_event, accountId) => {
+    if (typeof accountId !== "string" || !accountId) throw new Error("账号无效");
+    const target = path.join(path.dirname(progressPath(accountId)), "cloud-import.json");
+    await fs.mkdir(path.dirname(target), { recursive: true });
+    const temporary = `${target}.${randomUUID()}.tmp`;
+    await fs.writeFile(temporary, JSON.stringify({ completedAt: new Date().toISOString() }));
+    await fs.rename(temporary, target);
+    return true;
+  });
+  ipcMain.handle("book:audio", async (_event, value) => {
+    const url = new URL(value);
+    if (url.origin !== "https://cdn.aimwords.com" || !/^\/audio\/[a-f0-9]+\.(?:mp3|wav)$/i.test(url.pathname) || url.search || url.username || url.password) throw new Error("词书音频地址无效");
+    const response = await fetch(url, { redirect: "error", signal: AbortSignal.timeout(30000) });
+    if (!response.ok) throw new Error(`音频下载失败（${response.status}）`);
+    const contentType = response.headers.get("content-type") || "audio/mpeg";
+    const bytes = Buffer.from(await response.arrayBuffer());
+    if (!bytes.length || bytes.length > 5_000_000 || !/^(audio\/|application\/octet-stream)/i.test(contentType)) throw new Error("词书音频格式无效");
+    return { base64: bytes.toString("base64"), contentType };
+  });
   ipcMain.handle("catalog:read", () => fetchBookJson("/catalog"));
 
   ipcMain.handle("words:read", (_event, request) => {

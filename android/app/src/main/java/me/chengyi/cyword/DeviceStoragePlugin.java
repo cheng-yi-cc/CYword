@@ -101,7 +101,7 @@ public class DeviceStoragePlugin extends Plugin {
     @PluginMethod
     public synchronized void writeProgress(PluginCall call) {
         String name = call.getString("key"), value = call.getString("value");
-        if (name == null || !name.startsWith("cyword-progress:") || value == null) { call.reject("进度格式无效"); return; }
+        if (name == null || !(name.startsWith("cyword-progress:") || name.startsWith("cyword-cloud-import:")) || value == null) { call.reject("进度格式无效"); return; }
         // Preferences.set uses apply(), which cannot report disk failures. Acknowledged
         // study saves use commit() so the UI advances only after durable persistence.
         if (!persist(preferences(), name, value)) { call.reject("设备进度保存失败，请检查存储空间"); return; }

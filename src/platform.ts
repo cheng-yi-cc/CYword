@@ -64,6 +64,19 @@ export function installPlatform() {
     sendAuthCode: (email) => json("/api/auth/send-code", "POST", { email }),
     verifyAuthCode: (email, code) => json("/api/auth/verify-code", "POST", { email, code }),
     readSession,
+    readProgressImport: async (accountId) => Boolean(await storage.get(`cyword-cloud-import:${accountId}`)),
+    finishProgressImport: async (accountId) => {
+      const key = `cyword-cloud-import:${accountId}`, value = new Date().toISOString();
+      if (isNative) await DeviceStorage.writeProgress({ key, value }); else await storage.set(key, value);
+      return true;
+    },
+    downloadBookAudio: async (url) => {
+      const parsed = new URL(url);
+      if (parsed.origin !== "https://cdn.aimwords.com" || !/^\/audio\/[a-f0-9]+\.(?:mp3|wav)$/i.test(parsed.pathname) || parsed.search || parsed.username || parsed.password) throw new Error("词书音频地址无效");
+      const response = await CapacitorHttp.get({ url: isNative ? url : `/__book-audio${parsed.pathname}`, responseType: "arraybuffer", disableRedirects: true, connectTimeout: 15000, readTimeout: 30000 });
+      if (response.status !== 200) throw new Error(`音频下载失败（${response.status}）`);
+      return { base64: response.data, contentType: response.headers["content-type"] || response.headers["Content-Type"] || "audio/mpeg" };
+    },
     writeSession: async (session) => {
       if (isNative) await DeviceStorage.writeSession({ value: JSON.stringify(session) }); else await storage.set("cyword_session", JSON.stringify(session));
       return true;

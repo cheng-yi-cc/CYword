@@ -64,3 +64,13 @@ test("stopped pending playback cannot corrupt a replay of the same URL", async (
   assert.equal(player.snapshot().status, "error");
   assert.equal(replay.paused, true);
 });
+
+test("closing or switching words while disk audio resolves cannot start stale playback", async () => {
+  let resolve!: (url: string) => void;
+  const played: string[] = [];
+  const player = new PronunciationPlayer(url => { played.push(url); return new FakeAudio(); }, url => url === "old" ? new Promise(done => { resolve = done; }) : Promise.resolve("blob:new"));
+  const pending = player.play("old");
+  assert.deepEqual(player.snapshot(), { url: "old", status: "loading", message: "" });
+  player.stop(); await player.play("new"); resolve("blob:old"); await pending;
+  assert.deepEqual(played, ["blob:new"]); assert.equal(player.snapshot().url, "new");
+});

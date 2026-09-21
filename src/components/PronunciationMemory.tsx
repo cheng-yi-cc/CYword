@@ -1,14 +1,30 @@
-import { useId, useState } from "react";
+import { useId, useState, useSyncExternalStore } from "react";
+import { pronunciationPlayer } from "../audio";
 import type { PronunciationGuide } from "../types";
 
-export function PronunciationSpelling({ word, guide }: { word: string; guide?: PronunciationGuide }) {
+export function useSpellingSegmentation(wordId: string, audioUrl?: string, player = pronunciationPlayer) {
+  const [preference, setPreference] = useState({ wordId, split: false });
+  if (preference.wordId !== wordId) setPreference({ wordId, split: false });
+  const playback = useSyncExternalStore(player.subscribe, player.snapshot);
+  const playing = Boolean(audioUrl && playback.url === audioUrl && (playback.status === "loading" || playback.status === "playing"));
+  const split = playing || (preference.wordId === wordId && preference.split);
+  return { split, playing, onToggle: () => {
+    // 播放只临时展开，不改写手动选择，结束或失败即可恢复。
+    if (!playing) setPreference({ wordId, split: !split });
+  } };
+}
+
+export function PronunciationSpelling({ word, guide, split, playing, onToggle }: {
+  word: string; guide?: PronunciationGuide; split: boolean; playing: boolean; onToggle: () => void;
+}) {
   if (!guide) return <>{word}</>;
-  return <span className="sound-spelling" aria-label={word} onCopy={(event) => {
+  return <button type="button" className="sound-spelling" aria-label={word} aria-pressed={split} aria-disabled={playing}
+    title={split ? "收起发音分割" : "显示发音分割"} onClick={onToggle} onCopy={(event) => {
     event.clipboardData.setData("text/plain", word);
     event.preventDefault();
-  }}>{guide.chunks.map((chunk, index) =>
+  }}>{split ? guide.chunks.map((chunk, index) =>
     <span key={index} className={`sound-spelling-part stress-${chunk.stress}`} aria-hidden="true">{chunk.text}</span>,
-  )}</span>;
+  ) : word}</button>;
 }
 
 export function PronunciationMemory({ guide }: { guide?: PronunciationGuide }) {

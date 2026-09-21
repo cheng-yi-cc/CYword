@@ -1,6 +1,6 @@
 # 官网说明
 
-官网与认证函数已于 2026-09-20 部署；当前公开客户端为 Windows 0.4.5、Android 0.1.2。发布与下载核验记录统一见 [运行手册](RUNBOOK.md)。
+官网与认证函数已于 2026-09-20 部署；当前客户端为 Windows 0.4.6、Android 0.1.3。发布与下载核验记录统一见 [运行手册](RUNBOOK.md)。
 
 ## 用途与入口
 
@@ -8,10 +8,10 @@
 
 - 官网：<https://cyword.chengyi.me/>；Pages 备用域名：<https://cyword.pages.dev/>。
 - Windows 下载：<https://cyword.chengyi.me/downloads/latest>；Android 下载：<https://cyword.chengyi.me/downloads/android/latest>。两者从私有 R2 桶的独立原子版本指针跳转到安装包，支持断点续传，下载无需登录。
-- GitHub 仓库为私有，仅用于维护与发布流程，不作为普通用户的备用下载、源码或版本记录入口。公开版本记录放在 `/#release-notes`，只记录已发布改动。
+- GitHub 仓库 `https://github.com/cheng-yi-cc/CYword` 已于 2026-09-21 改为公开，官网源码在页脚提供开源入口；现有下载安装与自动更新仍使用官网源。公开版本记录放在 `/#release-notes`，只记录已发布改动；离线模式从 Windows 0.4.6 / Android 0.1.3 起提供。
 - Windows 版本和校验值以 `/downloads/latest.json` 为准，Android 以 `/downloads/android/latest.json` 为准；`website/src/release.ts` 只保留动态指针不可用时已核验的 Windows 0.4.5 回退信息，并在页面明确提示。Android 读取失败显示未知状态与重试入口，不填造版本或哈希。
 - 两个平台分别显示版本、文件大小、校验值及安装步骤，锚点为 `/#guide-windows`、`/#guide-android`。
-- 首屏为不保存记录的交互示例。桌面长难句沿用应用右侧竖排入口，默认收起为 52px；展开时三栏同步调整宽度，内容延迟淡入，收起时先淡出内容，动画时长与应用一致。手机标签按“单词、词根、长难句”切换。各栏独立滚动且隐藏滚动条，采用 `overscroll-behavior: contain` 阻断外层滚动穿透，发音支持播放、暂停与失败重试。
+- 首屏为不保存记录的交互示例。桌面长难句沿用应用右侧竖排入口，默认收起为 52px；展开时三栏同步调整宽度，内容延迟淡入，收起时先淡出内容，动画时长与应用一致。手机标签按“单词、词根、长难句”切换。各栏独立滚动且隐藏滚动条，采用 `overscroll-behavior: contain` 阻断外层滚动穿透，单词默认完整显示，点击切换分块；点击音标或发音按钮临时分块，结束、停止、失败后恢复。portable 使用已审核的 por·ta·ble，不按词根切分；发音支持停止与失败重试。
 
 网站使用境外 Cloudflare 服务。国内线路受地区、运营商和跨境网络影响，不能承诺全国永久可达；境外托管适用的备案说明见[阿里云文档](https://help.aliyun.com/en/icp-filing/basic-icp-service/support/for-the-record-process-faq)。迁移后的桌面版本通过同域 `/downloads/latest.yml` 检查更新，并从 R2 下载更新资产，不再向 GitHub 查询更新。
 
@@ -33,7 +33,7 @@ npm run preview:site
 
 输出为 `dist-site/`，预览地址为 `http://127.0.0.1:4174/`，与桌面端 `dist/` 和端口 5173 分离。Vite 不模拟 R2，通过 `/downloads/` 代理读取正式域名的发布信息和安装包；本地预览不会发布页面或切换版本。
 
-`npm run build:site` 会生成函数类型并检查 TypeScript。`npm run test:site:download` 会构建官网，以确定性文件在本地 R2 模拟器运行集成检查，覆盖旧 v1 与新 v2 发布指针、Windows 和安卓下载、公开响应不含私有仓库链接、electron-updater 清单、blockmap、字节完整性、HEAD、Range、续传拼接、条件请求、错误码及静态首页；不读取或写入远端桶。生成类型和测试状态不提交。客户端的加载、保存与退出交互回归使用 `npm run test:ui`，运行条件见 [运行手册](RUNBOOK.md)。
+`npm run build:site` 会生成函数类型并检查 TypeScript。`npm run test:site:download` 会构建官网，以确定性文件在本地 R2 模拟器运行集成检查，覆盖旧 v1 与新 v2 发布指针、Windows 和安卓下载、公开响应不含私有仓库链接、electron-updater 清单、blockmap、字节完整性、HEAD、Range、续传拼接、条件请求、错误码及静态首页；不读取或写入远端桶。生成类型和测试状态不提交。`npm run test:site:ui` 验证桌面/手机示例的分块切换及发音恢复。客户端的加载、保存与退出交互回归使用 `npm run test:ui`，运行条件见 [运行手册](RUNBOOK.md)。
 
 ## 代码入口
 
@@ -126,11 +126,11 @@ curl.exe --fail --head 'https://cyword.chengyi.me/downloads/latest'
 
 官网沿用暖纸色、陶土橙和橄榄绿，品牌只显示 CYword，中文使用系统无衬线字体，英文单词和品牌使用 Georgia。字体、图标、样式不依赖外部 CDN。主线是“逐词巧记 → 构词成组 → 熟练度与累计复习”。
 
-- Windows 自 0.3.0 起，安装包不内置六级详情，运行时通过词书接口加载 5166 个唯一单词。当前 Windows 0.4.5 与安卓 0.1.2 于 2026-09-20 发布；没有 Mac 版、四级或考研词书。官网正式下载以已经核验的发布指针为准。
+- Windows 自 0.3.0 起，安装包不内置六级详情，运行时通过词书接口加载 5166 个唯一单词。当前 Windows 0.4.6 与安卓 0.1.3 的发布记录见运行手册；没有 Mac 版、四级或考研词书。官网正式下载以已经核验的发布指针为准。
 - 计划包含 30 个学习日和 10 个累计复习日，不保证在 40 个自然日内记住全部单词。每天曝光次数以对应版本的编译排课为准，多词根组可重复出现同一词，曝光次数不等于唯一新词数，也不保证记忆效果。
-- 0.2.1 可离线学习；0.3.0 起启动和每天学习需联网。进度同步接口已部署，两端须使用同一邮箱。正常覆盖升级保留进度，旧文件按已登录账号归属迁移。
+- 0.4.6 / 0.1.3 起首次登录并下载完整词书及发音后离线学习，进度默认保存在本机，旧云端记录导入一次；云端模式及旧版同步服务保留。正常覆盖升级保留进度，旧文件按已登录账号归属迁移。
 - Windows 安装包未签名，安卓 APK 使用项目私有密钥签名；页面应提示核对来源与哈希，不引导用户关闭系统防护，也不把校验一致等同于安全认证。
-- `/#privacy` 说明账号、学习记录、官网示例与服务提供方：认证接口在 D1 保存邮箱、账号标识、登录时间和短期验证码，学习记录按账号保存在设备及 D1；两个私有 R2 桶分别保存公开安装包和服务端词书分片。官网没有统计脚本或公开表单，交互示例只保留 React 内存状态，刷新即重置，不访问客户端会话、学习进度或 localStorage。发音播放会请求 `cdn.aimwords.com`；下载、账号与同步使用 Cloudflare，验证码邮件使用 Resend。
+- `/#privacy` 说明账号、学习记录、官网示例与服务提供方：认证接口在 D1 保存邮箱、账号标识、登录时间和短期验证码，新版学习记录按账号保存在设备，旧 D1 记录只读导入一次，旧客户端或显式云端模式仍可同步；两个私有 R2 桶分别保存公开安装包和服务端词书分片。官网没有统计脚本或公开表单，交互示例只保留 React 内存状态，刷新即重置，不访问客户端会话、学习进度或 localStorage。发音播放会请求 `cdn.aimwords.com`；下载、账号与同步使用 Cloudflare，验证码邮件使用 Resend。
 - `/#feedback` 提供反馈与删除说明，维护者确认的公开邮箱为 `cyi907369@gmail.com`，通过 `mailto:` 链接打开邮件客户端。删除申请提示使用登录邮箱发送；这是人工申请入口，没有自助删除接口，实际收件及处理流程仍需维护者验证。退出登录、清理本机数据与删除云端数据是不同操作。
 - 官网固定示例混合使用原词书节选与页面编写内容；portable、transport、porter 及部分例句、长难句来自规范词书。逐项来源见 [内容来源台账](CONTENT-SOURCES.md)，不将上游“原创”标注等同于本项目原创或授权证明。不打包完整词书或词书远程图片。
 - 2026-08-31 核对：5166 词均有 `memory_markup`，4877 词有 `etymology_markup`；12813 条构词关联中 6390 条有独立 `memory_method`。不能宣传每个构词元素都有独立巧记，也不能把所有词都说成有真正词根。
@@ -164,4 +164,4 @@ curl.exe --fail --head 'https://cyword.chengyi.me/downloads/latest'
 
 ## 安卓下载
 
-`GET/HEAD /downloads/android/latest.json` 返回安卓独立版本信息；`/downloads/android/latest` 跳转当前 APK。资产采用 `releases/android/<version>/<sha256>/CYword-Android-<version>.apk` 路径，响应类型为 `application/vnd.android.package-archive`，支持 HEAD、Range 和条件缓存。其私有指针 `releases/android/current.json` 不对外暴露。私有仓库的 `android-v<version>` Release 作为内部原件来源，独立 GitHub Actions 上传原始签名 APK 并校验后切换指针，不影响 Windows 的 `latest.yml`。
+`GET/HEAD /downloads/android/latest.json` 返回安卓独立版本信息；`/downloads/android/latest` 跳转当前 APK。资产采用 `releases/android/<version>/<sha256>/CYword-Android-<version>.apk` 路径，响应类型为 `application/vnd.android.package-archive`，支持 HEAD、Range 和条件缓存。其私有指针 `releases/android/current.json` 不对外暴露。公开仓库的 `android-v<version>` Release 作为内部原件来源，独立 GitHub Actions 上传原始签名 APK 并校验后切换指针，不影响 Windows 的 `latest.yml`。

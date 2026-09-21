@@ -1,7 +1,8 @@
 {
   "name": "cyword",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "private": true,
+  "license": "Apache-2.0",
   "type": "module",
   "description": "词根驱动的本地英语记忆桌面应用",
   "author": "CYword",
@@ -24,6 +25,7 @@
     "build:site": "npm run check:site && tsc --project website/tsconfig.json && vite build --config website/vite.config.ts",
     "preview:site": "vite preview --config website/vite.config.ts",
     "test:site:download": "npm run build:site && node scripts/test-site-download.mjs",
+    "test:site:ui": "playwright test --config website/playwright.config.ts",
     "publish:site:release": "node scripts/publish-site-release.mjs",
     "upload:book-data": "npm run data:api && node scripts/upload-book-data.mjs",
     "deploy:site": "npm run build:site && wrangler pages deploy --cwd website --project-name cyword --branch main --commit-dirty=true",

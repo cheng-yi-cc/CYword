@@ -3,6 +3,8 @@ import { ProgressSync, type SyncStatus, type FlushResult } from "./sync-client";
 import { reconcileCompletion } from "./progress";
 import type { AppProgress, Catalog, UserSession } from "./types";
 
+export const cloudProgressEnabled = import.meta.env.VITE_CYWORD_PROGRESS_MODE === "cloud";
+
 export function useSyncedProgress(session: UserSession | null, catalog: Catalog | null, onSessionExpired: () => void) {
   const [state, setState] = useState<{ account: string; progress: AppProgress | null; status: SyncStatus; message: string }>({ account: "", progress: null, status: "syncing", message: "正在准备进度" });
   const ref = useRef<ProgressSync | null>(null);
@@ -13,6 +15,9 @@ export function useSyncedProgress(session: UserSession | null, catalog: Catalog 
     let active = true;
     const { token, user } = session;
     const sync = new ProgressSync({
+      mode: cloudProgressEnabled ? "cloud" : "local",
+      readImport: () => window.cyword.readProgressImport!(user.id),
+      finishImport: () => window.cyword.finishProgressImport!(user.id),
       read: () => window.cyword.readProgress(user.id),
       write: (progress) => window.cyword.writeProgress(progress, user.id),
       request: (payload) => {
@@ -30,7 +35,7 @@ export function useSyncedProgress(session: UserSession | null, catalog: Catalog 
     ref.current = sync;
     void sync.open().catch((error) => { if (active) setState({ account: user.id, progress: null, status: "error", message: `读取本机进度失败：${String(error)}` }); });
     const resume = () => { if (document.visibilityState !== "hidden") void sync.sync(); };
-    const interval = window.setInterval(resume, 15000);
+    const interval = cloudProgressEnabled ? window.setInterval(resume, 15000) : undefined;
     window.addEventListener("online", resume);
     window.addEventListener("focus", resume);
     window.addEventListener("cyword-resume", resume);

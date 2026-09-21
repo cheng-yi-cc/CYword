@@ -75,6 +75,14 @@ const devOtpCodes = new Map<string, { code: string; createdAt: number }>();
 const devUsers = new Map<string, { id: string; email: string; createdAt: number; lastLoginAt: number; loginCount: number }>();
 const devProgress = new Map<string, { revision: number; progress: AppProgress }>();
 const realAuth = process.env.CYWORD_REAL_AUTH === "1";
+// Browser previews cannot fetch the audio CDN directly because it has no CORS header.
+// Native apps use their own HTTP transport; this proxy accepts only book audio paths.
+const audioProxy = {
+  "^/__book-audio/audio/[a-fA-F0-9]+\\.(?:mp3|wav)$": {
+    target: "https://cdn.aimwords.com", changeOrigin: true,
+    rewrite: (path: string) => path.replace(/^\/__book-audio/, ""),
+  },
+};
 
 function localDataPreview() {
   return {
@@ -186,12 +194,14 @@ export default defineConfig({
   plugins: [react(), localDataPreview()],
   base: "./",
   optimizeDeps: { entries: ["index.html"] },
+  preview: { proxy: audioProxy },
   server: {
     watch: { ignored: ["**/android/**", "**/.work/**", "**/dist-site/**", "**/release/**"] },
     host: "127.0.0.1",
     port: 5173,
     strictPort: true,
     proxy: {
+      ...audioProxy,
       ...(realAuth ? {
         "/api/auth": { target: "https://cyword.chengyi.me", changeOrigin: true },
         "/api/progress": { target: "https://cyword.chengyi.me", changeOrigin: true },

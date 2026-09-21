@@ -204,6 +204,9 @@ declare global {
       readCatalog: () => Promise<Catalog>;
       readWords: (request: WordsRequest) => Promise<WordsResponse>;
       readProgress: (accountId?: string) => Promise<unknown>;
+      readProgressImport?: (accountId: string) => Promise<boolean>;
+      finishProgressImport?: (accountId: string) => Promise<boolean>;
+      downloadBookAudio?: (url: string) => Promise<{ base64: string; contentType: string }>;
       writeProgress: (progress: AppProgress, accountId?: string) => Promise<boolean>;
       syncProgress?: (token: string, payload?: { revision: number; progress: AppProgress }) => Promise<{ status: number; data: { revision: number; progress: AppProgress; error?: string } }>;
       sendAuthCode?: (email: string) => Promise<SendCodeResponse>;

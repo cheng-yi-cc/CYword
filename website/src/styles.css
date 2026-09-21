@@ -153,6 +153,11 @@ h1, h2, h3 { text-wrap: balance; }
 .study-word-hero { display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: start; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
 .hero-group-label { color: var(--clay-dark); font: 700 8.5px var(--mono); letter-spacing: .12em; }
 .study-word-title { margin: 2px 0 6px; font: 600 clamp(36px, 3.8vw, 48px)/1.08 var(--serif); letter-spacing: -.05em; color: #2d2a23; }
+.study-word-title .sound-spelling { display: inline; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; letter-spacing: inherit; text-align: inherit; overflow-wrap: anywhere; cursor: pointer; }
+.study-word-title .sound-spelling[aria-disabled="true"] { cursor: default; }
+.study-word-title .sound-spelling-part { display: inline-block; font-weight: inherit; }
+.study-word-title .sound-spelling-part + .sound-spelling-part::before { content: "·"; color: var(--muted); font-weight: 400; padding: 0 .035em; }
+.study-word-title .sound-spelling-part.stress-primary { text-decoration: underline; text-decoration-thickness: .055em; text-underline-offset: .13em; }
 .study-phonetic-row { display: flex; align-items: center; gap: 12px; }
 .study-phonetic-row strong { font: 12px var(--mono); color: var(--clay-dark); }
 

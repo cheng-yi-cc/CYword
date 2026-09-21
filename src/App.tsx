@@ -21,13 +21,15 @@ import {
 } from "./progress";
 import { AuthModal } from "./components/AuthModal";
 import { AndroidUpdateMenu } from "./components/AndroidUpdates";
-import { useSyncedProgress } from "./useSyncedProgress";
+import { useSyncedProgress, cloudProgressEnabled } from "./useSyncedProgress";
+import { offlineBook } from "./offline-book";
+import { BookDownload } from "./components/BookDownload";
 import { wordMemoryDisplay } from "./memory-display";
 import { bookWordOrder, searchBookWords } from "./word-search";
 import { applyCurriculum } from "./curriculum";
 import { WordHoverProvider, useWordHover } from "./components/WordHoverContext";
 import { MeaningBridgeMemory, MeaningBridgeProvider } from "./components/MeaningBridgeMemory";
-import { PronunciationMemory, PronunciationSpelling } from "./components/PronunciationMemory";
+import { PronunciationMemory, PronunciationSpelling, useSpellingSegmentation } from "./components/PronunciationMemory";
 import { AudioButton } from "./components/AudioButton";
 import { useSessionSave, useSessionWord } from "./session-state";
 import { useWordResources } from "./useWordResources";
@@ -134,8 +136,9 @@ function MarkdownBlock({ value, empty = "当前数据没有提供这部分内容
   );
 }
 
-function FittedWordTitle({ word, guide }: { word: string; guide?: PronunciationGuide }) {
+function FittedWordTitle({ word, guide, audioUrl }: { word: string; guide?: PronunciationGuide; audioUrl?: string }) {
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const segmentation = useSpellingSegmentation(word, audioUrl);
 
   useLayoutEffect(() => {
     const title = titleRef.current;
@@ -143,7 +146,7 @@ function FittedWordTitle({ word, guide }: { word: string; guide?: PronunciationG
     const fitTitle = () => {
       title.style.removeProperty("font-size");
       const availableWidth = title.clientWidth;
-      const naturalWidth = guide
+      const naturalWidth = guide && segmentation.split
         ? Array.from(title.querySelectorAll(".sound-spelling-part")).reduce((width, part) => width + part.getBoundingClientRect().width, 0)
         : title.scrollWidth;
       if (!availableWidth || naturalWidth <= availableWidth) return;
@@ -155,9 +158,9 @@ function FittedWordTitle({ word, guide }: { word: string; guide?: PronunciationG
     const observer = new ResizeObserver(fitTitle);
     if (title.parentElement) observer.observe(title.parentElement);
     return () => observer.disconnect();
-  }, [word, guide]);
+  }, [word, guide, segmentation.split]);
 
-  return <h1 ref={titleRef} className={guide ? "has-sound-spelling" : undefined}><PronunciationSpelling word={word} guide={guide} /></h1>;
+  return <h1 ref={titleRef} className={guide ? "has-sound-spelling" : undefined}><PronunciationSpelling word={word} guide={guide} {...segmentation} /></h1>;
 }
 
 function ProficiencyPicker({
@@ -282,6 +285,7 @@ function WordDetailPanel({
   compact?: boolean;
 }) {
   const [tab, setTab] = useState<"core" | "sentences" | "expand" | "long">("core");
+  const segmentation = useSpellingSegmentation(detail?.id ?? "", detail?.audioUrl);
   const hover = useWordHover();
   useEffect(() => setTab("core"), [detail?.id]);
   useEffect(() => {
@@ -294,8 +298,8 @@ function WordDetailPanel({
       <header className="word-hero">
         <div>
           <span className="eyebrow">{detail.bookName || detail.bookCode}</span>
-          <h2><PronunciationSpelling word={detail.spelling} guide={detail.pronunciationGuide} /></h2>
-          <div className="pronunciation"><strong>{detail.pronunciation || "音标未提供"}</strong><AudioButton url={detail.audioUrl} /></div>
+          <h2><PronunciationSpelling word={detail.spelling} guide={detail.pronunciationGuide} {...segmentation} /></h2>
+          <div className="pronunciation"><AudioButton url={detail.audioUrl} pronunciation={detail.pronunciation || "音标未提供"} /></div>
         </div>
         <div className="word-meaning"><p>{detail.definitionCn}</p></div>
       </header>
@@ -439,18 +443,15 @@ function HomeView({
   progress,
   current,
   goToday,
-  showPlan,
 }: {
   catalog?: Catalog;
   progress: AppProgress;
   plan?: PlanDay[];
   current: PlanDay;
   goToday: () => void;
-  showPlan: () => void;
 }) {
   const fraction = planDayFraction(progress, current);
   const dayState = progress.planDays[String(current.day)];
-  const done = Boolean(dayState?.completedAt);
   const completed = current.kind === "study" ? completedStudyExposureKeys(progress, current).length : (dayState?.reviewedWordIds.length ?? 0);
   const target = current.kind === "study" ? current.appearanceCount : (dayState?.reviewWordIds.length ?? reviewCandidates(progress, true).length);
 
@@ -463,8 +464,7 @@ function HomeView({
             <b>{completed}</b> <span>/</span> {target}
           </div>
           <div className="day-action">
-            <button onClick={goToday}>{done ? "查看今日记录" : current.kind === "study" ? "继续今日学习" : "进入复习判断"} <b>→</b></button>
-            <button className="home-plan-link" onClick={showPlan}>查看今日安排</button>
+            <button onClick={goToday}>继续学习 <b>→</b></button>
           </div>
         </section>
       </div>
@@ -769,7 +769,7 @@ function StudyToday({
             <div className="study-center-scroll" inert={ratingBusy}>
               {activeDetail ? <>
                 <header className="study-word-hero">
-                  <div><span>{group?.kind === "root" ? `${group.spelling} 词根家族` : "独立单词"}</span><FittedWordTitle word={activeDetail.spelling} guide={activeDetail.pronunciationGuide} /><div><strong>{activeDetail.pronunciation || "音标未提供"}</strong><AudioButton url={activeDetail.audioUrl} /></div></div>
+                  <div><span>{group?.kind === "root" ? `${group.spelling} 词根家族` : "独立单词"}</span><FittedWordTitle word={activeDetail.spelling} guide={activeDetail.pronunciationGuide} audioUrl={activeDetail.audioUrl} /><div><AudioButton url={activeDetail.audioUrl} pronunciation={activeDetail.pronunciation || "音标未提供"} /></div></div>
                   <div><p>{activeDetail.definitionCn}</p></div>
                 </header>
                 <PronunciationMemory key={activeDetail.id} guide={activeDetail.pronunciationGuide} />
@@ -1182,6 +1182,7 @@ function LogoutNotice({ message, canLeave, busy, onRetry, onContinue, onCancel }
 
 function App() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
+  const [bookChecked, setBookChecked] = useState(false);
   const [session, setSession] = useState<UserSession | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [sessionRestoreError, setSessionRestoreError] = useState("");
@@ -1249,10 +1250,16 @@ function App() {
   }, []);
 
   useEffect(() => {
-    window.cyword.readCatalog().then((nextCatalog) => {
-      setCatalog(applyCurriculum(nextCatalog));
-    }).catch((reason) => setError(reason instanceof Error ? reason.message : String(reason)));
-  }, []);
+    if (!session) return;
+    let active = true;
+    setBookChecked(false);
+    offlineBook.inspect().then(record => {
+      if (!active) return;
+      setCatalog(record?.ready ? applyCurriculum(record.catalog) : null);
+      setBookChecked(true);
+    }).catch(reason => { if (active) setError(reason instanceof Error ? reason.message : String(reason)); });
+    return () => { active = false; };
+  }, [session?.user.id]);
 
   const saveProgress = async (next: AppProgress) => {
     if (saveLock.current || logoutLock.current || logoutNotice) throw new Error("正在保存，请稍后重试。");
@@ -1282,7 +1289,7 @@ function App() {
         const result = await synced.flush();
         if (generation !== authGeneration.current) return;
         if (!result.localSaved) { setLogoutNotice({ message: result.message || "本机保存失败，请重试后退出。", canLeave: false }); return; }
-        if (!result.cloudSynced) { setLogoutNotice({ message: "本机记录已保存，但云端同步未完成。继续退出后，请勿清理当前设备数据；在其他设备上可能暂时看不到本次进度。", canLeave: true }); return; }
+        if (cloudProgressEnabled && !result.cloudSynced) { setLogoutNotice({ message: "本机记录已保存，但云端同步未完成。继续退出后，请勿清理当前设备数据；在其他设备上可能暂时看不到本次进度。", canLeave: true }); return; }
       }
       await finishLogout();
     } catch (reason) {
@@ -1291,6 +1298,7 @@ function App() {
   };
   if (sessionChecked && !session) return <><AuthModal notice={sessionRestoreError || (sessionExpired ? "登录已过期，请重新登录。本机学习记录已保留。" : undefined)} onSuccess={(s) => { authGeneration.current += 1; setLogoutNotice(null); setSessionRestoreError(""); setSessionExpired(false); setSession(s); }} /><UpdateControl /></>;
   if (error) return <div className="fatal-error"><span>CYWORD</span><h1>暂时无法继续</h1><p>{error}</p><button onClick={() => location.reload()}>重新连接</button></div>;
+  if (session && bookChecked && !catalog) return <BookDownload onReady={next => setCatalog(applyCurriculum(next))} onLogout={finishLogout} />;
   if (session && !progress && synced.status === "error") return <div className="fatal-error"><h1>进度读取失败</h1><p>{synced.message}</p><button onClick={() => location.reload()}>重试</button></div>;
   if (!catalog || !progress || !sessionChecked) return <div className="loading-screen"><div>Cy</div><p>正在铺开今天的词书计划…</p></div>;
 
@@ -1330,13 +1338,13 @@ function App() {
       <MeaningBridgeProvider catalog={catalog} progress={progress}>
       <div className="app-wallpaper" aria-hidden="true" />
       <div className="app-shell">
-        <header className="mobile-header"><a className="mobile-brand" href="#" onClick={(event) => { event.preventDefault(); navigate("home"); }}>CYword</a><details className="mobile-account"><summary aria-label={`我的账号，${synced.message}`}><i className={`sync-dot ${synced.status}`} aria-hidden="true" /><span>我的</span><svg className="account-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg></summary><div><b>{session?.user.email}</b><p className="account-sync-message"><i className={`sync-dot ${synced.status}`} aria-hidden="true" />{synced.message}</p><button onClick={() => void synced.sync()}>立即同步</button><button disabled={savingProgress || logoutBusy} onClick={() => void handleLogout()}>退出登录</button><AndroidUpdateMenu /></div></details></header>
+        <header className="mobile-header"><a className="mobile-brand" href="#" onClick={(event) => { event.preventDefault(); navigate("home"); }}>CYword</a><details className="mobile-account"><summary aria-label={`我的账号，${synced.message}`}><i className={`sync-dot ${synced.status}`} aria-hidden="true" /><span>我的</span><svg className="account-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg></summary><div><b>{session?.user.email}</b><p className="account-sync-message"><i className={`sync-dot ${synced.status}`} aria-hidden="true" />{synced.message}</p>{(cloudProgressEnabled || synced.status === "pending") && <button onClick={() => void synced.sync()}>{cloudProgressEnabled ? "立即同步" : "重试导入旧进度"}</button>}<button disabled={savingProgress || logoutBusy} onClick={() => void handleLogout()}>退出登录</button><AndroidUpdateMenu /></div></details></header>
         <aside className="sidebar">
           <div className="brand"><b>CYword</b></div>
           <nav>{navItems.map((item) => <button disabled={savingProgress || logoutBusy || Boolean(logoutNotice)} aria-label={item.label} aria-current={view === item.id ? "page" : undefined} className={view === item.id ? "active" : ""} key={item.id} onClick={() => navigate(item.id)}><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d={item.path} /></svg></i><b>{item.label}</b></button>)}</nav>
           {session && (
             <footer className="sidebar-user-footer">
-              <button className={`sync-status ${synced.status}`} title={synced.message} onClick={() => void synced.sync()}><i className={`sync-dot ${synced.status}`} />{synced.message}</button>
+              <button className={`sync-status ${synced.status}`} title={synced.message} disabled={!cloudProgressEnabled && synced.status !== "pending"} onClick={() => void synced.sync()}><i className={`sync-dot ${synced.status}`} />{synced.message}</button>
               <div className="sidebar-user-info">
                 <div className="sidebar-user-avatar">
                   {session.user.email.charAt(0).toUpperCase()}
@@ -1350,7 +1358,7 @@ function App() {
           )}
         </aside>
         <main className={`app-content soft-transition transition-${viewTransitionPhase}`}>
-          {view === "home" && <HomeView catalog={catalog} progress={progress} plan={plan} current={current} goToday={() => handleSelectPlanDay(currentDayNumber, !isPlanDayComplete(progress, currentDayNumber))} showPlan={() => handleSelectPlanDay(currentDayNumber)} />}
+          {view === "home" && <HomeView catalog={catalog} progress={progress} plan={plan} current={current} goToday={() => handleSelectPlanDay(currentDayNumber, !isPlanDayComplete(progress, currentDayNumber))} />}
           {view === "plan" && <PlanView plan={plan} progress={progress} current={plan[currentDayNumber - 1] ?? current} onSelectDay={handleSelectPlanDay} />}
           {view === "today" && <>{selected.day !== current.day && <div className="day-preview-banner">正在查看 Day {selected.day}<button disabled={savingProgress} onClick={() => handleSelectPlanDay(current.day)}>返回今日</button></div>}{selected.kind === "study" ? <StudyToday key={`${session?.user.id}:${selected.day}`} catalog={catalog} progress={progress} plan={selected} details={details} loadWords={loadWords} saveProgress={saveProgress} autoStart={autoStartStudy} preview={selected.day !== current.day} /> : <ReviewToday key={`${session?.user.id}:${selected.day}`} catalog={catalog} progress={progress} plan={selected} details={details} loadWords={loadWords} saveProgress={saveProgress} autoStart={autoStartStudy} />}</>}
           {view === "vocabulary" && <VocabularyView catalog={catalog} progress={progress} details={details} loadWords={loadWords} planDay={current.day} saveProgress={saveProgress} />}

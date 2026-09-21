@@ -2,10 +2,13 @@ import { normalizeProgress } from "./progress.ts";
 import { mergeProgress } from "./sync-merge.ts";
 import type { AppProgress } from "./types.ts";
 
-export type SyncStatus = "syncing" | "synced" | "pending" | "error";
+export type SyncStatus = "syncing" | "synced" | "local" | "pending" | "error";
 export type FlushResult = { localSaved: boolean; cloudSynced: boolean; message: string };
 type Snapshot = { revision: number; progress: AppProgress; error?: string };
 export interface SyncAdapter {
+  mode?: "local" | "cloud";
+  readImport?: () => Promise<boolean>;
+  finishImport?: () => Promise<unknown>;
   read: () => Promise<unknown>;
   write: (progress: AppProgress) => Promise<unknown>;
   request: (payload?: { revision: number; progress: AppProgress }) => Promise<{ status: number; data: Snapshot }>;
@@ -25,6 +28,8 @@ export class ProgressSync {
   private message = "进度尚未准备好";
   private timer: ReturnType<typeof setTimeout> | undefined;
   private adapter: SyncAdapter;
+  private imported = false;
+  private importMessage = "";
   constructor(adapter: SyncAdapter) { this.adapter = adapter; }
   async open() {
     this.progress = normalizeProgress(await this.adapter.read());
@@ -33,6 +38,13 @@ export class ProgressSync {
     if (this.adapter.reconcile) await this.commit(this.progress);
     if (this.stopped) return;
     this.loaded = true;
+    if (this.adapter.mode === "local") {
+      this.imported = await this.adapter.readImport?.() ?? false;
+      if (this.stopped) return;
+      this.notify("local", "进度已保存在本机");
+      await this.sync();
+      return;
+    }
     this.notify("syncing", "正在同步进度");
     await this.sync();
   }
@@ -82,6 +94,10 @@ export class ProgressSync {
       await this.commit(next, changedWords);
       if (this.stopped) throw new Error("账号已切换，请重新进入学习");
       this.localError = "";
+      if (this.adapter.mode === "local") {
+        this.notify(this.importMessage ? "pending" : "local", this.importMessage || "进度已保存在本机");
+        return;
+      }
       this.notify("pending", "已保存到设备，等待同步");
       clearTimeout(this.timer);
       this.timer = setTimeout(() => { void this.sync(); }, 800);
@@ -94,8 +110,31 @@ export class ProgressSync {
   sync(): Promise<void> {
     if (this.stopped || !this.loaded) return Promise.resolve();
     if (this.active) return this.active;
-    this.active = this.exchange().finally(() => { this.active = null; });
+    this.active = (this.adapter.mode === "local" ? this.importOnce() : this.exchange()).finally(() => { this.active = null; });
     return this.active;
+  }
+  private async importOnce() {
+    if (this.imported) return;
+    this.notify("syncing", "正在导入旧云端进度");
+    try {
+      // Local mode only reads the legacy cloud snapshot; it never uploads.
+      const response = await this.adapter.request();
+      if (this.stopped) return;
+      if (response.status === 401) throw new Error("旧进度导入需要重新登录，本机记录已保留");
+      if (response.status !== 200 || !Number.isSafeInteger(response.data.revision) || response.data.progress?.version !== 2) {
+        throw new Error("旧进度尚未导入，联网后可重试");
+      }
+      await this.commit(response.data.progress);
+      if (this.stopped) return;
+      // Record completion only after the merged snapshot is durable.
+      if (!this.adapter.finishImport || await this.adapter.finishImport() === false) throw new Error("旧进度已保存，导入标记保存失败，请重试");
+      this.imported = true;
+      this.importMessage = "";
+      this.notify(this.localError ? "error" : "local", this.localError || "进度已保存在本机");
+    } catch (error) {
+      this.importMessage = error instanceof Error ? error.message : "旧进度尚未导入，联网后可重试";
+      this.notify(this.localError ? "error" : "pending", this.localError || this.importMessage);
+    }
   }
   private async exchange() {
     this.cloudSynced = false;
@@ -132,7 +171,7 @@ export class ProgressSync {
   async flush(): Promise<FlushResult> {
     clearTimeout(this.timer);
     await this.writes.catch(() => undefined);
-    await this.sync();
+    if (this.adapter.mode !== "local") await this.sync();
     await this.writes.catch(() => undefined);
     const localSaved = this.loaded && !this.localError;
     return { localSaved, cloudSynced: localSaved && this.cloudSynced, message: this.localError || this.message };

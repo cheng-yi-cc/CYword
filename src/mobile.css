@@ -1,7 +1,7 @@
 .mobile-header, .study-session-tabs { display: none; }
 .sync-status { display: flex; align-items: center; gap: 7px; padding: 9px 0; border: 0; background: transparent; font-size: 11px; text-align: left; }
 .sync-dot { display: inline-block; flex: 0 0 7px; width: 7px; height: 7px; border-radius: 50%; background: #b69b63; }
-.sync-dot.synced { background: #6e855e; }.sync-dot.error { background: #bd5e4a; }.sync-dot.syncing { animation: sync-pulse 1s ease-in-out infinite alternate; }
+.sync-dot.synced, .sync-dot.local { background: #6e855e; }.sync-dot.error { background: #bd5e4a; }.sync-dot.syncing { animation: sync-pulse 1s ease-in-out infinite alternate; }
 @keyframes sync-pulse { to { opacity: .3; } }
 .fatal-error button { min-height: 48px; padding: 10px 28px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
 .popover-close { float: right; width: 40px; height: 40px; border: 0; border-radius: 50%; background: var(--paper-deep); font-size: 22px; }
@@ -18,7 +18,7 @@ body.study-mode-active .app-content { position: relative; z-index: 100; view-tra
   .app-shell > main { flex: 1; min-height: 0; height: auto; overscroll-behavior-y: contain; }
   .app-content { view-transition-name: none; }
   body.study-mode-active .sidebar, body.study-mode-active .mobile-header { visibility: hidden; }
-  .mobile-header { position: relative; z-index: 40; display: flex; flex: 0 0 60px; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid var(--glass-border); background: rgba(252,251,248,.92); }
+  .mobile-header { position: relative; z-index: 40; display: flex; flex: 0 0 60px; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid transparent; background: transparent; }
   .mobile-brand { display: flex; gap: 10px; align-items: center; color: var(--terracotta-dark); text-decoration: none; font: 700 28px Georgia,serif; }
   .mobile-account summary { display: flex; gap: 9px; min-height: 44px; align-items: center; cursor: pointer; font-size: 13px; list-style: none; }
   .mobile-account summary::-webkit-details-marker { display: none; }

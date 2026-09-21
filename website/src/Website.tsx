@@ -1,6 +1,8 @@
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { fetchLatestRelease, release, type ReleaseInfo } from "./release";
 import { PronunciationPlayer } from "../../src/audio";
+import { PronunciationSpelling, useSpellingSegmentation } from "../../src/components/PronunciationMemory";
+import type { PronunciationGuide } from "../../src/types";
 
 function Icon({ name, className = "" }: { name: string; className?: string }) {
   const shapes: Record<string, ReactNode> = {
@@ -42,6 +44,11 @@ const immersivePortable = {
   group: "port 词根家族",
   bookName: "大学英语六级",
   pronunciation: "/ˈpɔːtəbl/",
+  pronunciationGuide: {
+    pronunciation: "/ˈpɔːtəbl/",
+    chunks: [{ text: "por", ipa: "pɔː", stress: "primary" }, { text: "ta", ipa: "tə", stress: "none" }, { text: "ble", ipa: "bl", stress: "none" }],
+    notes: [],
+  } satisfies PronunciationGuide,
   audioUrl: "https://cdn.aimwords.com/audio/1c2ef59fe4c50c37771b9fdac52db1e6edf47bea24ab80d495625d680fb8db87.mp3",
   definition: "adj. 轻便的，便携的；手提的",
   memoryMethod: "把 por 联想成「婆婆」，table 想成桌子。连婆婆都能轻松扛着走的桌子，一定很轻便。",
@@ -106,19 +113,18 @@ const immersivePortable = {
   },
 };
 
-function WebAudioButton({ url }: { url: string }) {
-  const [player] = useState(() => new PronunciationPlayer());
+function WebAudioButton({ url, pronunciation, player }: { url: string; pronunciation: string; player: PronunciationPlayer }) {
   const playback = useSyncExternalStore(player.subscribe, player.snapshot);
-  const playing = playback.url === url && playback.status === "playing";
+  const playing = playback.url === url && (playback.status === "loading" || playback.status === "playing");
   const failed = playback.url === url && playback.status === "error";
   useEffect(() => () => player.stop(), [player, url]);
   const play = () => {
-    if (player.snapshot().status === "playing") player.stop();
+    if (playing) player.stop();
     else void player.play(url);
   };
   return <button className={`study-audio-btn ${playing ? "playing" : ""}`} onClick={play}
-    aria-label={failed ? "发音加载失败，点击重试" : playing ? "暂停发音" : "播放发音"}>
-    <Icon name="volume" /><span className="audio-label">{failed ? "重试发音" : playing ? "暂停发音" : "播放发音"}</span>
+    aria-label={failed ? "发音加载失败，点击重试" : playing ? "停止发音" : "播放发音"}>
+    <strong>{pronunciation}</strong><Icon name="volume" /><span className="audio-label">{failed ? "重试发音" : playing ? "停止发音" : "播放发音"}</span>
     <span className={`audio-wave ${playing ? "active" : ""}`} aria-hidden="true"><i /><i /><i /></span>
   </button>;
 }
@@ -130,6 +136,8 @@ function WordDemo() {
   const [sentenceExpanded, setSentenceExpanded] = useState(false);
   const [statusMsg, setStatusMsg] = useState("交互示例 · 评级只在本页展示，刷新后重置，不保存学习记录。");
   const word = immersivePortable;
+  const [player] = useState(() => new PronunciationPlayer());
+  const segmentation = useSpellingSegmentation(word.word, word.audioUrl, player);
 
   const handleRate = (idx: number) => {
     setActiveRating(idx);
@@ -214,10 +222,9 @@ function WordDemo() {
               <header className="study-word-hero">
                 <div className="study-hero-main">
                   <span className="hero-group-label">{word.group}</span>
-                  <h2 className="study-word-title">{word.word}</h2>
+                  <h2 className="study-word-title"><PronunciationSpelling word={word.word} guide={word.pronunciationGuide} {...segmentation} /></h2>
                   <div className="study-phonetic-row">
-                    <strong>{word.pronunciation}</strong>
-                    <WebAudioButton url={word.audioUrl} />
+                    <WebAudioButton url={word.audioUrl} pronunciation={word.pronunciation} player={player} />
                   </div>
                 </div>
                 <div className="study-hero-side">
@@ -424,27 +431,27 @@ const faqs = [
   { question: "每天的学习量大概是多少？", answer: "当前六级计划每个学习日安排约 180 次单词学习，具体以客户端当日计划为准。同一个词涉及多个词根时，会在相关组里再次出现；复习时按单词去重。这是计划安排的学习量，实际耗时和记忆效果会受词汇基础、专注程度与后续复习影响。" },
   { question: "巧记里的联想，就是单词的真正构词吗？", answer: "两者会分开展示。谐音、熟词和画面联想用来帮助记忆，构词分析则说明词根词缀的联系。有真正词根的单词按词根成组，没有独立词根的词会单独安排，跟着逐词巧记学习。" },
   { question: "需要注册账号，或者付费吗？", answer: "使用邮箱验证码登录后即可学习，目前没有内置付费步骤。请使用你自己的邮箱接收验证码。" },
-  { question: "断网也能背单词吗？", answer: "当前版本需要联网获取词书和单词详情，邮箱登录、发音和更新检查也需要网络。学习记录会保存在当前设备，暂不提供离线学习模式。" },
+  { question: "断网也能背单词吗？", answer: "首次联网登录并下载完整词书与全部发音后，Windows 和安卓应用都能离线学习、搜索和播放发音。重新登录、首次下载与更新检查需要网络。" },
   { question: "支持手机、Mac，或者其他词书吗？", answer: "本页提供 Windows 10 / 11 桌面版与 Android 7.0 及以上安卓安装包，使用相同的记忆和词汇掌握规则。当前支持含 5,166 个唯一单词的六级词书，尚无 Mac 版、四级或考研词书。" },
   { question: "安装时出现 Windows 安全提示怎么办？", answer: "当前安装包尚未进行代码签名，Windows 可能提示无法识别发布者。这不等于已经确认软件安全。请先确认文件来自本页的官方发布地址、文件名和版本一致；不确定来源时不要运行，也无需关闭系统安全防护。下载区提供文件校验值，供需要时核对。" },
   { question: "词汇掌握页面会收录哪些词？", answer: "安卓端和电脑端按同一规则展示全书掌握统计：已掌握、未掌握、不清楚和未学习。待巩固列表只收录已学过且评级为“未掌握”或“不清楚”的词；改为“已掌握”后自动移出，学习记录仍然保留。尚未学习、未评级的词不会混入列表。" },
-  { question: "学习进度会保存吗？更新后还在吗？", answer: "学习记录和熟练度自动保存在当前设备。正常覆盖升级会保留进度，“词汇掌握”会根据最新评级自动更新，无需另存一份列表。电脑与手机使用同一邮箱登录即可同步，换设备前请确认“已与云端同步”；卸载或清理应用数据前，请先备份本机数据。" },
+  { question: "学习进度会保存吗？更新后还在吗？", answer: "学习记录和熟练度自动保存在当前设备，正常覆盖升级会保留。新版在每台设备按账号导入旧云端记录一次，此后不再自动跨设备同步。卸载或清理应用数据前，请先备份本机数据。" },
   { question: "下载没有开始，或者下载速度很慢？", answer: "主下载由本站通过 Cloudflare R2 提供，无需访问 GitHub，支持断点续传。跨境线路仍可能较慢，部分地区也可能无法连接。请先查看浏览器下载列表，尝试继续下载或稍后重试；也可以复制本站下载地址重试，并核对下载区的 SHA-256。" },
 ];
 
 function InstallGuide() {
   return <section className="guide-section section-wrap" id="guide" aria-labelledby="guide-title">
-    <div className="section-heading"><div><span className="eyebrow">START WITH CYWORD</span><h2 id="guide-title">装好，登录，开始今天。</h2></div><p>下载不需要账号，学习时使用邮箱验证码登录。<br />电脑和手机使用同一邮箱，换设备前确认已与云端同步。</p></div>
+    <div className="section-heading"><div><span className="eyebrow">START WITH CYWORD</span><h2 id="guide-title">装好，登录，开始今天。</h2></div><p>使用邮箱验证码登录，下载完整词书与发音后即可离线学习。<br />进度保存在当前设备，旧云端记录只导入一次。</p></div>
     <div className="platform-guide">
       <article id="guide-windows"><h3><Icon name="windows" />Windows 10 / 11 · 64 位</h3><ol>
         <li>下载 Windows 安装包，核对文件名、版本和下载区校验值。</li>
         <li>打开 .exe 并选择安装位置；遇到发布者提示时先确认来源，不需要关闭系统安全防护。</li>
-        <li>打开 CYword，用邮箱验证码登录，再进入今日计划。</li>
+        <li>打开 CYword，用邮箱验证码登录，下载完整词书与发音后进入学习。</li>
       </ol><a href="#download">下载 Windows 安装包 <Icon name="arrow" /></a></article>
       <article id="guide-android"><h3><Icon name="phone" />Android 7.0 及以上</h3><ol>
         <li>在安卓手机上下载 APK，从浏览器的下载列表打开。</li>
         <li>核对来源后按系统提示允许当前浏览器安装此应用；安装后可关闭该权限。</li>
-        <li>用同一邮箱登录。更新时直接覆盖安装；先确认云端同步，避免卸载后丢失未同步记录。</li>
+        <li>登录后下载完整词书与发音。更新时直接覆盖安装；进度保存在本机，请勿卸载或清理应用数据。</li>
       </ol><a href="#download">下载安卓安装包 <Icon name="arrow" /></a></article>
     </div>
   </section>;
@@ -454,6 +461,7 @@ function ReleaseNotes() {
   return <section className="information-section section-wrap" id="release-notes" aria-labelledby="release-notes-title">
     <div className="section-heading"><h2 id="release-notes-title">版本记录</h2><p>这里记录已发布的客户端改动，安装包版本以下载区为准。</p></div>
     <div className="release-notes-grid">
+      <article><span className="eyebrow">2026.09.21</span><h3>Windows 0.4.6 / Android 0.1.3</h3><p>登录后下载完整词书与发音，支持离线学习；进度默认保存本机，旧云端记录导入一次。单词默认完整显示，点击切换分割，发音时临时分割并在结束后恢复，官网示例同步支持。</p></article>
       <article><span className="eyebrow">2026.09.20</span><h3>Windows 0.4.5</h3><p>新增全书搜索、以音记形与以熟带生；改进学习、保存与同步，隐藏滚动条。后续更新自动下载，准备完成后点击安装。</p></article>
       <article><span className="eyebrow">2026.09.20</span><h3>Android 0.1.2</h3><p>新增自动检查更新，“我的”支持手动检查和下载新版。0.1.1 及更早版本需先从官网覆盖安装一次。</p></article>
     </div>
@@ -462,9 +470,9 @@ function ReleaseNotes() {
 
 function PrivacyNotice() {
   return <section className="information-section section-wrap" id="privacy" aria-labelledby="privacy-title">
-    <div className="section-heading"><h2 id="privacy-title">隐私与数据</h2><p>更新于 2026 年 9 月 20 日</p></div>
+    <div className="section-heading"><h2 id="privacy-title">隐私与数据</h2><p>更新于 2026 年 9 月 21 日</p></div>
     <div className="privacy-details">
-      <details open><summary>账号与学习记录<Icon name="plus" /></summary><p>客户端用邮箱接收登录验证码，服务端保存邮箱、账号标识与登录时间。学习进度、熟练度和复习记录保存在当前设备，并在登录后同步到云端，以便在电脑和手机间继续学习。退出登录不会删除已保存的学习记录；清理本机应用数据也不会自动删除云端记录。</p></details>
+      <details open><summary>账号与学习记录<Icon name="plus" /></summary><p>客户端用邮箱接收登录验证码，服务端保存邮箱、账号标识与登录时间。新版学习进度、熟练度和复习记录默认只保存在当前设备；每台设备按账号导入旧云端记录一次，此后不再自动同步。旧云端记录仍保留，旧版客户端可能继续同步。退出登录保留本机记录；卸载或清理应用数据会删除本机记录，但不会删除云端记录。</p></details>
       <details><summary>网站、发音与服务提供方<Icon name="plus" /></summary><p>官网交互示例只保存在当前页面内存中，刷新即重置，不读取客户端学习记录；官网没有添加统计脚本。下载、账号与同步服务使用 Cloudflare，验证码邮件通过 Resend 发送；点播放发音时，浏览器会请求词书音频服务 cdn.aimwords.com。这些网络服务会接收完成请求所需的网络信息。</p></details>
       <details id="feedback" open><summary>反馈与数据删除<Icon name="plus" /></summary><p>账号、云端记录与本机数据需要分别处理。删除云端记录前，请先保留需要的学习进度，并停止其他设备的同步，避免记录再次上传。</p><p>反馈或申请删除账号及云端学习记录，请联系 <a href="mailto:cyi907369@gmail.com">cyi907369@gmail.com</a>。删除申请请使用登录邮箱发送。</p></details>
     </div>
@@ -476,7 +484,7 @@ function AndroidDownload({ currentRelease, status, retry }: { currentRelease: Re
   return <div className="download-card">
     <div className="download-card-heading"><span className="windows-tile"><Icon name="phone" /></span><div><h3>CYword for Android</h3><p>Android 7.0 及以上</p></div>{currentRelease && <span className="version-label">v{currentRelease.version}</span>}</div>
     {currentRelease ? <>
-      <div className="download-meta"><span>大学英语六级词书 · 联网学习</span><span>{currentRelease.size} <i>·</i> {currentRelease.date}</span></div>
+      <div className="download-meta"><span>大学英语六级词书 · 下载后离线学习</span><span>{currentRelease.size} <i>·</i> {currentRelease.date}</span></div>
       <a className="button button-primary download-main" href={currentRelease.downloadUrl} onClick={() => setDownloadStarted(true)}><Icon name="download" />下载安卓安装包<Icon name="arrow" /></a>
       <p className="download-reassurance">下载 APK 后打开安装 · 邮箱验证码登录</p>
       <div className="download-links"><a href="#guide-android">安卓安装步骤</a><span>·</span><a href={currentRelease.notesUrl}>版本记录</a></div>
@@ -495,7 +503,7 @@ function Download({ currentRelease, androidRelease, androidStatus, windowsFallba
   };
   return <section className="download-section section-wrap" id="download" aria-labelledby="download-title"><div className="download-intro"><span className="brand-mark download-logo" aria-hidden="true">Cy</span><span className="eyebrow">MAKE ROOM FOR A LITTLE PROGRESS</span><h2 id="download-title">下一组单词，<br className="mobile-break" />从这里开始。</h2><p>巧记、构词、分组与复习，都已经准备好。</p></div>
     <div className="download-platforms"><AndroidDownload currentRelease={androidRelease} status={androidStatus} retry={retryAndroid} />
-    <div className="download-card"><div className="download-card-heading"><span className="windows-tile"><Icon name="windows" /></span><div><h3>CYword for Windows</h3><p>Windows 10 / 11 · 64 位</p></div><span className="version-label">v{currentRelease.version}</span></div><div className="download-meta"><span>大学英语六级词书 · 联网学习</span><span>{currentRelease.size} <i>·</i> {currentRelease.date}</span></div>
+    <div className="download-card"><div className="download-card-heading"><span className="windows-tile"><Icon name="windows" /></span><div><h3>CYword for Windows</h3><p>Windows 10 / 11 · 64 位</p></div><span className="version-label">v{currentRelease.version}</span></div><div className="download-meta"><span>大学英语六级词书 · 下载后离线学习</span><span>{currentRelease.size} <i>·</i> {currentRelease.date}</span></div>
       <a className="button button-primary download-main" href={currentRelease.downloadUrl} onClick={() => setDownloadStarted(true)}><Icon name="download" />下载 Windows 安装包<Icon name="arrow" /></a><p className="download-reassurance">邮箱验证码登录 · 下载后双击安装 · 可选择安装目录</p>
       <div className="download-links"><button onClick={copyLink}>{copyState === "done" ? "下载地址已复制" : "复制下载地址"}</button><span>·</span><a href="#guide-windows">Windows 安装步骤</a><span>·</span><a href={currentRelease.notesUrl}>版本记录</a></div>
       <div className="download-feedback" role="status">{downloadStarted && <p>已向浏览器发起下载，请查看下载列表。如果没有开始，可复制地址后重试。<a href="#faq">查看下载帮助</a></p>}{copyState === "done" && <p>下载地址已复制，可粘贴到 Windows 电脑的浏览器中打开。</p>}{copyState === "failed" && <label>浏览器未允许复制，请手动选择下面的地址：<input readOnly aria-label="Windows 安装包下载地址" value={currentRelease.downloadUrl} onFocus={(event) => event.currentTarget.select()} /></label>}</div>
@@ -536,6 +544,6 @@ export default function Website() {
       <section className="faq-section section-wrap" id="faq" aria-labelledby="faq-title"><div><span className="eyebrow">A FEW THINGS TO KNOW</span><h2 id="faq-title">你可能还想知道</h2><p>开始之前，把这些小问题说清楚。</p></div><div className="faq-list">{faqs.map((faq, i) => <details name="faq" key={faq.question} open={i === 0 ? true : undefined}><summary>{faq.question}<Icon name="plus" /></summary><p>{faq.answer}</p></details>)}</div></section>
       <PrivacyNotice />
     </main>
-    <footer className="site-footer section-wrap"><div className="footer-top"><Brand footer /><p>每个词有巧记，每一组有联系，学过之后有复习。</p><a href="#top">回到顶部 ↑</a></div><div className="footer-bottom"><span>© {new Date().getFullYear()} CYword</span><span><a href="#release-notes">版本记录</a><a href="#privacy">隐私与数据</a><a href="#feedback">反馈与删除申请</a></span></div></footer>
+    <footer className="site-footer section-wrap"><div className="footer-top"><Brand footer /><p>每个词有巧记，每一组有联系，学过之后有复习。</p><a href="#top">回到顶部 ↑</a></div><div className="footer-bottom"><span>© {new Date().getFullYear()} CYword</span><span><a href="https://github.com/cheng-yi-cc/CYword" target="_blank" rel="noreferrer">开源代码</a><a href="#release-notes">版本记录</a><a href="#privacy">隐私与数据</a><a href="#feedback">反馈与删除申请</a></span></div></footer>
   </>;
 }

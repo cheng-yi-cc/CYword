@@ -1,6 +1,8 @@
 # 架构
 
-仓库包含 Windows 桌面应用、Capacitor 安卓应用和独立官网。安装包只携带软件，启动时联网读取词书目录；进度按账号先写入设备，再由 `/api/progress` 同步到 D1。生产同步表和函数已于 2026-09-20 部署。官网页面只展示少量交互示例，不读取用户进度；Pages Functions 承载认证、同步、只读词书接口和安装包下载。缓存、会话、凭据、同步与发布校验改进已随 2026-09-20 的 Windows 0.4.5、安卓 0.1.1 和官网函数发布。部署与验证边界见 [安卓与同步说明](ANDROID.md)。
+仓库包含 Windows 桌面应用、Capacitor 安卓应用和独立官网。当前源码先联网登录，完整下载词书及发音到 IndexedDB，之后从本机读取；进度按账号写入原有设备存储。旧云端进度只读合并导入一次，默认不上传。该行为从 Windows 0.4.6 / Android 0.1.3 起启用，设计与恢复开关见 [OFFLINE.md](OFFLINE.md)。
+
+Pages Functions 的认证、同步、只读词书和下载路由，以及 D1、R2、Secrets 均保留；官网仅展示独立示例，不读取用户进度。本文下方的双向同步、轮询和同步 401 清理流程描述保留的 `VITE_CYWORD_PROGRESS_MODE=cloud` 模式及已发布的旧版行为；默认本地模式不启用这些流程。部署记录见 [ANDROID.md](ANDROID.md)。
 
 ## 数据流
 
@@ -31,7 +33,7 @@ books/<code>/book.json + csv/*.csv + enhancements/*.jsonl（可选）
 
 ## 桌面边界
 
-音形增强在编译时合入 `WordDetail.pronunciationGuide`，不参与排课或进度模型。`PronunciationMemory` 在学习主卡和详情复用；字段缺失时隐藏增强入口。结构验收及源音标快照检查由 `pronunciation-data.mjs` 执行，候选生成器不在构建/运行时调用。Vite 开发模式从 `data/` 提供本地接口，正式应用继续请求线上版本化词书。
+音形增强在编译时合入 `WordDetail.pronunciationGuide`，不参与排课或进度模型。`PronunciationMemory` 在学习主卡和详情复用；字段缺失时隐藏增强入口。结构验收及源音标快照检查由 `pronunciation-data.mjs` 执行，候选生成器不在构建/运行时调用。Vite 开发模式从 `data/` 提供本地接口，正式应用首次完整下载线上版本化词书，之后从本机 IndexedDB 读取。
 
 词义桥接由 `meaning-bridge-data.mjs` 校验逐对审核及全书逐词结果，编译为可选的 `WordDetail.meaningBridges`。`MeaningBridgeProvider` 根据同一排课的曝光顺序与学习记录筛选同书参照；学习页传入本次曝光位置，详情默认首次位置。`MeaningBridgeMemory` 在构词分析后显示一个候选，复用 `WordHoverContext`，无候选则隐藏。新关系不增加排课依赖，不改写原巧记或进度。
 
@@ -43,7 +45,7 @@ Electron 主进程通过固定 HTTPS 地址读取词书目录和每日批量词�
 
 `useWordResources` 为当前词书代码和 `dataVersion` 创建共享 `WordResourceCache`，默认容量为 256 个详情，采用 LRU 淘汰；版本切换清空旧缓存并丢弃迟到响应，同词并发请求按 ID 去重。学习、复习和列表详情由 `useSessionWord` 先取当前词，成功后只预取随后最多 4 词；加载失败留在局部详情并提供重试，不再以整日或累计复习全量请求驱动缓存。服务端仍根据清单按学习日分片读取 R2 并流式拼接 JSON。`WordHoverContext` 按需加载引用词并提供局部失败重试，不阻塞主学习流。
 
-学习和浏览详情共用 `useSessionSave` 的同步保存锁，以及 `useSessionDialog` 的背景 inert、焦点约束、Esc/安卓返回键和焦点/滚动恢复；关闭行为先处理悬浮卡，保存期间不退出。所有发音入口共用 `PronunciationPlayer` 单通道和 `AudioButton`，新播放停止旧播放，迟到的播放结果不能覆盖当前词，错误在原入口显示并可重试。
+学习和浏览详情共用 `useSessionSave` 的同步保存锁，以及 `useSessionDialog` 的背景 inert、焦点约束、Esc/安卓返回键和焦点/滚动恢复；关闭行为先处理悬浮卡，保存期间不退出。单词标题默认不分块，`useSpellingSegmentation` 分离手动状态与发音临时状态：加载/播放时强制分块，结束、停止、失败时恢复，切词重置。官网复用该 Hook 与标题组件，单独持有播放器，仅内置 portable 的审核分块，不打包词书。所有应用发音入口共用 `PronunciationPlayer` 单通道和 `AudioButton`，新播放停止旧播放，迟到的播放结果不能覆盖当前词，错误在原入口显示并可重试。
 
 ## 排课与复习
 
@@ -112,7 +114,7 @@ Cloudflare DNS：cyword.chengyi.me → cyword.pages.dev
 
 下载处理器 `website/functions/downloads/[[path]].ts` 只接受稳定最新版入口、受约束的内容寻址资产和迁移前安装包路径。认证处理器 `website/functions/api/auth/*.ts` 基于 Cloudflare D1 存储用户数据与验证码，通过专用发信域 `auth.cyword.chengyi.me` 的 Resend Key 发送邮件，并使用强随机 Secret 和 Web Crypto 签发/校验 HMAC-SHA256 JWT；任一密钥缺失时生产接口关闭，不降级为模拟模式。验证码的匹配、有效期和次数检查与核销通过单条 `DELETE ... RETURNING` 原子执行；错误次数在条件 UPDATE 中递增，发码冷却与占位使用条件 UPSERT，账号创建及登录次数也由 UPSERT 保证。Electron `userData/session.json` 保存加密令牌与账号信息，该目录不进入安装包。
 
-两个 R2 桶与 D1 数据库均使用 APAC 位置，不开放 `r2.dev` 入口。electron-updater 使用官网 generic provider；GitHub Release 作为维护者的发布来源及工作流取件入口，不向用户宣传私有仓库下载或备用链接。
+两个 R2 桶与 D1 数据库均使用 APAC 位置，不开放 `r2.dev` 入口。electron-updater 使用官网 generic provider；GitHub Release 作为维护者的发布来源及工作流取件入口，源码与 Release 已公开，应用内更新仍使用官网源。
 
 `website/server/release-manifest.ts` 统一校验 Windows/安卓发布身份与内容寻址路径。下载函数兼容已发布 v1 指针和新 v2 指针，对外只返回官网路径、版本、大小和 SHA-256 等必要字段，发行说明指向官网。安装器和 blockmap 继续流式响应并支持 HEAD、Range 与条件请求。v2 发布前须先部署兼容函数；`scripts/release-preflight.mjs` 以固定官网域名、禁止重定向的 HEAD 请求检查 `X-CYword-Release-Schemas: 1,2`，未确认支持就拒绝写入 R2。能力响应不依赖当前是否已有安装包指针。安装包资产先校验上传，最后切换相应平台的 `current.json`，Windows 与安卓指针彼此独立。
 
