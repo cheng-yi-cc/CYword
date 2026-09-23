@@ -11,9 +11,10 @@ test('real Worker + D1 validates identity, atomic revisions and compressed persi
   const mf = new Miniflare(convertV4MiniflareOptions({ modules: true, script: bundle.outputFiles[0].text, compatibilityDate: '2026-08-31', d1Databases: ['DB'], bindings: { JWT_SECRET: secret } }));
   try {
     const db = await mf.getD1Database('DB');
-    await db.prepare('CREATE TABLE users (id TEXT PRIMARY KEY, email TEXT, created_at INTEGER, last_login_at INTEGER, login_count INTEGER)').run();
+    for (const query of (await readFile(new URL('../migrations/0001_create_auth_tables.sql', import.meta.url), 'utf8')).split(';').filter((part) => part.trim())) await db.prepare(query).run();
+    for (const query of (await readFile(new URL('../website/migrations/0002_admin.sql', import.meta.url), 'utf8')).split(';').filter((part) => part.trim())) await db.prepare(query).run();
     await db.prepare(await readFile(new URL('../website/migrations/0001_progress.sql', import.meta.url), 'utf8')).run();
-    for (const id of ['a','b']) await db.prepare('INSERT INTO users VALUES (?, ?, 1, 1, 1)').bind(id, `${id}@example.test`).run();
+    for (const id of ['a','b']) await db.prepare('INSERT INTO users (id, email, created_at, last_login_at, login_count) VALUES (?, ?, 1, 1, 1)').bind(id, `${id}@example.test`).run();
     const a = await signJWT({ sub: 'a', email: 'a@example.test' }, secret);
     const b = await signJWT({ sub: 'b', email: 'b@example.test' }, secret);
     const request = (token, body) => mf.dispatchFetch('https://example.test/api/progress', { method: body ? 'PUT' : 'GET', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });

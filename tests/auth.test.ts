@@ -19,9 +19,11 @@ const TEST_JWT_SECRET = "test-secret-key-with-at-least-32-characters";
 
 // Execute the actual SQL instead of reimplementing query behavior in a Map mock.
 const authSchema = readFileSync(new URL("../migrations/0001_create_auth_tables.sql", import.meta.url), "utf8");
+const adminSchema = readFileSync(new URL("../website/migrations/0002_admin.sql", import.meta.url), "utf8");
 function createSqliteD1(): D1Database {
   const sqlite = new DatabaseSync(":memory:");
   sqlite.exec(authSchema);
+  sqlite.exec(adminSchema);
   return {
     prepare(query: string) {
       let bound: Array<string | number | null> = [];
@@ -140,6 +142,7 @@ test("real D1 atomically consumes OTPs and increments account login counts", asy
   try {
     const db = await mf.getD1Database("DB");
     for (const query of authSchema.split(";").filter((part) => part.trim())) await db.prepare(query).run();
+    for (const query of adminSchema.split(";").filter((part) => part.trim())) await db.prepare(query).run();
     const email = "concurrent@example.test";
     let sent = 0, code = "";
     const send = async (_email: string, value: string) => { sent++; code = value; return { success: true }; };
