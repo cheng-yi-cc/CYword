@@ -4,7 +4,7 @@
 
 2026-09-21 更新：维护者已将仓库公开；新版源码增加在用户设备下载、保存并离线播放全部原音频的流程，直接从原 CDN 获取，不新增音频再托管。该变化记录使用方式，不把软件 Apache-2.0 许可证扩展为第三方正文或录音的许可；下表待补材料状态保持不变。
 
-2026-09-23 更新（待发布源码）：完整词书、全部原发音及正文原配图改为构建时从规范表及原 CDN 收集，随 Windows / 安卓安装包分发；原内容的授权材料状态保持不变。新增 Gentium 7.000 Regular 原版 WOFF2，用于 IPA 音标，来源为 [SIL 官方下载](https://software.sil.org/gentium/download/)，未修改字体文件；SIL Open Font License 1.1 副本随安装包保存在 `third-party/GENTIUM-OFL.txt`，源码文件为 `src/assets/Gentium-Regular.woff2`。
+2026-09-25 更新：完整词书、全部原发音及正文原配图改为构建时从规范表及原 CDN 收集，已随 Windows 0.4.7 / 安卓 0.1.4 安装包发布；原内容的授权材料状态保持不变。新增 Gentium 7.000 Regular 原版 WOFF2，用于 IPA 音标，来源为 [SIL 官方下载](https://software.sil.org/gentium/download/)，未修改字体文件；SIL Open Font License 1.1 副本随安装包保存在 `third-party/GENTIUM-OFL.txt`，源码文件为 `src/assets/Gentium-Regular.woff2`。
 
 本文记录文件能够支持的来源信息和仍待补齐的材料，不判断具体使用是否获得授权，也不作法律结论。“未见材料”仅指本轮检查的仓库文件中未找到相应凭据，不表示维护者在仓库外没有材料。
 

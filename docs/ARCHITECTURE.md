@@ -1,6 +1,6 @@
 # 架构
 
-仓库包含 Windows 桌面应用、Capacitor 安卓应用和独立官网。当前源码将完整词书、全部发音、原配图和音标字体放入 Windows / 安卓安装包，首次联网登录后直接从包内读取；进度按账号写入原有设备存储。旧云端进度只读合并导入一次，默认不上传。资源预装从待发布的 Windows 0.4.7 / Android 0.1.4 起启用，设计与恢复开关见 [OFFLINE.md](OFFLINE.md)。
+仓库包含 Windows 桌面应用、Capacitor 安卓应用和独立官网。当前源码将完整词书、全部发音、原配图和音标字体放入 Windows / 安卓安装包，首次联网登录后直接从包内读取；进度按账号写入原有设备存储。旧云端进度只读合并导入一次，默认不上传。资源预装从 Windows 0.4.7 / Android 0.1.4 起启用，设计与恢复开关见 [OFFLINE.md](OFFLINE.md)。
 
 Pages Functions 的认证、同步、只读词书和下载路由，以及 D1、R2、Secrets 均保留；官网仅展示独立示例，不读取用户进度。本文下方的双向同步、轮询和同步 401 清理流程描述保留的 `VITE_CYWORD_PROGRESS_MODE=cloud` 模式及已发布的旧版行为；默认本地模式不启用这些流程。部署记录见 [ANDROID.md](ANDROID.md)。
 

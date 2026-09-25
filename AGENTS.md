@@ -38,7 +38,7 @@
 - 公开反馈与账号数据删除申请邮箱为 `cyi907369@gmail.com`；官网提供邮件入口，删除申请提示使用登录邮箱发送，不将验证码发件地址当作客服渠道。
 - 部署使用 `website/wrangler.jsonc` 和 Wrangler；禁止用纯静态 ZIP 代替含函数的部署。Pages 生产项目为 `cyword`、分支为 `main`；普通 Git 推送不自动部署官网函数和静态页面。
 - `DOWNLOADS` 与 `BOOKS` 绑定专用私有 R2 桶，`DB` 绑定 D1 数据库 `cyword-db`；认证接口使用 Web Crypto JWT 与 Resend。`RESEND_API_KEY` 与至少 32 字符的 `JWT_SECRET` 必须作为 Pages Production 加密 Secret 配置，缺失时认证接口关闭，禁止生产回显验证码或降级模拟发信。只公开受控下载入口、词书分片与认证路由。
-- 新标签工作流先创建 GitHub Release，再把安装器、blockmap 和版本化 `latest.yml` 上传到 R2，最后原子更新 `releases/current.json`。不得覆盖旧版本内容或提前写入指针。
+- 版本发布工作流先创建 GitHub Release，再把安装器、blockmap 和版本化 `latest.yml` 上传到 R2，最后原子更新 `releases/current.json`。不得覆盖旧版本内容或提前写入指针。
 - 首次写入 v2 发布清单前必须先部署兼容 v1/v2 的下载函数，发布脚本检查线上能力后才能写入 R2。重跑已有 Release 时复用原资产；同版本内容不一致须拒绝，上传前校验完整元数据和 blockmap 分块哈希。
 - 桌面自动更新使用官网 generic 源 `/downloads/`，不得恢复为 GitHub provider。`website/src/release.ts` 只保留动态指针不可用时的已核验回退版本。
 - 安卓检查更新只读取官网独立安卓清单，与安装应用的版本号比较；启动及回到前台自动检查（间隔 6 小时），“我的”保留手动检查与失败重试。下载须由用户点击，浏览器只打开经校验的官网版本化 APK 地址，不影响学习进度或 Windows 更新源。

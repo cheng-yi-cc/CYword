@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - "v*"
-  release:
-    types: [published]
 
 permissions:
   contents: write
@@ -16,7 +14,6 @@ concurrency:
 
 jobs:
   build-windows:
-    if: github.event_name != 'release' || (startsWith(github.event.release.tag_name, 'v') && !github.event.release.prerelease)
     name: Build Windows installer
     runs-on: windows-latest
     timeout-minutes: 30

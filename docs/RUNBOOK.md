@@ -1,8 +1,8 @@
 # 运行手册
 
-当前待发布源码为 Windows 0.4.7 / Android 0.1.4（versionCode 505）：安装包预装完整词书、全部发音、原配图与音标字体，每日学习取消分段。`npm run build` 首次需在构建机下载全部原发音和配图，分别缓存到 `.work/book-audio/`、`.work/book-images/`；缺失或无效资源会阻断构建，无损转码缓存位于 `.work/book-images-webp/`。详见 [离线模式](OFFLINE.md)。
+当前正式版本为 Windows 0.4.7 / Android 0.1.4（versionCode 505，2026-09-25 发布）：安装包预装完整词书、全部发音、原配图与音标字体，每日学习取消分段。`npm run build` 首次需在构建机下载全部原发音和配图，分别缓存到 `.work/book-audio/`、`.work/book-images/`；缺失或无效资源会阻断构建，无损转码缓存位于 `.work/book-images-webp/`。详见 [离线模式](OFFLINE.md)。
 
-2026-09-23 已生成以下本地安装包，尚未上传 GitHub Release 或官网：
+2026-09-23 构建并验收的以下原件已于 2026-09-25 发布到 GitHub Release 与官网，未重新打包。Windows 下载清单日期沿用原始 `latest.yml` 的构建日期：
 
 | 安装包 | 字节数 | SHA-256 |
 | --- | ---: | --- |
@@ -11,9 +11,9 @@
 
 两个平台包内均核对了 5166 词、5166 条音频、1196 个图片引用（1013 张不同图片）与音标字体；所有音频及图片的长度和 SHA-256 与清单一致。Windows 实际 ASAR 通过断网读取、发音及重启保留进度验证；APK 签名通过，证书与已发布版本一致。未运行 Windows 安装向导，也未连接安卓真机，不能将包内验证等同于真机安装升级验收。
 
-当前正式版本为 Windows 0.4.6、Android 0.1.3（versionCode 504），于 2026-09-21 发布。官网、两个独立下载指针和自动更新元数据已上线。
+发布源码为 `d0284b3`，标签为 `v0.4.7`、`android-v0.1.4`；Windows 工作流 `36105972953`、Android 工作流 `36105976299` 成功复用原件上传 R2。官网生产部署为 `ec33c003.cyword.pages.dev`。两个平台完整下载的长度与 SHA-256、HEAD、首尾 Range、稳定入口跳转均核验通过；Windows `latest.yml` 的版本、路径和 SHA-512 与原件一致，线上 blockmap 与本地原件逐字节相同。官网安装说明、版本记录与回退信息同步更新，22 项本地下载检查、2 项官网界面回归通过。
 
-Windows 0.4.6 / Android 0.1.3 实现登录后下载完整文字及发音、离线学习、本地进度和一次性旧云端导入。预览时首次完整下载后从 IndexedDB 读取；`CYWORD_REAL_AUTH=1` 不会启用上传，只有 `VITE_CYWORD_PROGRESS_MODE=cloud` 显式恢复双向同步。词书重编译后的本地重下载步骤和验证边界见 [OFFLINE.md](OFFLINE.md)。源码与 Release 已公开；官网更新源及生产资源均保留。
+Windows 0.4.6 / Android 0.1.3 的首次下载流程继续供旧客户端使用；开发预览首次完整下载后从 IndexedDB 读取。`CYWORD_REAL_AUTH=1` 不会启用上传，只有 `VITE_CYWORD_PROGRESS_MODE=cloud` 显式恢复双向同步。词书重编译后的本地重下载步骤和验证边界见 [OFFLINE.md](OFFLINE.md)。源码与 Release 已公开；官网更新源及生产资源均保留。
 
 ## Windows 0.4.6 / Android 0.1.3 发布记录（2026-09-21）
 
@@ -102,7 +102,7 @@ Windows 0.4.5 起的更新流程：启动检测到新版本即自动下载，右
 
 ## 标签构建与已验收安装包发布
 
-推送形如 `v<package version>` 的标签，或发布同名正式 GitHub Release，都会触发 `.github/workflows/build-tag.yml`。Release 事件忽略安卓标签和预发布版；同一标签串行处理。Windows runner 检查标签与 `package.json` 一致，执行 `npm ci`，再检查 GitHub Release：尚不存在时才运行测试、构建 NSIS、校验资产并创建 Release；已存在时下载原始安装器、`.exe.blockmap` 与 `latest.yml`，跳过重建并重新校验。随后把原安装器、blockmap 和改写为 R2 路径的版本化清单发布到官网 R2，全部不可变对象校验成功后才更新 `releases/current.json`，官网和桌面更新源同时切换。
+推送形如 `v<package version>` 的新标签会触发 `.github/workflows/build-tag.yml`。发布尚不存在标签的正式 GitHub Release 也会创建该标签并触发同一流程；同一标签串行处理。Windows runner 检查标签与 `package.json` 一致，执行 `npm ci`，再检查 GitHub Release：尚不存在时才运行测试、构建 NSIS、校验资产并创建 Release；已存在时下载原始安装器、`.exe.blockmap` 与 `latest.yml`，跳过重建并重新校验。随后把原安装器、blockmap 和改写为 R2 路径的版本化清单发布到官网 R2，全部不可变对象校验成功后才更新 `releases/current.json`，官网和桌面更新源同时切换。
 
 ```powershell
 $cyVersion = node -p "require('./package.json').version"
@@ -110,7 +110,7 @@ git tag -a "v$cyVersion" -m "CYword v$cyVersion"
 git push origin "v$cyVersion"
 ```
 
-已有本地验收安装包时，先推送源码，再用 `gh release create v<version> --target <源码提交> --draft` 创建草稿，上传该次构建的安装器、blockmap 和原始 latest.yml；文件齐全后发布草稿。正式 Release 事件会复用这些原件上传 R2，不重建安装器。安卓沿用独立 Release 工作流，并设置 `--latest=false`。
+已有本地验收安装包时，先推送源码，再用 `gh release create v<version> --target <源码提交> --draft` 创建草稿，上传该次构建的安装器、blockmap 和原始 latest.yml；文件齐全后发布草稿。发布草稿时创建的新标签会触发工作流，复用这些原件上传 R2，不重建安装器；已有标签则重跑该标签对应的工作流。不要再同时订阅 Release 发布事件，以免相同原件重复执行上传。安卓沿用独立 Release 工作流，并设置 `--latest=false`。
 
 工作流不额外上传 GitHub Actions artifact，也不覆盖已有 GitHub Release 资产。同标签重跑只用于沿用原件恢复尚未完成的 R2 发布，避免重新构建改变安装包字节或 `releaseDate`；已有 Release 为草稿、缺少文件、文件未上传完整或查询失败时直接中止。R2 使用 `releases/<version>/<sha256>/` 内容寻址路径，已有对象只有长度和完整 SHA-256 相同才跳过，不同则拒绝覆盖。需要修改软件时必须使用新版本和新标签。
 
@@ -202,7 +202,7 @@ NSIS 安装包只收录 `dist/`、`electron/` 和发布用 `package.json`。邮�
 2. 对 Windows `/downloads/latest.json`、Android `/downloads/android/latest.json` 发 HEAD，确认响应含 `X-CYword-Release-Schemas: 1,2`。新环境暂无指针时，错误响应同样应有此能力头。
 3. 再发布新版本。`scripts/release-preflight.mjs` 在任何 R2 写入前检查对应生产入口是否声明支持 `2`，超时、重定向或缺少支持声明都中止，不绕过检查强写新指针。
 
-兼容函数部署完成后，常规 Windows 安装包发布只需推送与 `package.json` 一致的新标签；不必为每个安装包改写 `website/src/release.ts` 或重新部署下载函数。官网 `/#release-notes` 的文字是静态内容，新增公开版本记录仍需更新页面并部署。Windows 发布顺序固定为：GitHub Release → 内容寻址安装器 → blockmap → 版本化 `latest.yml` → `releases/current.json`。最后一步之前的任何失败都不会切换最新版。Android 用独立 `android-v<version>` Release、APK 路径及 `releases/android/current.json`，不切换 Windows 指针。
+兼容函数部署完成后，常规 Windows 安装包发布可推送与 `package.json` 一致的新标签，或发布包含已验收原件的同名正式 Release；不必为每个安装包改写 `website/src/release.ts` 或重新部署下载函数。官网 `/#release-notes` 的文字是静态内容，新增公开版本记录仍需更新页面并部署。Windows 发布顺序固定为：GitHub Release → 内容寻址安装器 → blockmap → 版本化 `latest.yml` → `releases/current.json`。最后一步之前的任何失败都不会切换最新版。Android 用独立 `android-v<version>` Release、APK 路径及 `releases/android/current.json`，不切换 Windows 指针。
 
 先做只生成本地文件的资产检查：
 
