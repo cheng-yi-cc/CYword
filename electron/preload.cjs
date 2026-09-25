@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("cyword", {
+  readBundledBookFile: (file) => ipcRenderer.invoke("book:installed-file", file),
   readCatalog: () => ipcRenderer.invoke("catalog:read"),
   readWords: (request) => ipcRenderer.invoke("words:read", request),
   readProgress: (accountId) => ipcRenderer.invoke("progress:read", accountId),

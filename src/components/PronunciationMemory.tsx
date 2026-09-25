@@ -47,7 +47,7 @@ export function PronunciationMemory({ guide }: { guide?: PronunciationGuide }) {
           aria-pressed={selected === index}
           aria-label={`${chunk.text}，${chunk.ipa}，${chunk.stress === "primary" ? "重读" : chunk.stress === "secondary" ? "次重读" : "未标重音"}`}
           onClick={() => setSelected(selected === index ? null : index)}>
-          <b>{chunk.text}</b><span>/{chunk.ipa}/</span>
+          <b>{chunk.text}</b><span className="ipa">/{chunk.ipa}/</span>
           <small>{chunk.stress === "primary" ? "重读" : chunk.stress === "secondary" ? "次重读" : "\u00a0"}</small>
         </button>)}
       </div>

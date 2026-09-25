@@ -1,7 +1,7 @@
 import curriculum from "../data/curriculum.json" with { type: "json" };
 import type { Catalog, StudyDayPlan } from "./types.ts";
 
-/** Share the compiled curriculum across clients without bundling word definitions or changing API shards. */
+/** Share the compiled curriculum across installed clients and legacy API catalogs. */
 export function applyCurriculum(catalog: Catalog): Catalog {
   if (catalog.book.code !== curriculum.bookCode) return catalog;
   const remote = new Map(catalog.groups.map(group => [group.id, group]));

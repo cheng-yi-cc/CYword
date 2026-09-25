@@ -1,5 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import fs from "node:fs/promises";
+import path from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { validProgress } from "./website/server/progress-sync.ts";
 import { emptyProgress } from "./src/progress.ts";
@@ -191,7 +193,16 @@ function localDataPreview() {
 }
 
 export default defineConfig({
-  plugins: [react(), localDataPreview()],
+  plugins: [react(), localDataPreview(), {
+    name: "cyword-installed-book",
+    apply: "build",
+    async writeBundle(options) {
+      const source = path.resolve(".work/bundled-book");
+      // Fail the build if preparation did not complete; never ship a partial book.
+      await fs.access(path.join(source, "manifest.json"));
+      await fs.cp(source, path.join(options.dir!, "book"), { recursive: true });
+    },
+  }],
   base: "./",
   optimizeDeps: { entries: ["index.html"] },
   preview: { proxy: audioProxy },

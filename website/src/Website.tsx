@@ -431,7 +431,7 @@ const faqs = [
   { question: "每天的学习量大概是多少？", answer: "当前六级计划每个学习日安排约 180 次单词学习，具体以客户端当日计划为准。同一个词涉及多个词根时，会在相关组里再次出现；复习时按单词去重。这是计划安排的学习量，实际耗时和记忆效果会受词汇基础、专注程度与后续复习影响。" },
   { question: "巧记里的联想，就是单词的真正构词吗？", answer: "两者会分开展示。谐音、熟词和画面联想用来帮助记忆，构词分析则说明词根词缀的联系。有真正词根的单词按词根成组，没有独立词根的词会单独安排，跟着逐词巧记学习。" },
   { question: "需要注册账号，或者付费吗？", answer: "使用邮箱验证码登录后即可学习，目前没有内置付费步骤。请使用你自己的邮箱接收验证码。" },
-  { question: "断网也能背单词吗？", answer: "首次联网登录并下载完整词书与全部发音后，Windows 和安卓应用都能离线学习、搜索和播放发音。重新登录、首次下载与更新检查需要网络。" },
+  { question: "断网也能背单词吗？", answer: "Windows 和安卓安装包已包含完整词书、全部发音及配图。首次联网登录后即可离线学习、搜索和播放发音，无需再下载资源。重新登录与更新检查需要网络。" },
   { question: "支持手机、Mac，或者其他词书吗？", answer: "本页提供 Windows 10 / 11 桌面版与 Android 7.0 及以上安卓安装包，使用相同的记忆和词汇掌握规则。当前支持含 5,166 个唯一单词的六级词书，尚无 Mac 版、四级或考研词书。" },
   { question: "安装时出现 Windows 安全提示怎么办？", answer: "当前安装包尚未进行代码签名，Windows 可能提示无法识别发布者。这不等于已经确认软件安全。请先确认文件来自本页的官方发布地址、文件名和版本一致；不确定来源时不要运行，也无需关闭系统安全防护。下载区提供文件校验值，供需要时核对。" },
   { question: "词汇掌握页面会收录哪些词？", answer: "安卓端和电脑端按同一规则展示全书掌握统计：已掌握、未掌握、不清楚和未学习。待巩固列表只收录已学过且评级为“未掌握”或“不清楚”的词；改为“已掌握”后自动移出，学习记录仍然保留。尚未学习、未评级的词不会混入列表。" },
@@ -441,17 +441,17 @@ const faqs = [
 
 function InstallGuide() {
   return <section className="guide-section section-wrap" id="guide" aria-labelledby="guide-title">
-    <div className="section-heading"><div><span className="eyebrow">START WITH CYWORD</span><h2 id="guide-title">装好，登录，开始今天。</h2></div><p>使用邮箱验证码登录，下载完整词书与发音后即可离线学习。<br />进度保存在当前设备，旧云端记录只导入一次。</p></div>
+    <div className="section-heading"><div><span className="eyebrow">START WITH CYWORD</span><h2 id="guide-title">装好，登录，开始今天。</h2></div><p>完整词书、发音和配图已随安装包提供，邮箱验证码登录后即可离线学习。<br />进度保存在当前设备，旧云端记录只导入一次。</p></div>
     <div className="platform-guide">
       <article id="guide-windows"><h3><Icon name="windows" />Windows 10 / 11 · 64 位</h3><ol>
         <li>下载 Windows 安装包，核对文件名、版本和下载区校验值。</li>
         <li>打开 .exe 并选择安装位置；遇到发布者提示时先确认来源，不需要关闭系统安全防护。</li>
-        <li>打开 CYword，用邮箱验证码登录，下载完整词书与发音后进入学习。</li>
+        <li>打开 CYword，用邮箱验证码登录后直接进入学习，无需再下载词书资源。</li>
       </ol><a href="#download">下载 Windows 安装包 <Icon name="arrow" /></a></article>
       <article id="guide-android"><h3><Icon name="phone" />Android 7.0 及以上</h3><ol>
         <li>在安卓手机上下载 APK，从浏览器的下载列表打开。</li>
         <li>核对来源后按系统提示允许当前浏览器安装此应用；安装后可关闭该权限。</li>
-        <li>登录后下载完整词书与发音。更新时直接覆盖安装；进度保存在本机，请勿卸载或清理应用数据。</li>
+        <li>登录后直接使用预装词书、发音和配图。更新时直接覆盖安装；进度保存在本机，请勿卸载或清理应用数据。</li>
       </ol><a href="#download">下载安卓安装包 <Icon name="arrow" /></a></article>
     </div>
   </section>;
@@ -461,6 +461,7 @@ function ReleaseNotes() {
   return <section className="information-section section-wrap" id="release-notes" aria-labelledby="release-notes-title">
     <div className="section-heading"><h2 id="release-notes-title">版本记录</h2><p>这里记录已发布的客户端改动，安装包版本以下载区为准。</p></div>
     <div className="release-notes-grid">
+      <article><span className="eyebrow">2026.09.25</span><h3>Windows 0.4.7 / Android 0.1.4</h3><p>完整六级词书、全部发音和巧记配图随安装包提供，登录后无需二次下载。每日学习连续进行，取消中途分段休息页；内置音标字体，减少手机字体缺字问题。升级保留本机学习记录。</p></article>
       <article><span className="eyebrow">2026.09.21</span><h3>Windows 0.4.6 / Android 0.1.3</h3><p>登录后下载完整词书与发音，支持离线学习；进度默认保存本机，旧云端记录导入一次。单词默认完整显示，点击切换分割，发音时临时分割并在结束后恢复，官网示例同步支持。</p></article>
       <article><span className="eyebrow">2026.09.20</span><h3>Windows 0.4.5</h3><p>新增全书搜索、以音记形与以熟带生；改进学习、保存与同步，隐藏滚动条。后续更新自动下载，准备完成后点击安装。</p></article>
       <article><span className="eyebrow">2026.09.20</span><h3>Android 0.1.2</h3><p>新增自动检查更新，“我的”支持手动检查和下载新版。0.1.1 及更早版本需先从官网覆盖安装一次。</p></article>
@@ -484,7 +485,7 @@ function AndroidDownload({ currentRelease, status, retry }: { currentRelease: Re
   return <div className="download-card">
     <div className="download-card-heading"><span className="windows-tile"><Icon name="phone" /></span><div><h3>CYword for Android</h3><p>Android 7.0 及以上</p></div>{currentRelease && <span className="version-label">v{currentRelease.version}</span>}</div>
     {currentRelease ? <>
-      <div className="download-meta"><span>大学英语六级词书 · 下载后离线学习</span><span>{currentRelease.size} <i>·</i> {currentRelease.date}</span></div>
+      <div className="download-meta"><span>大学英语六级词书 · 完整资源预装</span><span>{currentRelease.size} <i>·</i> {currentRelease.date}</span></div>
       <a className="button button-primary download-main" href={currentRelease.downloadUrl} onClick={() => setDownloadStarted(true)}><Icon name="download" />下载安卓安装包<Icon name="arrow" /></a>
       <p className="download-reassurance">下载 APK 后打开安装 · 邮箱验证码登录</p>
       <div className="download-links"><a href="#guide-android">安卓安装步骤</a><span>·</span><a href={currentRelease.notesUrl}>版本记录</a></div>
@@ -503,7 +504,7 @@ function Download({ currentRelease, androidRelease, androidStatus, windowsFallba
   };
   return <section className="download-section section-wrap" id="download" aria-labelledby="download-title"><div className="download-intro"><span className="brand-mark download-logo" aria-hidden="true">Cy</span><span className="eyebrow">MAKE ROOM FOR A LITTLE PROGRESS</span><h2 id="download-title">下一组单词，<br className="mobile-break" />从这里开始。</h2><p>巧记、构词、分组与复习，都已经准备好。</p></div>
     <div className="download-platforms"><AndroidDownload currentRelease={androidRelease} status={androidStatus} retry={retryAndroid} />
-    <div className="download-card"><div className="download-card-heading"><span className="windows-tile"><Icon name="windows" /></span><div><h3>CYword for Windows</h3><p>Windows 10 / 11 · 64 位</p></div><span className="version-label">v{currentRelease.version}</span></div><div className="download-meta"><span>大学英语六级词书 · 下载后离线学习</span><span>{currentRelease.size} <i>·</i> {currentRelease.date}</span></div>
+    <div className="download-card"><div className="download-card-heading"><span className="windows-tile"><Icon name="windows" /></span><div><h3>CYword for Windows</h3><p>Windows 10 / 11 · 64 位</p></div><span className="version-label">v{currentRelease.version}</span></div><div className="download-meta"><span>大学英语六级词书 · 完整资源预装</span><span>{currentRelease.size} <i>·</i> {currentRelease.date}</span></div>
       <a className="button button-primary download-main" href={currentRelease.downloadUrl} onClick={() => setDownloadStarted(true)}><Icon name="download" />下载 Windows 安装包<Icon name="arrow" /></a><p className="download-reassurance">邮箱验证码登录 · 下载后双击安装 · 可选择安装目录</p>
       <div className="download-links"><button onClick={copyLink}>{copyState === "done" ? "下载地址已复制" : "复制下载地址"}</button><span>·</span><a href="#guide-windows">Windows 安装步骤</a><span>·</span><a href={currentRelease.notesUrl}>版本记录</a></div>
       <div className="download-feedback" role="status">{downloadStarted && <p>已向浏览器发起下载，请查看下载列表。如果没有开始，可复制地址后重试。<a href="#faq">查看下载帮助</a></p>}{copyState === "done" && <p>下载地址已复制，可粘贴到 Windows 电脑的浏览器中打开。</p>}{copyState === "failed" && <label>浏览器未允许复制，请手动选择下面的地址：<input readOnly aria-label="Windows 安装包下载地址" value={currentRelease.downloadUrl} onFocus={(event) => event.currentTarget.select()} /></label>}</div>

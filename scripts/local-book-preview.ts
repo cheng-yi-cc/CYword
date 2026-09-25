@@ -3,7 +3,7 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import type { Catalog, WordsRequest, WordsResponse } from "../src/types.ts";
 
-// 仅供 Vite 开发服务使用；发布包继续从正式词书接口加载。
+// 仅供 Vite 开发服务使用；正式安装包从 dist/book 读取完整预装词书。
 export async function readLocalBook(dataDir: string, request?: WordsRequest): Promise<Catalog | WordsResponse> {
   const raw = await fs.readFile(path.join(dataDir, "catalog.json"), "utf8");
   const catalog = JSON.parse(raw) as Catalog;

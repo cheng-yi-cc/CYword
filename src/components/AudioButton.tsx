@@ -3,7 +3,7 @@ import { playPronunciation, pronunciationPlayer, stopPronunciation } from "../au
 
 export function AudioButton({ url, className = "", pronunciation }: { url?: string; className?: string; pronunciation?: string }) {
   const playback = useSyncExternalStore(pronunciationPlayer.subscribe, pronunciationPlayer.snapshot);
-  if (!url) return pronunciation ? <strong>{pronunciation}</strong> : null;
+  if (!url) return pronunciation ? <strong className="ipa">{pronunciation}</strong> : null;
   const playing = playback.url === url && (playback.status === "loading" || playback.status === "playing");
   const failed = playback.url === url && playback.status === "error";
   return <span className="audio-control">
@@ -11,7 +11,7 @@ export function AudioButton({ url, className = "", pronunciation }: { url?: stri
       event.stopPropagation();
       if (playing) stopPronunciation();
       else void playPronunciation(url);
-    }}>{pronunciation && <strong>{pronunciation}</strong>}<span>{failed ? "重试发音" : playing ? "停止" : "播放发音"}</span></button>
+    }}>{pronunciation && <strong className="ipa">{pronunciation}</strong>}<span>{failed ? "重试发音" : playing ? "停止" : "播放发音"}</span></button>
     {failed && <small className="audio-error" role="status">{playback.message}</small>}
   </span>;
 }

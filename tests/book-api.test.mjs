@@ -18,7 +18,7 @@ function r2JsonObject(value) {
   };
 }
 
-test("installer configuration does not package generated word data", () => {
+test("installer packages prepared dist resources, not the raw data working directory", () => {
   const packageJson = JSON.parse(fs.readFileSync(path.join(projectRoot, "package.json"), "utf8"));
   assert.equal(packageJson.build.extraResources, undefined);
   assert.ok(packageJson.build.files.every((pattern) => !pattern.startsWith("data")));

@@ -1,5 +1,6 @@
 import type { Catalog, WordDetail, WordsRequest, WordsResponse } from "./types";
 import { applyCurriculum } from "./curriculum.ts";
+import { installedBook, type InstalledBook } from "./bundled-book.ts";
 
 type BookRecord = { catalog: Catalog; ready: boolean };
 export type DownloadState = { phase: "words" | "audio"; completed: number; total: number };
@@ -51,22 +52,56 @@ export class OfflineBook {
   private installed?: BookRecord;
   private objectUrls = new Map<string, string>();
   private storage: BookStorage;
+  private bundled?: InstalledBook;
   private source: {
     catalog: () => Promise<Catalog>;
     words: (request: WordsRequest) => Promise<WordsResponse>;
     audio: (url: string) => Promise<Blob>;
   };
-  constructor(storage: BookStorage, source: OfflineBook["source"]) { this.storage = storage; this.source = source; }
+  constructor(storage: BookStorage, source: OfflineBook["source"], bundled?: InstalledBook) { this.storage = storage; this.source = source; this.bundled = bundled; }
   async inspect() {
     if (this.installed) return this.installed;
+    if (this.bundled) return this.installed = { catalog: await this.bundled.catalog(), ready: true };
     const record = await this.storage.record();
     if (record?.ready) this.installed = record;
     return record;
   }
   download(change: (state: DownloadState) => void): Promise<Catalog> {
+    if (this.bundled) return this.bundled.catalog();
     if (this.active) return this.active;
     this.active = this.transfer(change).finally(() => { this.active = null; });
     return this.active;
+  }
+  private async downloadWords(catalog: Catalog, ids: string[], saved: (count: number) => void): Promise<void> {
+    let response: WordsResponse | undefined;
+    let failure: unknown;
+    let valid = false;
+    // Retry a failed response with smaller requests, down to one word. A complete
+    // outage stops on the first failing single word (at most eight requests).
+    for (let attempt = 0; attempt < (ids.length === 1 ? 2 : 1); attempt++) {
+      try {
+        response = await this.source.words({ dataVersion: catalog.dataVersion, planDay: 1, kind: "bookmarks", wordIds: ids });
+      } catch (error) { failure = error; response = undefined; }
+      if (response?.dataVersion && response.dataVersion !== catalog.dataVersion) {
+        throw new Error("词书分片版本不一致，请稍后重试下载");
+      }
+      valid = !!response && response.dataVersion === catalog.dataVersion && response.wordCount === ids.length
+        && ids.every(id => response!.words?.[id]?.id === id && response!.words[id].bookCode === catalog.book.code && !!response!.words[id].audioUrl);
+      if (valid) break;
+    }
+    if (!valid) {
+      if (ids.length > 1) {
+        const middle = Math.ceil(ids.length / 2);
+        await this.downloadWords(catalog, ids.slice(0, middle), saved);
+        await this.downloadWords(catalog, ids.slice(middle), saved);
+        return;
+      }
+      const spelling = catalog.words[ids[0]]?.spelling || ids[0];
+      throw new Error(`“${spelling}”下载失败，请检查网络后继续下载`, { cause: failure ?? new Error("词书分片不完整") });
+    }
+    // Storage failures must surface immediately, never trigger network retries.
+    await this.storage.putWords(`${catalog.book.code}:${catalog.dataVersion}`, ids.map(id => response!.words[id]));
+    saved(ids.length);
   }
   private async transfer(change: (state: DownloadState) => void) {
     const previous = await this.storage.record();
@@ -80,21 +115,25 @@ export class OfflineBook {
     await this.storage.setRecord({ catalog, ready: false });
     const version = `${catalog.book.code}:${catalog.dataVersion}`;
     const audioUrls = new Set<string>();
+    let completedWords = 0;
     for (let offset = 0; offset < ids.length; offset += 64) {
       const batch = ids.slice(offset, offset + 64);
       const local = await this.storage.words(version, batch);
       const missing = batch.filter((_, index) => !local[index]);
+      completedWords += batch.length - missing.length;
       if (missing.length) {
-        const response = await this.source.words({ dataVersion: catalog.dataVersion, planDay: 1, kind: "bookmarks", wordIds: missing });
-        if (response.dataVersion !== catalog.dataVersion || response.wordCount !== missing.length || missing.some(id => response.words[id]?.id !== id || !response.words[id]?.audioUrl)) throw new Error("词书分片不完整，请重试下载");
-        await this.storage.putWords(version, missing.map(id => response.words[id]));
+        // Count each committed sub-batch, including when a later sub-batch fails.
+        await this.downloadWords(catalog, missing, count => {
+          completedWords += count;
+          change({ phase: "words", completed: completedWords, total: ids.length });
+        });
       }
       const complete = await this.storage.words(version, batch);
       for (const word of complete) {
         if (!word?.audioUrl) throw new Error("词书发音信息缺失，请重试下载");
         audioUrls.add(word.audioUrl);
       }
-      change({ phase: "words", completed: Math.min(offset + 64, ids.length), total: ids.length });
+      change({ phase: "words", completed: completedWords, total: ids.length });
     }
     const urls = [...audioUrls];
     let index = 0, completed = 0;
@@ -120,6 +159,7 @@ export class OfflineBook {
     return catalog;
   }
   async readWords(request: WordsRequest): Promise<WordsResponse> {
+    if (this.bundled) return this.bundled.words(request);
     const record = await this.inspect();
     if (!record?.ready || record.catalog.dataVersion !== request.dataVersion) throw new Error("请先完成词书下载");
     const ids = [...new Set(request.wordIds)];
@@ -128,6 +168,7 @@ export class OfflineBook {
     return { dataVersion: request.dataVersion, wordCount: ids.length, words: Object.fromEntries(ids.map((id, index) => [id, words[index]!])) };
   }
   async audioUrl(url: string) {
+    if (this.bundled) return this.bundled.audioUrl(url);
     const cached = this.objectUrls.get(url);
     if (cached) { this.objectUrls.delete(url); this.objectUrls.set(url, cached); return cached; }
     const blob = await this.storage.audio(url);
@@ -143,6 +184,7 @@ export class OfflineBook {
     }
     return objectUrl;
   }
+  imageUrl(url: string) { return this.bundled?.imageUrl?.(url) ?? url; }
 }
 
 export const offlineBook = new OfflineBook(new IndexedBookStorage(), {
@@ -153,4 +195,4 @@ export const offlineBook = new OfflineBook(new IndexedBookStorage(), {
     const { base64, contentType } = await window.cyword.downloadBookAudio(url);
     return new Blob([Uint8Array.from(atob(base64), character => character.charCodeAt(0))], { type: contentType });
   },
-});
+}, installedBook());

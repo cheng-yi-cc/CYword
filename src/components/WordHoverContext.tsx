@@ -10,8 +10,7 @@ import React, {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import DOMPurify from "dompurify";
-import { marked } from "marked";
+import { bookMarkdown } from "../book-markdown";
 import { wordMemoryDisplay } from "../memory-display";
 import type { Catalog, WordDetail, WordSummary } from "../types";
 import { buildPlan, studyExposures } from "../progress";
@@ -119,7 +118,7 @@ function PopoverCard({
     const preprocessed = wordMemoryDisplay(detail.memoryMarkup)!
       .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, "**$2**")
       .replace(/\[\[([^\]]+)\]\]/g, "**$1**");
-    return DOMPurify.sanitize(marked.parse(preprocessed, { breaks: true }) as string);
+    return bookMarkdown(preprocessed);
   }, [detail?.memoryMarkup]);
 
   return (
@@ -155,7 +154,7 @@ function PopoverCard({
             <h3 className="popover-spelling">{spelling}</h3>
             <AudioButton url={audioUrl} className="popover-audio" />
           </div>
-          {pronunciation && <span className="popover-pronunciation">{pronunciation}</span>}
+          {pronunciation && <span className="popover-pronunciation ipa">{pronunciation}</span>}
           <p className="popover-definition">{definition}</p>
         </div>
 

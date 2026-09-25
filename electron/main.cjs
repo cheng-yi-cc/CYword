@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, shell, dialog, safeStorage, screen } = require("electron");
 const { createSessionStore } = require("./session-store.cjs");
+const { readBundledBookFile } = require("./bundled-book.cjs");
 const { autoUpdater } = require("electron-updater");
 const fs = require("node:fs/promises");
 const path = require("node:path");
@@ -130,6 +131,7 @@ async function readJson(filePath, fallback = null) {
 }
 
 async function registerIpc() {
+  ipcMain.handle("book:installed-file", (_event, file) => readBundledBookFile(path.join(app.getAppPath(), "dist", "book"), file));
   const legacySession = await readJson(sessionPath(), null);
   const sessions = createSessionStore(sessionPath(), safeStorage);
   ipcMain.handle("progress:import-read", async (_event, accountId) => {

@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "CYword IPA";
+  src: url("./assets/Gentium-Regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+}
+
 :root {
   font-family: "Segoe UI Variable", "Microsoft YaHei UI", sans-serif;
   color: #3d3929;
@@ -655,11 +663,6 @@ body.study-mode-active .android-update-notice { display: none; }
 .audio-error { max-width: 220px; color: var(--action); font: 12px/1.5 "Microsoft YaHei UI",sans-serif; }
 .session-word-anchor { display: none; }
 .session-save-error { position: relative; margin: 0 auto 9px; padding: 10px 14px; max-width: 600px; border: 1px solid #dfbdad; border-radius: 9px; background: #fff5ef; color: #923c2a; font-size: 13px; line-height: 1.6; pointer-events: auto; }
-.study-break-panel { grid-column: 1 / -1; align-self: center; justify-self: center; width: min(460px,calc(100% - 36px)); margin: auto; padding: 32px 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); text-align: center; }
-.study-break-panel h2 { margin: 0 0 14px; font-size: 28px; }
-.study-break-panel p { color: var(--muted); font-size: 14px; line-height: 1.8; }
-.study-break-panel button { min-height: 46px; margin: 8px; padding: 10px 22px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper-deep); }
-.study-break-panel button:first-of-type { background: var(--action); color: var(--action-ink); border-color: var(--action); }
 .logout-notice-backdrop { position: fixed; z-index: 800; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(42,35,25,.38); }
 .logout-notice { width: min(450px,100%); max-height: calc(100dvh - 48px); overflow: auto; padding: 26px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); box-shadow: var(--shadow); }
 .logout-notice h2 { margin-top: 0; font-size: 22px; }
@@ -689,3 +692,6 @@ body.study-mode-active .android-update-notice { display: none; }
 .sync-status:disabled { opacity: 1; cursor: default; }
 @keyframes vocabulary-expand { from { opacity: 0; transform: translateY(22px) scale(.97); } to { opacity: 1; transform: none; } }
 @keyframes vocabulary-collapse { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(18px) scale(.98); } }
+
+/* Keep IPA independent of Android system/theme fonts at every entry point. */
+.ipa.ipa { font-family: "CYword IPA", sans-serif; font-style: normal; font-weight: 400; letter-spacing: normal; }

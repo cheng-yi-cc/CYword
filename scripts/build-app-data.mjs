@@ -235,7 +235,7 @@ const catalog = {
   words: summaryWords,
 };
 fs.writeFileSync(path.join(outDir, "catalog.json"), JSON.stringify(catalog), "utf8");
-// Only identifiers and ordering are bundled. Word content continues to come from the book API.
+// Shared ordering for installed books and the legacy browser download path.
 const curriculum = { bookCode, groups: groups.map(({ id, wordIds }) => ({ id, wordIds })), schedule };
 fs.writeFileSync(path.join(outDir, "curriculum.json"), JSON.stringify(curriculum), "utf8");
 

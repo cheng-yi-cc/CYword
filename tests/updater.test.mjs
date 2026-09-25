@@ -29,6 +29,7 @@ async function updaterFixture() {
   const mocks = {
     electron,
     "./session-store.cjs": { createSessionStore },
+    "./bundled-book.cjs": { readBundledBookFile: async () => { throw Error("not used by updater"); } },
     "electron-updater": { autoUpdater: updater },
     "node:fs/promises": { readFile: async () => { throw Object.assign(new Error(), { code: "ENOENT" }); } },
     "node:path": { join: (...parts) => parts.join("/") },

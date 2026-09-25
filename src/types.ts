@@ -202,6 +202,7 @@ declare global {
     cyword: {
       androidUpdates?: import("./android-updates").AndroidUpdates;
       readCatalog: () => Promise<Catalog>;
+      readBundledBookFile?: (file: string) => Promise<unknown>;
       readWords: (request: WordsRequest) => Promise<WordsResponse>;
       readProgress: (accountId?: string) => Promise<unknown>;
       readProgressImport?: (accountId: string) => Promise<boolean>;

@@ -48,8 +48,8 @@ test("Android update menu retries and downloads only on request without changing
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
-async function setup(page: Page, learned: string[] = ["a"], sessionReadFails = false, androidUpdates = false) {
-  await page.addInitScript(({ catalog, details, empty, learned, sessionReadFails, androidUpdates, audioBase64 }) => {
+async function setup(page: Page, learned: string[] = ["a"], sessionReadFails = false, androidUpdates = false, downloadBatchLimit = 64) {
+  await page.addInitScript(({ catalog, details, empty, learned, sessionReadFails, androidUpdates, audioBase64, downloadBatchLimit }) => {
     const initial = structuredClone(empty) as any;
     for (const id of learned) initial.words[id] = { learnedAt: "2026-09-19T00:00:00.000Z", lastSeenAt: "2026-09-19T00:00:00.000Z", proficiency: "unclear", exposures: 0, reviewCount: 0 };
     const state = { local: JSON.parse(localStorage.getItem("test-progress") || "null") || initial, remote: structuredClone(empty), revision: 0, writes: 0, cloudReads: 0, cloudWrites: 0, audioRequests: 0, wordRequests: [] as string[][], failLoads: false, failWrites: false, offline: false, writeGate: null as Promise<void> | null, releaseWrite: null as (() => void) | null, loadGate: null as Promise<void> | null, releaseLoad: null as (() => void) | null, clearFails: false, sessionCleared: false };
@@ -77,6 +77,7 @@ async function setup(page: Page, learned: string[] = ["a"], sessionReadFails = f
         const shouldFail = state.failLoads;
         if (state.loadGate) await state.loadGate;
         if (shouldFail) throw new Error("词书请求失败");
+        if (request.wordIds.length > downloadBatchLimit) return { dataVersion: catalog.dataVersion, wordCount: request.wordIds.length, words: {} };
         return { dataVersion: catalog.dataVersion, wordCount: request.wordIds.length, words: Object.fromEntries(request.wordIds.map(id => [id, details[id]])) };
       },
     } as any;
@@ -92,7 +93,7 @@ async function setup(page: Page, learned: string[] = ["a"], sessionReadFails = f
         download: async () => { (window as any).__updateTest.downloads++; notify({ ...snapshot, message: "已打开浏览器，下载后点击 APK 安装" }); },
       };
     }
-  }, { catalog, details, empty, learned, sessionReadFails, androidUpdates, audioBase64 });
+  }, { catalog, details, empty, learned, sessionReadFails, androidUpdates, audioBase64, downloadBatchLimit });
   await page.goto("/");
   if (sessionReadFails) {
     await expect(page.locator(".auth-message")).toContainText("读取受保护登录状态失败");
@@ -282,15 +283,20 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 844, height: 390 }
   });
 }
 
-test("a completed segment offers a pause without completing the day", async ({ page }) => {
+test("learning continues across legacy segment boundaries until the whole day is complete", async ({ page }) => {
   await setup(page, []);
   await page.getByRole("button", { name: "继续学习" }).click();
   await expect(study(page).locator("h1")).toHaveText("first");
   await study(page).locator(".session-rating button.unmastered").click();
-  await expect(study(page).locator(".study-break-panel")).toBeVisible();
-  expect(await page.evaluate(() => (window as any).__test.local.planDays["1"].completedAt)).toBeUndefined();
-  await study(page).getByRole("button", { name: "继续下一段" }).click();
   await expect(study(page).locator("h1")).toHaveText("symposium");
+  await expect(page.getByText("本段完成", { exact: true })).toHaveCount(0);
+  expect(await page.evaluate(() => (window as any).__test.local.planDays["1"].completedAt)).toBeUndefined();
+  await expect(study(page).locator(".study-word-hero .ipa")).toHaveCSS("font-family", /CYword IPA/);
+  await study(page).locator(".session-rating button.unclear").click();
+  await expect(study(page).locator("h1")).toHaveText("third");
+  await study(page).locator(".session-rating button.mastered").click();
+  await expect(study(page)).toHaveCount(0);
+  expect(await page.evaluate(() => (window as any).__test.local.planDays["1"].completedAt)).toBeTruthy();
 });
 
 test("review reveals only on request and local word failure can be retried", async ({ page }) => {
@@ -367,6 +373,18 @@ test("credential restore failure is visible without clearing records and success
   await page.locator(".btn-logout").click();
   await expect(page.getByLabel("电子邮箱")).toBeVisible();
   await expect(page.getByText("读取受保护登录状态失败", { exact: false })).toHaveCount(0);
+});
+
+test("incomplete download batches recover automatically and remain installed after reload", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await setup(page, ["a"], false, false, 1);
+  const requests = await page.evaluate(() => (window as any).__test.wordRequests as string[][]);
+  expect(requests[0]).toHaveLength(5);
+  expect(requests.filter(batch => batch.length === 1).flat()).toEqual(ids);
+  await page.reload();
+  await expect(page.getByRole("button", { name: "继续学习" })).toBeVisible();
+  expect(await page.evaluate(() => (window as any).__test.wordRequests.length)).toBe(0);
+  expect(await page.evaluate(() => (window as any).__test.local.words.a.proficiency)).toBe("unclear");
 });
 
 test("downloaded words, pronunciation and ratings survive restart without network or cloud writes", async ({ page }) => {

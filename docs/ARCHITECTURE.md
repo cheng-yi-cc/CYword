@@ -1,6 +1,6 @@
 # 架构
 
-仓库包含 Windows 桌面应用、Capacitor 安卓应用和独立官网。当前源码先联网登录，完整下载词书及发音到 IndexedDB，之后从本机读取；进度按账号写入原有设备存储。旧云端进度只读合并导入一次，默认不上传。该行为从 Windows 0.4.6 / Android 0.1.3 起启用，设计与恢复开关见 [OFFLINE.md](OFFLINE.md)。
+仓库包含 Windows 桌面应用、Capacitor 安卓应用和独立官网。当前源码将完整词书、全部发音、原配图和音标字体放入 Windows / 安卓安装包，首次联网登录后直接从包内读取；进度按账号写入原有设备存储。旧云端进度只读合并导入一次，默认不上传。资源预装从待发布的 Windows 0.4.7 / Android 0.1.4 起启用，设计与恢复开关见 [OFFLINE.md](OFFLINE.md)。
 
 Pages Functions 的认证、同步、只读词书和下载路由，以及 D1、R2、Secrets 均保留；官网仅展示独立示例，不读取用户进度。本文下方的双向同步、轮询和同步 401 清理流程描述保留的 `VITE_CYWORD_PROGRESS_MODE=cloud` 模式及已发布的旧版行为；默认本地模式不启用这些流程。部署记录见 [ANDROID.md](ANDROID.md)。
 
@@ -14,30 +14,29 @@ books/<code>/book.json + csv/*.csv + enhancements/*.jsonl（可选）
                 └─ scripts/build-app-data.mjs   编译运行时 JSON
                                   │
                                   ├─ data/curriculum.json → 两端内置排序元数据
-                                  ├─ data/catalog.json
-                                  └─ data/words/<word-id>.json
+                                  └─ data/catalog.json + words/<word-id>.json
+                                             ├─ build-bundled-book.mjs
+                                             │  收集发音与原配图、校验并无损优化
+                                             │           ↓
+                                             │  dist/book/ → Windows / 安卓安装包
+                                             │           ↓
+                                             │  BundledBook → React 界面
                                              │
-                      scripts/build-book-api-data.mjs
-                                             │
-                  .work/book-api/<code>/<version>/
-                    ├─ catalog.json + manifest.json
-                    └─ shard-01.json ... shard-30.json
-                                             │ 上传
-                                      私有 R2 词书桶
-                                             │ Pages Functions
-                                             ▼
-                          Electron IPC → React / Vite 界面
+                                             └─ build-book-api-data.mjs
+                                                .work/book-api/<code>/<version>/
+                                                → 私有 R2 → Pages Functions
+                                                → 旧客户端 / 开发预览
 ```
 
-`books/` 是唯一应手工维护和提交的词书源数据，原巧记正文严禁修改。`data/` 是构建生成物；完整目录及单词详情不进入安装包。`data/curriculum.json` 仅包含分组 ID、词 ID 与日程顺序，由两端共用的 `applyCurriculum` 编译进应用，校验远端分组成员一致后应用；远端 `dataVersion` 保留用于请求原有分片，因此重排不要求替换线上词书，也不改变旧客户端的日程。服务端发布物按内容哈希生成不可变版本：每个单词只进入首次出现的学习日分片，清单记录单词到分片的映射。所有版本文件上传完成后才更新 `current.json`。
+`books/` 是唯一应手工维护和提交的词书源数据，原巧记正文严禁修改。`data/` 是构建生成物，不直接打包；完整目录、单词详情、音频和图片经安装包构建步骤进入 `dist/book/`，由包内清单记录版本及资源哈希。`data/curriculum.json` 包含分组 ID、词 ID 与日程顺序，由两端共用的 `applyCurriculum` 编译进应用。旧客户端和开发预览保留远端 `dataVersion` 请求分片的流程；服务器每个单词只进入首次出现的学习日分片，所有不可变版本文件上传完成后才更新 `current.json`。安装包资源发布不要求修改旧客户端使用的线上词书指针。
 
 ## 桌面边界
 
-音形增强在编译时合入 `WordDetail.pronunciationGuide`，不参与排课或进度模型。`PronunciationMemory` 在学习主卡和详情复用；字段缺失时隐藏增强入口。结构验收及源音标快照检查由 `pronunciation-data.mjs` 执行，候选生成器不在构建/运行时调用。Vite 开发模式从 `data/` 提供本地接口，正式应用首次完整下载线上版本化词书，之后从本机 IndexedDB 读取。
+音形增强在编译时合入 `WordDetail.pronunciationGuide`，不参与排课或进度模型。`PronunciationMemory` 在学习主卡和详情复用；字段缺失时隐藏增强入口。结构验收及源音标快照检查由 `pronunciation-data.mjs` 执行，候选生成器不在构建/运行时调用。Vite 开发模式从 `data/` 提供本地接口，正式应用读取 `dist/book/` 内预装的完整词书和音频。
 
 词义桥接由 `meaning-bridge-data.mjs` 校验逐对审核及全书逐词结果，编译为可选的 `WordDetail.meaningBridges`。`MeaningBridgeProvider` 根据同一排课的曝光顺序与学习记录筛选同书参照；学习页传入本次曝光位置，详情默认首次位置。`MeaningBridgeMemory` 在构词分析后显示一个候选，复用 `WordHoverContext`，无候选则隐藏。新关系不增加排课依赖，不改写原巧记或进度。
 
-Electron 主进程通过固定 HTTPS 地址读取词书目录和每日批量词汇，并提供进度原子读写、同步请求及基于 electron-updater 的版本更新管理 IPC。渲染进程启用上下文隔离、关闭 Node 集成并开启沙箱。进度原子写入 `userData/accounts/<账号哈希>/progress.json`；旧版 `progress.json` 保留且只向已知归属账号迁移。Windows 会话令牌由 `electron/session-store.cjs` 使用 safeStorage/DPAPI 加密，读取旧 `session.json` 时原子迁移；加密失败不明文降级。窗口初始和最小尺寸受当前显示器工作区限制，常规最小尺寸为 760×560。
+Electron 主进程通过限定文件名的 `book:installed-file` IPC 读取安装目录中的词书 JSON；音频与配图直接读取包内文件。旧网络词书 IPC 保留供开发预览使用。主进程同时提供进度原子读写、同步请求及基于 electron-updater 的版本更新管理 IPC。渲染进程启用上下文隔离、关闭 Node 集成并开启沙箱。进度原子写入 `userData/accounts/<账号哈希>/progress.json`；旧版 `progress.json` 保留且只向已知归属账号迁移。Windows 会话令牌由 `electron/session-store.cjs` 使用 safeStorage/DPAPI 加密，读取旧 `session.json` 时原子迁移；加密失败不明文降级。窗口初始和最小尺寸受当前显示器工作区限制，常规最小尺寸为 760×560。
 
 网页预览使用 localStorage，安卓通过 `src/platform.ts` 使用 Capacitor 原生 HTTP；账号进度仍保存在原 Preferences 键，由自有 `DeviceStoragePlugin` 通过 `commit()` 确认写入，失败恢复内存缓存并上报。会话使用 Android Keystore 的 AES-GCM 密文，旧 Preferences 明文仅在密文提交成功后删除，凭据迁移不改变进度文件或账号归属。
 
@@ -51,7 +50,7 @@ Electron 主进程通过固定 HTTPS 地址读取词书目录和每日批量词�
 
 编译阶段只把真正词根组成学习组；无真正词根的单词独立成组。`scripts/learning-schedule.mjs` 区分熟词前置依赖与已经解释词根含义的回指；后者仍保留原文和悬浮窗，并在可行时优先满足。可学习的单词组和多词组按全书比例穿插，限制连续单词组；只有一个词的词根组也按单词组计入节奏。
 
-互相依赖的词根组先合并成同日学习单元，再按真实词级依赖安排曝光，尽量保持组内连续，必要时先学另一组的基础词。`exposureOrder` 是当天分组展开序列的索引排列，仅顺序不同的日期保存该字段；学习前后导航与悬浮窗使用同一序列。根本无法满足的熟词循环直接中止构建，不再静默放行。日界线通过整体均衡分配，保持 30 个学习日和同组不跨天，多词根词的重复曝光保留。编译日程的可选 `segmentEnds` 记录累计曝光终点：按完整同日互依单元累积到约 20 个曝光后设置休息点，大单元可以超过 20；仅用于学习中途休息提示，不重排、拆组、改变日界线或新增依赖。
+互相依赖的词根组先合并成同日学习单元，再按真实词级依赖安排曝光，尽量保持组内连续，必要时先学另一组的基础词。`exposureOrder` 是当天分组展开序列的索引排列，仅顺序不同的日期保存该字段；学习前后导航与悬浮窗使用同一序列。根本无法满足的熟词循环直接中止构建，不再静默放行。日界线通过整体均衡分配，保持 30 个学习日和同组不跨天，多词根词的重复曝光保留。每日学习不再生成分段休息点；评级成功后连续进入下一待学词，旧目录中的 `segmentEnds` 不参与运行时推进。
 
 界面把每 3 个学习日后插入 1 个复习日。六级共 30 个学习日和 10 个复习日。计划视图支持自由点击任意天数直接查阅对应日程。学习日单词卡片默认隐藏「下一个」并拦截右方向键跳过，强制完成三档熟练度判断后自动跳入下一词；使用「上一个」或左方向键回看已评级词时动态显示「下一个」按钮并恢复方向键，支持直接前进或重新评级后前进。学习日按“组 × 单词”安排计数，任何已有熟练度状态的词均计入已学，开始学习及评级后优先进入剩余未学词；完成剩余未学词即可完成当天。实际评级曝光另行保留，不为提前已学词伪造曝光；复习从此前所有已学唯一单词动态生成，默认排除 `mastered`，顺序为 `unmastered`、`unclear`、`mastered`，每词本轮只出现一次。
 
@@ -126,4 +125,4 @@ Cloudflare DNS：cyword.chengyi.me → cyword.pages.dev
 
 ## 0.4.5 / 0.1.1 验证边界
 
-同步测试覆盖本机失败不污染云端、上传期间评级、修订冲突、设备时差、新旧客户端合并一致与旧渲染基线；本地真实 D1 测试覆盖 OTP 并发核销及次数限制。缓存、音频和休息点有对应行为测试。Windows 实际 Electron/DPAPI 的旧会话迁移、密文回读与退出清除已通过，安卓 Release 构建与延续旧版证书的签名校验已通过；未连接安卓真机，尚不能声称 Keystore 升级迁移、真实账号跨设备同步和移动设备音频已验收。两个平台已发布，正式下载验证记录见 [运行手册](RUNBOOK.md)。
+同步测试覆盖本机失败不污染云端、上传期间评级、修订冲突、设备时差、新旧客户端合并一致与旧渲染基线；本地真实 D1 测试覆盖 OTP 并发核销及次数限制。缓存、音频、连续学习和安装包资源读取有对应行为测试。Windows 实际 Electron/DPAPI 的旧会话迁移、密文回读与退出清除已通过，安卓 Release 构建与延续旧版证书的签名校验已通过；未连接安卓真机，尚不能声称 Keystore 升级迁移、真实账号跨设备同步和移动设备音频已验收。两个平台已发布，正式下载验证记录见 [运行手册](RUNBOOK.md)。

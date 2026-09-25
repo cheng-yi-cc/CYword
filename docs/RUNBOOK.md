@@ -1,5 +1,16 @@
 # 运行手册
 
+当前待发布源码为 Windows 0.4.7 / Android 0.1.4（versionCode 505）：安装包预装完整词书、全部发音、原配图与音标字体，每日学习取消分段。`npm run build` 首次需在构建机下载全部原发音和配图，分别缓存到 `.work/book-audio/`、`.work/book-images/`；缺失或无效资源会阻断构建，无损转码缓存位于 `.work/book-images-webp/`。详见 [离线模式](OFFLINE.md)。
+
+2026-09-23 已生成以下本地安装包，尚未上传 GitHub Release 或官网：
+
+| 安装包 | 字节数 | SHA-256 |
+| --- | ---: | --- |
+| `release/CYword-Setup-0.4.7.exe` | 1205007611 | `e5bc357c42a5205eefcaa241af19d97a25f31a9a2129626e6d36cb6fc17a7872` |
+| `release/CYword-Android-0.1.4.apk` | 1136228843 | `812927e6f8cf494877efe84742b66272064dea7a8d0118abd097c48f283ecfd2` |
+
+两个平台包内均核对了 5166 词、5166 条音频、1196 个图片引用（1013 张不同图片）与音标字体；所有音频及图片的长度和 SHA-256 与清单一致。Windows 实际 ASAR 通过断网读取、发音及重启保留进度验证；APK 签名通过，证书与已发布版本一致。未运行 Windows 安装向导，也未连接安卓真机，不能将包内验证等同于真机安装升级验收。
+
 当前正式版本为 Windows 0.4.6、Android 0.1.3（versionCode 504），于 2026-09-21 发布。官网、两个独立下载指针和自动更新元数据已上线。
 
 Windows 0.4.6 / Android 0.1.3 实现登录后下载完整文字及发音、离线学习、本地进度和一次性旧云端导入。预览时首次完整下载后从 IndexedDB 读取；`CYWORD_REAL_AUTH=1` 不会启用上传，只有 `VITE_CYWORD_PROGRESS_MODE=cloud` 显式恢复双向同步。词书重编译后的本地重下载步骤和验证边界见 [OFFLINE.md](OFFLINE.md)。源码与 Release 已公开；官网更新源及生产资源均保留。
@@ -83,21 +94,23 @@ npm run build:web
 npm run dist
 ```
 
-主要安装文件是 `release/CYword-Setup-<version>.exe`。`data/` 不在 electron-builder 的 `files` 中，也不得通过 `extraResources` 整体打包；只有不含正文的 `curriculum.json` 排序元数据由前端编译引用，完整词书仍从 API 加载。`latest.yml` 和 `CYword-Setup-<version>.exe.blockmap` 是应用内更新元数据；三者来自同一次构建，必须一起发布到 GitHub Release 和官网 R2。当前版本未配置代码签名，首次下载或安装时 Windows 可能显示 SmartScreen；发布前如有证书，应在构建环境配置签名，不要把证书或密码写入仓库。
+主要安装文件是 `release/CYword-Setup-<version>.exe`。规范数据编译后由打包脚本生成 `dist/book/`，其中包含全部词条、发音、配图和独立清单；该目录随 `dist/**/*` 安装。`data/` 和 `.work/` 不直接进入安装包。`latest.yml` 和 `CYword-Setup-<version>.exe.blockmap` 是应用内更新元数据；三者来自同一次构建，必须一起发布到 GitHub Release 和官网 R2。当前版本未配置代码签名，首次下载或安装时 Windows 可能显示 SmartScreen；发布前如有证书，应在构建环境配置签名，不要把证书或密码写入仓库。
 
 安装器为交互式 NSIS：首次安装可选择目录；手动运行新版安装包时会从注册表读取旧目录作为默认值，用户仍可修改。应用内更新使用同一个安装器静默覆盖旧版本，并保留 Electron `userData` 中的学习进度。
 
 Windows 0.4.5 起的更新流程：启动检测到新版本即自动下载，右上角显示下载进度；完成后点击一次立即安装并重启。下载失败可点击重试，关闭应用不会自动安装。0.4.4 用户需手动触发更新或从官网下载覆盖安装；升级到 0.4.5 后具备此自动下载流程。开发模式不实际检测或安装更新。
 
-## 标签自动构建
+## 标签构建与已验收安装包发布
 
-推送形如 `v<package version>` 的标签会触发 `.github/workflows/build-tag.yml`。Windows runner 检查标签与 `package.json` 一致，执行 `npm ci`，再检查 GitHub Release：尚不存在时才运行测试、构建 NSIS、校验资产并创建 Release；已存在时下载原始安装器、`.exe.blockmap` 与 `latest.yml`，跳过重建并重新校验。随后把原安装器、blockmap 和改写为 R2 路径的版本化清单发布到官网 R2，全部不可变对象校验成功后才更新 `releases/current.json`，官网和桌面更新源同时切换。
+推送形如 `v<package version>` 的标签，或发布同名正式 GitHub Release，都会触发 `.github/workflows/build-tag.yml`。Release 事件忽略安卓标签和预发布版；同一标签串行处理。Windows runner 检查标签与 `package.json` 一致，执行 `npm ci`，再检查 GitHub Release：尚不存在时才运行测试、构建 NSIS、校验资产并创建 Release；已存在时下载原始安装器、`.exe.blockmap` 与 `latest.yml`，跳过重建并重新校验。随后把原安装器、blockmap 和改写为 R2 路径的版本化清单发布到官网 R2，全部不可变对象校验成功后才更新 `releases/current.json`，官网和桌面更新源同时切换。
 
 ```powershell
 $cyVersion = node -p "require('./package.json').version"
 git tag -a "v$cyVersion" -m "CYword v$cyVersion"
 git push origin "v$cyVersion"
 ```
+
+已有本地验收安装包时，先推送源码，再用 `gh release create v<version> --target <源码提交> --draft` 创建草稿，上传该次构建的安装器、blockmap 和原始 latest.yml；文件齐全后发布草稿。正式 Release 事件会复用这些原件上传 R2，不重建安装器。安卓沿用独立 Release 工作流，并设置 `--latest=false`。
 
 工作流不额外上传 GitHub Actions artifact，也不覆盖已有 GitHub Release 资产。同标签重跑只用于沿用原件恢复尚未完成的 R2 发布，避免重新构建改变安装包字节或 `releaseDate`；已有 Release 为草稿、缺少文件、文件未上传完整或查询失败时直接中止。R2 使用 `releases/<version>/<sha256>/` 内容寻址路径，已有对象只有长度和完整 SHA-256 相同才跳过，不同则拒绝覆盖。需要修改软件时必须使用新版本和新标签。
 
@@ -114,7 +127,7 @@ npm run data:build
 Remove-Item Env:CYWORD_BOOK
 ```
 
-默认值始终是 `cet6`。选择词书只影响本地校验和服务端数据生成，安装包不携带任何完整词书。
+默认值始终是 `cet6`。当前安装包默认预装 cet6 完整词书与全部发音，新增词书需同时配置对应的离线包。
 
 ## 发布服务端词书
 
@@ -133,15 +146,15 @@ npm run upload:book-data
 
 - 双击无窗口：优先使用 NSIS 安装包，不再发布旧 portable 版本；查看任务管理器中是否已有单实例正在运行。
 - 开发模式不启动：先单独运行 `npm run data:verify`，再检查 Node.js 版本和 `npm ci` 是否成功。
-- 界面加载失败：首次下载失败时确认网络和 `/api/books/cet6/catalog` 返回 200；已下载后检查本机词库，勿删除账号进度；开发模式再运行 `npm run build` 检查 TypeScript、Vite 和本地数据生成。
+- 界面加载失败：当前安装版检查包内 `book/catalog.json`、`manifest.json` 和资源完整性，缺失时重新安装，勿删除账号进度；旧版或开发预览下载失败时检查网络和 `/api/books/cet6/catalog`。运行 `npm run build` 可检查数据生成、资源准备、TypeScript 和 Vite。
 - 进度异常：先备份 Electron 用户数据目录中的 `accounts/<账号哈希>/progress.json` 和旧 `progress.json`，再检查其 `version` 是否为 2。除非用户明确要求，不要删除进度文件。同步检查、安卓构建和签名恢复见 [安卓与同步说明](ANDROID.md)。
 
 ## 发布前清单
 
 1. `npm ci` 能在干净依赖环境完成。
 2. `npm run data:verify`、`npm test`、`npm run test:ui`、`npm run build:web` 全部通过；修改官网时另检查 `npm run build:site` 与 `npm run test:site:download`。
-3. 解包目录不存在 `resources/data`，安装后联网登录并完整下载 5166 词与发音；下载后断网冷启动，学习、搜索和发音可用，评级重启后保留。
-4. 本机词库按当前词加载，再预取后面最多 4 词；首次下载分批持久化完整词书，复习词序由本机进度决定，线上接口继续兼容旧客户端。
+3. 包内 `dist/book/`（安卓为 `assets/public/book/`）包含 5166 词、全部发音与配图，资源长度和 SHA-256 与清单一致。首次联网登录后无需二次下载；断网冷启动可学习、搜索、看图和播放发音，评级重启后保留。
+4. 安装版按当前词读取包内文件，再预取后面最多 4 词，不复制到 IndexedDB。浏览器开发预览保留分批下载与持久化流程，线上接口继续兼容旧客户端。
 5. `release/` 中存在安装器、`latest.yml` 和对应 `.exe.blockmap`；`data/`、`dist/`、`release/` 和检查截图不提交。
 6. 对外发布前检查站内版本记录与实际已发布版本一致，确认真实反馈/删除申请渠道及 [内容来源台账](CONTENT-SOURCES.md) 的未决项；不能将占位提示或来源记录当作渠道开通、版权授权完成的证明。
 
@@ -236,7 +249,7 @@ Get-FileHash -Algorithm SHA256 -LiteralPath '.work\download-check.exe'
 
 ## 下载费用与限制
 
-2026-08-31 核对：R2 Standard 每月免费包含 10 GB-month、100 万次 A 类操作、1000 万次 B 类操作，出口流量免费。超额存储为 $0.015/GB-month、A 类 $4.50/百万次、B 类 $0.36/百万次，按计费单位向上取整；免费额度在账号内共享，见 [R2 定价](https://developers.cloudflare.com/r2/pricing/)。134 MiB 安装包持续保存约 70 份就接近 10 GB；用户下载不会重复增加存储副本。
+2026-08-31 核对：R2 Standard 每月免费包含 10 GB-month、100 万次 A 类操作、1000 万次 B 类操作，出口流量免费。超额存储为 $0.015/GB-month、A 类 $4.50/百万次、B 类 $0.36/百万次，按计费单位向上取整；免费额度在账号内共享，见 [R2 定价](https://developers.cloudflare.com/r2/pricing/)。完整资源安装包单份约 1.1–1.2 GB，保留多个双平台版本会累积存储占用；用户下载不会重复增加存储副本。
 
 用户已授权 R2 激活及超额计费；Workers 保持免费套餐，未配置自动升级。Pages Functions 与账号内其他 Workers 每日共享 10 万次请求，UTC 0 点（北京时间 8 点）重置；静态资源请求免费且不限量，见 [Functions 定价](https://developers.cloudflare.com/pages/functions/pricing/)。安装包 GET 通常产生一次函数调用和两次 R2 B 类操作；一次学习请求产生一次函数调用、一次清单读取和若干分片读取，累计复习最多读取 30 个分片。HEAD、分段、续传、重试也会增加用量，因此不能只按人数估算额度。应同时检查 R2 用量和 Workers 请求面板的账号总用量。
 
@@ -245,7 +258,7 @@ Get-FileHash -Algorithm SHA256 -LiteralPath '.work\download-check.exe'
 | 现象 | 检查与处理 |
 | --- | --- |
 | 首页正常，下载或更新 404 | 检查 `releases/current.json`、其中三个内容寻址对象及 `/downloads/latest.yml`；指针只能在全部资产上传后写入 |
-| 应用启动时词书 404/503 | 核对 `BOOKS` 绑定、`books/cet6/current.json` 及其 `catalogKey`；重新上传时必须让版本指针最后写入 |
+| 旧客户端或开发预览词书 404/503 | 核对 `BOOKS` 绑定、`books/cet6/current.json` 及其 `catalogKey`；重新上传时必须让版本指针最后写入 |
 | 每日词汇返回 409 | 客户端目录版本对应的清单已被删除；恢复该不可变版本，或重启应用重新获取当前目录 |
 | 每日词汇流中断 | 查找 `book_words_stream_failed` 日志，核对清单里的分片是否完整；不要在上传中途更新版本指针 |
 | 下载 503 | 查看 Pages Functions 日志的 `release_download_failed`；核对 `DOWNLOADS` 绑定、指针格式和桶内对象；按 `Retry-After` 稍后重试 |

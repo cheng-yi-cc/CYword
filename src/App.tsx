@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import DOMPurify from "dompurify";
-import { marked } from "marked";
+import { bookMarkdown } from "./book-markdown";
 import {
   buildPlan,
   completedStudyExposureKeys,
@@ -35,7 +34,6 @@ import { useSessionSave, useSessionWord } from "./session-state";
 import { useWordResources } from "./useWordResources";
 import { useSessionDialog } from "./useSessionDialog";
 import { playPronunciation, stopPronunciation } from "./audio";
-import { completedSegmentEnd } from "./study-segments";
 import type {
   AppProgress,
   Catalog,
@@ -106,7 +104,7 @@ function MarkdownBlock({ value, empty = "当前数据没有提供这部分内容
     const parsedMarkdown = hover
       ? hover.renderWordMarkup(value)
       : value.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, "**$2**").replace(/\[\[([^\]]+)\]\]/g, "**$1**");
-    return DOMPurify.sanitize(marked.parse(parsedMarkdown, { breaks: true }) as string);
+    return bookMarkdown(parsedMarkdown);
   }, [value, hover]);
   if (!html) return <p className="empty-copy">{empty}</p>;
 
@@ -550,8 +548,6 @@ function StudyToday({
   const finished = isPlanDayComplete(progress, plan.day);
   const [sessionActive, transitionSession, sessionTransitionPhase] = useSoftTransitionState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [breakNextIndex, setBreakNextIndex] = useState<number | null>(null);
-  const shownBreaks = useRef(new Set<number>());
   const [simpleExampleIndex, setSimpleExampleIndex] = useState(0);
   const [examExampleIndex, setExamExampleIndex] = useState(0);
   const [longSentenceIndex, setLongSentenceIndex] = useState(0);
@@ -581,8 +577,6 @@ function StudyToday({
   const openWordSession = async (targetGroupId: string, targetWordId: string) => {
     if (ratingLock.current) return;
     closingSession.current = false;
-    setBreakNextIndex(null);
-    shownBreaks.current.clear();
     const targetIndex = exposures.findIndex((item) => item.groupId === targetGroupId && item.wordId === targetWordId);
     setActiveIndex(targetIndex >= 0 ? targetIndex : 0);
     setSentencesOpen(false);
@@ -592,8 +586,6 @@ function StudyToday({
   const startSession = async () => {
     if (ratingLock.current) return;
     closingSession.current = false;
-    setBreakNextIndex(null);
-    shownBreaks.current.clear();
     const nextIndex = exposures.findIndex((item) => !completedKeys.has(item.key));
     const targetIdx = nextIndex >= 0 ? nextIndex : 0;
     setActiveIndex(targetIdx);
@@ -606,12 +598,9 @@ function StudyToday({
   }, [autoStart]);
   useEffect(() => () => stopPronunciation(), []);
   useEffect(() => { if (!sessionActive) stopPronunciation(); }, [sessionActive]);
-  useLayoutEffect(() => {
-    if (breakNextIndex !== null) dialogRef.current?.querySelector<HTMLButtonElement>(".study-break-panel button")?.focus({ preventScroll: true });
-  }, [breakNextIndex]);
 
   const move = (direction: -1 | 1) => {
-    if (ratingLock.current || closingSession.current || breakNextIndex !== null || (direction > 0 && !rated)) return;
+    if (ratingLock.current || closingSession.current || (direction > 0 && !rated)) return;
     saving.setError("");
     setActiveIndex((current) => Math.max(0, Math.min(exposures.length - 1, current + direction)));
   };
@@ -635,7 +624,7 @@ function StudyToday({
   }, [exposure?.key]);
 
   const rate = async (level: Proficiency) => {
-    if (!group || !activeDetail || !exposure || ratingLock.current || closingSession.current || breakNextIndex !== null) return;
+    if (!group || !activeDetail || !exposure || ratingLock.current || closingSession.current) return;
     const next = rateStudyWord(progress, plan, group, exposure.wordId, level);
     await saving.run(() => saveProgress(next), () => {
       if (finished) {
@@ -645,13 +634,7 @@ function StudyToday({
         const ratedKeys = new Set(completedStudyExposureKeys(next, plan));
         const nextUnrated = exposures.findIndex((item, index) => index > activeIndex && !ratedKeys.has(item.key));
         const anyUnrated = nextUnrated >= 0 ? nextUnrated : exposures.findIndex((item) => !ratedKeys.has(item.key));
-        if (anyUnrated >= 0) {
-          const boundary = !rated ? completedSegmentEnd(plan.segmentEnds, activeIndex, anyUnrated, exposures, ratedKeys) : null;
-          if (boundary !== null && !shownBreaks.current.has(boundary)) {
-            shownBreaks.current.add(boundary);
-            setBreakNextIndex(anyUnrated);
-          } else setActiveIndex(anyUnrated);
-        }
+        if (anyUnrated >= 0) setActiveIndex(anyUnrated);
         else endSession();
       }
     });
@@ -663,7 +646,7 @@ function StudyToday({
       if (event.defaultPrevented) return;
       const target = event.target as HTMLElement | null;
       const editing = target?.matches("input, textarea, select, [contenteditable='true']");
-      if (ratingLock.current || closingSession.current || breakNextIndex !== null) return;
+      if (ratingLock.current || closingSession.current) return;
       if (editing || target?.closest(".sound-memory, .meaning-bridge, .word-hover-popover")) return;
       if (event.key === "ArrowLeft") {
         event.preventDefault();
@@ -690,7 +673,7 @@ function StudyToday({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [sessionActive, activeIndex, activeDetail?.id, activeDetail?.audioUrl, ratingBusy, progress, rated, breakNextIndex]);
+  }, [sessionActive, activeIndex, activeDetail?.id, activeDetail?.audioUrl, ratingBusy, progress, rated]);
 
   const rootPriority = { root: 0, prefix: 1, suffix: 2, base: 3 };
   const rootLabels = { root: "词根", prefix: "前缀", suffix: "后缀", base: "词基" };
@@ -730,7 +713,7 @@ function StudyToday({
                     title={`直接学习 ${word.spelling}`}
                   >
                     <b>{word.spelling}</b>
-                    <span>{word.pronunciation || "—"}</span>
+                    <span className="ipa">{word.pronunciation || "—"}</span>
                     <p>{word.definitionCn}</p>
                     <i className={proficiency}>{proficiency ? proficiencyCopy[proficiency].label : "待学习"}</i>
                   </button>
@@ -749,11 +732,11 @@ function StudyToday({
           <strong>{activeIndex + 1} / {exposures.length}</strong>
           <button disabled={ratingBusy} onClick={closeSession}><kbd>Esc</kbd> 返回</button>
         </header>
-        <nav className="study-session-tabs" aria-label="学习内容" inert={breakNextIndex !== null}>
+        <nav className="study-session-tabs" aria-label="学习内容">
           {([['word', '单词'], ['roots', '词根'], ['sentences', '长难句']] as const).filter(([id]) => id !== "sentences" || longSentences.length > 0).map(([id, label]) => <button disabled={ratingBusy} key={id} aria-pressed={mobilePanel === id} onClick={() => setMobilePanel(id)}>{label}</button>)}
         </nav>
 
-        {breakNextIndex !== null ? <section className="study-break-panel" aria-live="polite"><h2>本段完成</h2><p>今天已学 {completedCount} / {plan.appearanceCount} 词，可以休息一下。</p><div><button onClick={() => { setActiveIndex(breakNextIndex); setBreakNextIndex(null); }}>继续下一段</button><button onClick={closeSession}>返回安排</button></div></section> : <div className={`study-session-grid ${longSentences.length ? sentencesOpen ? "sentences-open" : "sentences-collapsed" : "without-sentences"}`}>
+        <div className={`study-session-grid ${longSentences.length ? sentencesOpen ? "sentences-open" : "sentences-collapsed" : "without-sentences"}`}>
           <aside className="study-morpheme-column" inert={ratingBusy}>
             <header><span>MORPHEME NOTES</span><h2>词根词缀</h2></header>
             <div className="study-column-scroll">
@@ -831,7 +814,7 @@ function StudyToday({
             </footer>}
             </div>
           </aside>}
-        </div>}
+        </div>
       </div>, document.body)}
     </div>
   );
@@ -880,7 +863,7 @@ function ReviewToday({ catalog, progress, plan, details, loadWords, saveProgress
   const word = currentId ? catalog.words[currentId] : null;
   const detail = currentId ? details[currentId] ?? null : null;
   return <div className="page review-session"><PageHeader eyebrow={`DAY ${plan.day} · REVIEW`} title="先回想，再查看详情" description={`还剩 ${queue.length} 词`} aside={<div className="today-progress"><b>{day.reviewedWordIds.length}</b><span>/ {day.reviewWordIds.length}</span></div>} />{saveNotice}<div className={`judgment-card ${revealed ? "revealed" : ""}`}>
-    {!revealed && word ? <button className="judgment-front" disabled={saving.busy} onClick={() => setRevealed(true)}><span>查看词义</span><h2>{word.spelling}</h2><p>{word.pronunciation}</p></button> : detail ? <WordDetailPanel detail={detail} footer={<ProficiencyPicker disabled={saving.busy} value={currentId ? progress.words[currentId]?.proficiency : undefined} onChange={(level) => void rate(level)} title="重新判断熟练度" />} /> : <div className="vocabulary-loading" role="status"><p>{resource.failed ? "单词详情加载失败" : "正在加载单词详情…"}</p>{resource.failed && <button onClick={resource.retry}>重新加载</button>}</div>}
+    {!revealed && word ? <button className="judgment-front" disabled={saving.busy} onClick={() => setRevealed(true)}><span>查看词义</span><h2>{word.spelling}</h2><p className="ipa">{word.pronunciation}</p></button> : detail ? <WordDetailPanel detail={detail} footer={<ProficiencyPicker disabled={saving.busy} value={currentId ? progress.words[currentId]?.proficiency : undefined} onChange={(level) => void rate(level)} title="重新判断熟练度" />} /> : <div className="vocabulary-loading" role="status"><p>{resource.failed ? "单词详情加载失败" : "正在加载单词详情…"}</p>{resource.failed && <button onClick={resource.retry}>重新加载</button>}</div>}
   </div></div>;
 }
 function WordBrowseSession({ wordIds, initialIndex, category, progress, details, loadWords, planDay, saveProgress, onClose }: {
@@ -1000,7 +983,7 @@ function VocabularyView({ catalog, progress, details, loadWords, planDay, savePr
     <p className="vocabulary-hint">未掌握、不清楚的已学词自动收录；改为已掌握后自动移出。</p>
     {ids.length ? <>
       <div className="vocabulary-layout">
-        <aside aria-label="词汇列表">{visibleIds.map((id) => <button className={selectedId === id ? "active" : ""} key={id} onClick={() => { setSelectedId(id); setSession({ wordIds: [...ids], initialIndex: ids.indexOf(id), category: filter }); }}><b>{catalog.words[id].spelling}</b><span>{catalog.words[id].pronunciation}</span><small>{catalog.words[id].definitionCn}</small><i className={progress.words[id].proficiency}>{proficiencyCopy[progress.words[id].proficiency].label}</i></button>)}</aside>
+        <aside aria-label="词汇列表">{visibleIds.map((id) => <button className={selectedId === id ? "active" : ""} key={id} onClick={() => { setSelectedId(id); setSession({ wordIds: [...ids], initialIndex: ids.indexOf(id), category: filter }); }}><b>{catalog.words[id].spelling}</b><span className="ipa">{catalog.words[id].pronunciation}</span><small>{catalog.words[id].definitionCn}</small><i className={progress.words[id].proficiency}>{proficiencyCopy[progress.words[id].proficiency].label}</i></button>)}</aside>
       </div>
       {pageCount > 1 && <nav className="vocabulary-pagination" aria-label="词汇列表翻页"><button disabled={currentPage === 0} onClick={() => { setPage(currentPage - 1); }}>上一页</button><span>{currentPage + 1} / {pageCount} · 共 {ids.length} 词</span><button disabled={currentPage + 1 === pageCount} onClick={() => { setPage(currentPage + 1); }}>下一页</button></nav>}
     </> : <div className="vocabulary-empty"><span aria-hidden="true">◇</span><h2>{query.trim() ? "没有找到匹配的词" : overview.ids.length ? "当前分类没有待巩固词汇" : overview.counts.unlearned === overview.total ? "学过之后，在这里看见进步" : "已学词汇都已掌握"}</h2></div>}
@@ -1093,7 +1076,7 @@ function WordSearchView({ catalog, progress, details, loadWords, planDay, savePr
         {visibleIds.map((id) => {
           const word = catalog.words[id], level = progress.words[id]?.proficiency;
           return <button key={id} className={selectedId === id ? "active" : ""} onClick={() => openWord(id, ids)}>
-            <b>{word.spelling}</b><span>{word.pronunciation}</span><small>{word.definitionCn}</small><i className={level ?? "unlearned"}>{level ? proficiencyCopy[level].label : "待学习"}</i>
+            <b>{word.spelling}</b><span className="ipa">{word.pronunciation}</span><small>{word.definitionCn}</small><i className={level ?? "unlearned"}>{level ? proficiencyCopy[level].label : "待学习"}</i>
           </button>;
         })}
       </div>
