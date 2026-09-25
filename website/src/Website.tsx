@@ -461,6 +461,7 @@ function ReleaseNotes() {
   return <section className="information-section section-wrap" id="release-notes" aria-labelledby="release-notes-title">
     <div className="section-heading"><h2 id="release-notes-title">版本记录</h2><p>这里记录已发布的客户端改动，安装包版本以下载区为准。</p></div>
     <div className="release-notes-grid">
+      <article><span className="eyebrow">2026.09.25</span><h3>Windows 0.4.8 / Android 0.1.5</h3><p>搜索移到左上角，桌面支持 Ctrl+K；新增词书菜单与更新日志。账号入口更简洁，登录失效后仍可本机学习。Windows 独立打包词书，减少后续差量更新流量；安卓从本版开始支持后续差量下载与续传。旧版首次迁移仍可能需要完整包，升级保留本机记录。</p></article>
       <article><span className="eyebrow">2026.09.25</span><h3>Windows 0.4.7 / Android 0.1.4</h3><p>完整六级词书、全部发音和巧记配图随安装包提供，登录后无需二次下载。每日学习连续进行，取消中途分段休息页；内置音标字体，减少手机字体缺字问题。升级保留本机学习记录。</p></article>
       <article><span className="eyebrow">2026.09.21</span><h3>Windows 0.4.6 / Android 0.1.3</h3><p>登录后下载完整词书与发音，支持离线学习；进度默认保存本机，旧云端记录导入一次。单词默认完整显示，点击切换分割，发音时临时分割并在结束后恢复，官网示例同步支持。</p></article>
       <article><span className="eyebrow">2026.09.20</span><h3>Windows 0.4.5</h3><p>新增全书搜索、以音记形与以熟带生；改进学习、保存与同步，隐藏滚动条。后续更新自动下载，准备完成后点击安装。</p></article>

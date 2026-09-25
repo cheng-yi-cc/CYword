@@ -13,14 +13,14 @@ export type ReleaseInfo = {
 
 // R2 尚未发布动态指针或暂时不可用时，官网继续提供最后一个已核验版本。
 export const release: ReleaseInfo = {
-  version: "0.4.7",
-  date: "2026.09.23",
-  size: "1149 MB",
-  filename: "CYword-Setup-0.4.7.exe",
-  sizeBytes: 1205007611,
-  downloadUrl: "https://cyword.chengyi.me/downloads/releases/0.4.7/e5bc357c42a5205eefcaa241af19d97a25f31a9a2129626e6d36cb6fc17a7872/CYword-Setup-0.4.7.exe",
+  version: "0.4.8",
+  date: "2026.09.25",
+  size: "1163 MB",
+  filename: "CYword-Setup-0.4.8.exe",
+  sizeBytes: 1219005231,
+  downloadUrl: "https://cyword.chengyi.me/downloads/releases/0.4.8/c0af9e229c58424f4544f6826507c75a2d3f03897300b1be7f1989300bbf7a89/CYword-Setup-0.4.8.exe",
   notesUrl: releaseNotesUrl,
-  sha256: "e5bc357c42a5205eefcaa241af19d97a25f31a9a2129626e6d36cb6fc17a7872",
+  sha256: "c0af9e229c58424f4544f6826507c75a2d3f03897300b1be7f1989300bbf7a89",
 };
 
 function formatDate(publishedAt: string): string {

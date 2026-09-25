@@ -12,12 +12,12 @@ type DownloadAsset = {
 
 const currentReleaseKey = "releases/current.json";
 const fallbackRelease: PublicRelease = {
-  version: "0.4.4",
-  publishedAt: "2026-09-20T07:33:38.463Z",
-  filename: "CYword-Setup-0.4.4.exe",
-  sizeBytes: 129150572,
-  sha256: "985ac100038fe023c23e921a4e86889d1374a2f9b5d8f2fd6f71eb6cd7ded9c0",
-  downloadPath: "/downloads/releases/0.4.4/985ac100038fe023c23e921a4e86889d1374a2f9b5d8f2fd6f71eb6cd7ded9c0/CYword-Setup-0.4.4.exe",
+  version: "0.4.8",
+  publishedAt: "2026-09-25T11:54:38.389Z",
+  filename: "CYword-Setup-0.4.8.exe",
+  sizeBytes: 1219005231,
+  sha256: "c0af9e229c58424f4544f6826507c75a2d3f03897300b1be7f1989300bbf7a89",
+  downloadPath: "/downloads/releases/0.4.8/c0af9e229c58424f4544f6826507c75a2d3f03897300b1be7f1989300bbf7a89/CYword-Setup-0.4.8.exe",
   notesUrl: releaseNotesUrl,
 };
 
