@@ -42,7 +42,7 @@ Electron 主进程通过限定文件名的 `book:installed-file` IPC 读取安�
 
 正式桌面包启动时检测更新，`autoDownload=true` 自动下载；下载完成后通过安装 IPC 一次点击安装，`autoInstallOnAppQuit=false` 保证普通退出不会触发安装。界面展示下载进度、失败重试和安装入口；开发预览不执行自动更新。
 
-差量更新：Windows 沿用 electron-updater 的 NSIS 分块复用，官网修正旧 blockmap 的哈希路径推导。安卓由发布端按 APK ZIP 压缩数据边界生成 SHA-256 清单，`ApkDelta` 对已安装 APK 使用同一分段算法，复用相同数据、下载缺块并保留可校验的中断结果。整包哈希与应用签名、身份、版本均通过后，经 FileProvider 交给系统安装；元数据、APK 下载继续使用官网独立安卓源。协议及发布门禁见 [WEBSITE.md](WEBSITE.md)。
+差量更新：Windows 沿用 electron-updater 的 NSIS 分块复用，官网修正旧 blockmap 的哈希路径推导；`asarUnpack` 将词书文件从程序 ASAR 分离，利用 NSIS 非固实压缩保持未变资源的压缩块稳定。安卓由发布端按 APK ZIP 压缩数据边界生成 SHA-256 清单，`ApkDelta` 对已安装 APK 使用同一分段算法，复用相同数据、下载缺块并保留可校验的中断结果。整包哈希与应用签名、身份、版本均通过后，经 FileProvider 交给系统安装；元数据、APK 下载继续使用官网独立安卓源。协议及发布门禁见 [WEBSITE.md](WEBSITE.md)。
 
 `useWordResources` 为当前词书代码和 `dataVersion` 创建共享 `WordResourceCache`，默认容量为 256 个详情，采用 LRU 淘汰；版本切换清空旧缓存并丢弃迟到响应，同词并发请求按 ID 去重。学习、复习和列表详情由 `useSessionWord` 先取当前词，成功后只预取随后最多 4 词；加载失败留在局部详情并提供重试，不再以整日或累计复习全量请求驱动缓存。服务端仍根据清单按学习日分片读取 R2 并流式拼接 JSON。`WordHoverContext` 按需加载引用词并提供局部失败重试，不阻塞主学习流。
 

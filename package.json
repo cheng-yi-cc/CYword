@@ -40,6 +40,9 @@
     "appId": "com.cyword.desktop",
     "productName": "CYword",
     "asar": true,
+    "asarUnpack": [
+      "dist/book/**/*"
+    ],
     "directories": {
       "output": "release"
     },
