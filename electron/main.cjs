@@ -294,6 +294,8 @@ function createWindow() {
     backgroundColor: "#f7f4ee",
     icon: path.join(__dirname, "assets", "icon.ico"),
     autoHideMenuBar: true,
+    titleBarStyle: "hidden",
+    titleBarOverlay: { color: "#f7f4ee", symbolColor: "#3d3929", height: 40 },
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,

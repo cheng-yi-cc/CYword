@@ -256,9 +256,107 @@ test("search rating and return retain the query without manufacturing a review",
   expect(await page.evaluate(() => (window as any).__test.local.reviewHistory.length)).toBe(0);
 });
 
+test("titlebar search shortcut, book menu and release history replace the old sidebar entry", async ({ page }) => {
+  await setup(page);
+  await expect(page.locator(".sidebar nav").getByRole("button", { name: "单词搜索" })).toHaveCount(0);
+  await page.locator(".book-picker summary").click();
+  await expect(page.locator(".book-picker .current")).toContainText("当前使用");
+  await expect(page.locator(".book-choice").getByText("即将上线")).toBeVisible();
+  await expect(page.locator("button.book-choice")).toBeDisabled();
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("Control+k");
+  const search = page.getByRole("dialog", { name: "单词搜索", exact: true });
+  await expect(search.getByRole("combobox")).toBeFocused();
+  await search.getByRole("combobox").fill("sym");
+  await search.getByRole("combobox").press("ArrowDown");
+  await search.getByRole("combobox").press("Enter");
+  await expect(page.locator(".vocabulary-session")).toBeVisible();
+  await expect(search).toHaveAttribute("inert", "");
+  await page.keyboard.press("Escape");
+  await expect(search.getByRole("combobox")).toHaveValue("sym");
+  await expect(search).not.toHaveAttribute("inert");
+  await page.screenshot({ path: ".work/preflight/titlebar-search.png" });
+  await page.keyboard.press("Escape");
+  await expect(search).toHaveCount(0);
+  await page.locator(".release-notes-entry").click();
+  const releases = page.getByRole("dialog", { name: "更新日志" });
+  await expect(releases.locator(".release-detail")).toContainText("Windows 0.4.8");
+  await releases.getByRole("button", { name: /v0.4.3/ }).click();
+  await expect(releases.locator(".release-detail")).toContainText("熟练度");
+  await page.screenshot({ path: ".work/preflight/release-history.png" });
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".release-notes-entry")).toBeFocused();
+  await page.screenshot({ path: ".work/preflight/titlebar-home.png" });
+});
+
+test("expired login keeps the local account usable and reauthentication preserves its progress", async ({ page }) => {
+  await setup(page);
+  await page.addInitScript(() => {
+    const read = window.cyword.readSession!;
+    window.cyword.readSession = async () => {
+      const session = (await read())!;
+      return { ...session, token: `e30.${btoa(JSON.stringify({ exp: 1 }))}.signature` };
+    };
+  });
+  await page.reload();
+  await expect(page.locator(".account-trigger")).toHaveText("未登录");
+  await expect(page.getByLabel("电子邮箱")).toHaveCount(0);
+  await openStudy(page);
+  await study(page).locator(".session-rating button.unmastered").click();
+  await expect(study(page).locator("h1")).toHaveText("third");
+  expect(await page.evaluate(() => (window as any).__test.local.words.b.proficiency)).toBe("unmastered");
+  await study(page).getByRole("button", { name: /返回/ }).click();
+  await page.locator(".account-trigger").click();
+  await expect(page.getByLabel("电子邮箱")).toHaveValue("fixture@example.test");
+  await page.keyboard.press("Escape");
+  await expect(page.getByLabel("电子邮箱")).toHaveCount(0);
+  await page.locator(".account-trigger").click();
+  await page.evaluate(() => {
+    window.cyword.verifyAuthCode = async () => ({ success: true, token: "renewed", user: { id: "fixture-user", email: "fixture@example.test", createdAt: 0, lastLoginAt: 0, loginCount: 2 } });
+    window.cyword.writeSession = async () => true;
+  });
+  await page.getByLabel("6 位验证码").fill("123456");
+  await page.locator(".auth-submit-btn").click();
+  await expect(page.locator(".sidebar-account summary")).toContainText("fixture");
+  expect(await page.evaluate(() => (window as any).__test.local.words.b.proficiency)).toBe("unmastered");
+  expect(await page.evaluate(() => (window as any).__test.sessionCleared)).toBe(false);
+  // Switching the identity after expiry must load the other account's own file.
+  await page.reload();
+  await page.locator(".account-trigger").click();
+  await page.evaluate(() => {
+    window.cyword.verifyAuthCode = async () => ({ success: true, token: "other", user: { id: "other", email: "other@example.test", createdAt: 0, lastLoginAt: 0, loginCount: 1 } });
+    window.cyword.writeSession = async () => true;
+    const read = window.cyword.readProgress;
+    window.cyword.readProgress = async account => account === "other" ? { version: 2, planDays: {}, words: {}, bookmarks: {}, reviewHistory: [] } : read(account);
+    window.cyword.readProgressImport = async () => true;
+  });
+  await page.getByLabel("电子邮箱").fill("other@example.test");
+  await page.getByLabel("6 位验证码").fill("123456");
+  await page.locator(".auth-submit-btn").click();
+  await expect(page.locator(".sidebar-account summary")).toContainText("other");
+  await page.getByRole("button", { name: "继续学习" }).click();
+  await expect(study(page).locator("h1")).toHaveText("first");
+});
+
+test("mobile search remains at the top and the four-item navigation stays usable", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await setup(page);
+  await expect(page.locator(".sidebar nav button")).toHaveCount(4);
+  await page.getByRole("button", { name: "单词搜索", exact: true }).click();
+  await page.getByRole("combobox", { name: "搜索单词" }).fill("sym");
+  await expect(page.getByRole("option")).toContainText("symposium");
+  await page.screenshot({ path: ".work/preflight/mobile-search.png" });
+  await page.keyboard.press("Escape");
+  await page.locator(".mobile-account summary").click();
+  await page.locator(".mobile-account").getByRole("button", { name: "更新日志" }).click();
+  await expect(page.locator(".release-detail")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+});
+
 test("offline logout only requires local persistence and reports credential cleanup failures", async ({ page }) => {
   await setup(page);
   await page.evaluate(() => { const s = (window as any).__test; s.offline = true; s.clearFails = true; });
+  await page.locator(".sidebar-account summary").click();
   await page.locator(".btn-logout").click();
   const notice = page.getByRole("dialog", { name: "退出登录" });
   await expect(notice).toContainText("会话清理失败");
@@ -343,6 +441,7 @@ test("local logout never contacts cloud and the next account opens without stale
     window.cyword.verifyAuthCode = async () => ({ success: true, token: "new-user", user: { id: "new-user", email: "new@example.test", createdAt: 0, lastLoginAt: 0, loginCount: 1 } });
     window.cyword.writeSession = async () => true;
   });
+  await page.locator(".sidebar-account summary").click();
   await page.locator(".btn-logout").click();
   await expect(page.getByLabel("电子邮箱")).toBeVisible();
   expect(await page.evaluate(() => (window as any).__test.cloudWrites)).toBe(0);
@@ -370,6 +469,7 @@ test("credential restore failure is visible without clearing records and success
   await page.getByRole("button", { name: "下载词书", exact: true }).click();
   await expect(page.getByRole("button", { name: "继续学习" })).toBeVisible();
   expect(await page.evaluate(() => (window as any).__test.local.words.a.proficiency)).toBe("unclear");
+  await page.locator(".sidebar-account summary").click();
   await page.locator(".btn-logout").click();
   await expect(page.getByLabel("电子邮箱")).toBeVisible();
   await expect(page.getByText("读取受保护登录状态失败", { exact: false })).toHaveCount(0);

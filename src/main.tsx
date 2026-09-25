@@ -3,12 +3,14 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./styles.css";
 import "./mobile.css";
+import "./shell.css";
 import { installPlatform } from "./platform";
 import { AndroidUpdateNotice } from "./components/AndroidUpdates";
 import { pronunciationPlayer } from "./audio";
 import { offlineBook } from "./offline-book";
 
 installPlatform();
+if (window.cyword.desktop) document.documentElement.classList.add("desktop-app");
 pronunciationPlayer.setSourceResolver(url => offlineBook.audioUrl(url));
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

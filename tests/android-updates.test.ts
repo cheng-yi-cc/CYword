@@ -53,3 +53,23 @@ test("Android offline check is retryable and preserves a previously validated up
   fail=false; await service.check(); assert.equal(service.getSnapshot().status,"available");
   fail=true; await service.check(); assert.equal(service.getSnapshot().status,"available"); assert.equal(service.getSnapshot().release?.version,"0.1.3");
 });
+
+test("Android differential download is explicit, reports progress, retries errors and installs only after verification", async () => {
+  const current = release();
+  const delta = { ...current, differential: { path: current.downloadPath + ".blocks.json", sha256: "b".repeat(64), sizeBytes: 100 } };
+  let prepares = 0, installs = 0, opens = 0, fail = true;
+  const service = new AndroidUpdateService({ version: async () => "0.1.2", release: async () => delta, open: async () => { opens++; },
+    prepare: async (_, progress) => { prepares++; progress({ phase: "downloading", completed: 10, total: 20, downloaded: 10 }); assert.match(service.getSnapshot().message!, /50%/); if (fail) throw Error("断网，请重试"); return { downloadedBytes: 2048 }; },
+    install: async () => { installs++; if (installs === 3) throw Object.assign(Error("cache evicted"), { code: "UPDATE_NOT_READY" }); return { permissionRequired: installs === 1 }; },
+  });
+  await service.check(true); assert.equal(prepares, 0);
+  await service.install(); assert.equal(installs, 0);
+  await service.download(); assert.equal(service.getSnapshot().status, "available"); assert.equal(opens, 0);
+  await service.downloadFull(); assert.equal(opens, 1);
+  fail = false; await service.download(); assert.equal(service.getSnapshot().status, "ready"); assert.equal(installs, 0);
+  await service.check(true); assert.equal(service.getSnapshot().status, "ready");
+  await service.install(); assert.match(service.getSnapshot().message!, /允许安装/);
+  await service.install(); assert.equal(installs, 2); assert.match(service.getSnapshot().message!, /系统窗口/);
+  await service.install(); assert.equal(service.getSnapshot().status, "available"); assert.match(service.getSnapshot().message!, /重新下载/);
+  assert.equal(prepares, 2);
+});

@@ -6,6 +6,12 @@ import { createServer } from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import http from "node:http";
+import { gzipSync, gunzipSync } from "node:zlib";
+import { blake2b } from "@noble/hashes/blake2.js";
+import { GenericDifferentialDownloader } from "electron-updater/out/differentialDownloader/GenericDifferentialDownloader.js";
+import { Provider } from "electron-updater/out/providers/Provider.js";
+import { HttpExecutor, CancellationToken } from "builder-util-runtime";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const work = path.join(root, ".work", "download-tests");
@@ -23,7 +29,15 @@ const baseKey = `releases/0.0.0/${fixtureDigest}`;
 const assetKey = `${baseKey}/${fixtureName}`;
 const blockmapKey = `${assetKey}.blockmap`;
 const updaterKey = `${baseKey}/latest.yml`;
-const blockmap = Buffer.from("deterministic blockmap fixture\n");
+function makeBlockmap(data) {
+  const sizes = [], checksums = [];
+  for (let i = 0; i < data.length; i += 4096) {
+    const block = data.subarray(i, i + 4096); sizes.push(block.length);
+    checksums.push(Buffer.from(blake2b(block, { dkLen: 18 })).toString("base64"));
+  }
+  return gzipSync(JSON.stringify({ version: "2", files: [{ name: "file", offset: 0, sizes, checksums }] }));
+}
+const blockmap = makeBlockmap(fixture);
 const updaterMetadata = `version: 0.0.0\nfiles:\n  - url: ${assetKey}\n    sha512: fixture\n    size: ${fixture.length}\nreleaseDate: '2026-09-01T00:00:00.000Z'\n`;
 const pointer = {
   schemaVersion: 1,
@@ -60,16 +74,23 @@ await put(assetKey, fixturePath);
 await put(blockmapKey, blockmapPath);
 await put(updaterKey, updaterPath);
 await put("releases/current.json", pointerPath);
+const newFixture = Buffer.from(fixture); newFixture[newFixture.length - 100] ^= 255;
+const newKey = `releases/0.0.1/${digest(newFixture)}/CYword-Setup-0.0.1.exe`;
+const newFile = path.join(work, "new.exe"), newMapFile = `${newFile}.blockmap`;
+await writeFile(newFile, newFixture); await writeFile(newMapFile, makeBlockmap(newFixture));
+await put(newKey, newFile); await put(`${newKey}.blockmap`, newMapFile);
 const androidName = "CYword-Android-0.1.0.apk";
 const androidKey = `releases/android/0.1.0/${fixtureDigest}/${androidName}`;
 const androidPointer = {
   schemaVersion: 2, version: "0.1.0", publishedAt: pointer.publishedAt,
   filename: androidName, sizeBytes: fixture.length, sha256: fixtureDigest, assetPath: androidKey,
   notesUrl: "/#release-notes",
+  differential: { path: `/downloads/${androidKey}.blocks.json`, sha256: digest(blockmap), sizeBytes: blockmap.length },
 };
 const androidPointerPath = path.join(work, "android-current.json");
 await writeFile(androidPointerPath, JSON.stringify(androidPointer));
 await put(androidKey, fixturePath);
+await put(`${androidKey}.blocks.json`, blockmapPath);
 await put("releases/android/current.json", androidPointerPath);
 
 const listener = createServer();
@@ -114,6 +135,8 @@ try {
     const payload = await latest.json();
     assert.equal(payload.downloadPath, `/downloads/${androidKey}`);
     assert.equal(payload.notesUrl, "/#release-notes");
+    assert.deepEqual(payload.differential, androidPointer.differential);
+    assert.equal(latest.headers.get("X-CYword-Android-Differential"), "zip-sha256-1m");
     assert.equal(payload.githubDownloadUrl, undefined);
     assert.equal(payload.repositoryUrl, undefined);
     const redirect = await fetch(`${origin}/downloads/android/latest`, { redirect: "manual" });
@@ -128,6 +151,35 @@ try {
     assert.equal(apk.headers.get("content-type"), "application/vnd.android.package-archive");
     assert.equal(apk.headers.get("content-disposition"), `attachment; filename="${androidName}"`);
     assert.deepEqual(await bytes(apk), fixture.subarray(0, 32));
+  });
+  await check("Android block manifest is immutable and available at its validated URL", async () => {
+    const response = await request({}, "GET", origin + androidPointer.differential.path);
+    assert.equal(response.status, 200); assert.match(response.headers.get("cache-control"), /immutable/);
+    assert.deepEqual(await bytes(response), blockmap);
+  });
+  await check("real Windows differential downloader resolves old hash paths and transfers only changes", async () => {
+    let transferred = 0;
+    class Executor extends HttpExecutor {
+      createRequest(options, callback) { return http.request(options, response => { response.on("data", chunk => { transferred += chunk.length; }); callback(response); }); }
+    }
+    const executor = new Executor();
+    const provider = new Provider({ executor, isUseMultipleRangeRequest: false });
+    const newUrl = new URL(`${origin}/downloads/${newKey}`);
+    const [oldMapUrl, newMapUrl] = provider.getBlockMapFiles(newUrl, "0.0.0", "0.0.1");
+    assert.ok(oldMapUrl.pathname.includes(digest(newFixture)));
+    const redirect = await fetch(oldMapUrl, { redirect: "manual" });
+    assert.equal(redirect.status, 302); assert.equal(redirect.headers.get("cache-control"), "no-store");
+    assert.equal(redirect.headers.get("location"), `${origin}/downloads/${blockmapKey}`);
+    const maps = await Promise.all([oldMapUrl, newMapUrl].map(async url => JSON.parse(gunzipSync(await bytes(await fetch(url))))));
+    const reconstructed = path.join(work, "reconstructed.exe");
+    const downloader = new GenericDifferentialDownloader({ size: newFixture.length, sha512: createHash("sha512").update(newFixture).digest("base64") }, executor, {
+      oldFile: fixturePath, newFile: reconstructed, newUrl, isUseMultipleRangeRequest: false,
+      cancellationToken: new CancellationToken(), logger: { info() {}, warn() {}, error: console.error },
+    });
+    await downloader.download(...maps);
+    assert.deepEqual(await readFile(reconstructed), newFixture);
+    assert.equal(transferred, 4096);
+    console.log(`Windows fixture: ${transferred}/${newFixture.length} installer bytes transferred`);
   });
   await check("Android rejects mismatched versions and private pointer paths", async () => {
     for (const target of [androidKey.replace(androidName, "CYword-Android-9.9.9.apk"), "releases/android/current.json"]) {

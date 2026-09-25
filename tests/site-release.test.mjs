@@ -11,6 +11,7 @@ import { gzipSync } from "node:zlib";
 import { blake2b } from "@noble/hashes/blake2.js";
 import { verifyBlockmap } from "../scripts/verify-blockmap.mjs";
 import { isReleasePointer, isPublicRelease, toPublicRelease } from "../website/server/release-manifest.ts";
+import { zipFixture } from "./zip-fixture.mjs";
 
 const run = promisify(execFile);
 const root = fileURLToPath(new URL("../", import.meta.url));
@@ -143,7 +144,7 @@ test("Android release preparation produces an independent public manifest", asyn
   try {
     const { versionName: version } = JSON.parse(await readFile(path.join(root, "android/version.json"), "utf8"));
     const filename = `CYword-Android-${version}.apk`;
-    const installer = Buffer.from("android fixture");
+    const installer = zipFixture([["assets/book", Buffer.from("android fixture")]]);
     const sha256 = createHash("sha256").update(installer).digest("hex");
     await writeFile(path.join(fixtureRoot, filename), installer);
     await run(process.execPath, [path.join(root, "scripts/publish-site-release.mjs"), fixtureRoot, "--android", "--prepare-only"], { cwd: root, windowsHide: true });
@@ -154,6 +155,10 @@ test("Android release preparation produces an independent public manifest", asyn
     assert.ok(isPublicRelease(toPublicRelease(pointer), true));
     assert.equal(isReleasePointer(pointer), false);
     assert.equal(pointer.updaterMetadataPath, undefined);
+    assert.equal(pointer.differential.path, `/downloads/${pointer.assetPath}.blocks.json`);
+    for (const patch of [{ path: "https://evil.test/map" }, { sha256: "bad" }, { sizeBytes: 17000000 }]) {
+      assert.equal(isPublicRelease({ ...toPublicRelease(pointer), differential: { ...pointer.differential, ...patch } }, true), false);
+    }
   } finally {
     await rm(fixtureRoot, { recursive: true, force: true });
   }

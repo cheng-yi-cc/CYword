@@ -2,7 +2,8 @@ import { Capacitor, CapacitorHttp, registerPlugin } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
 import { App as NativeApp } from "@capacitor/app";
 import type { AppProgress, UserSession, WordsRequest } from "./types";
-import { AndroidUpdateService } from "./android-updates";
+import { AndroidUpdateService, type AndroidDownloadProgress } from "./android-updates";
+import type { PublicRelease } from "../website/server/release-manifest";
 
 export const isNative = Capacitor.isNativePlatform();
 const DeviceStorage = registerPlugin<{
@@ -85,11 +86,21 @@ export function installPlatform() {
   };
   if (isNative) {
     if (Capacitor.getPlatform() === "android") {
-      const AppUpdates = registerPlugin<{ openDownload(options: { url: string }): Promise<void> }>("AppUpdates");
+      const AppUpdates = registerPlugin<{
+        openDownload(options: { url: string }): Promise<void>;
+        prepareUpdate(options: { release: PublicRelease }): Promise<{ downloadedBytes: number }>;
+        installUpdate(): Promise<{ permissionRequired: boolean }>;
+        addListener(event: "progress", listener: (value: AndroidDownloadProgress) => void): Promise<{ remove(): Promise<void> }>;
+      }>("AppUpdates");
       const updates = new AndroidUpdateService({
         version: async () => (await NativeApp.getInfo()).version,
         release: () => json("/downloads/android/latest.json"),
         open: url => AppUpdates.openDownload({ url }),
+        prepare: async (release, progress) => {
+          const listener = await AppUpdates.addListener("progress", progress);
+          try { return await AppUpdates.prepareUpdate({ release }); } finally { await listener.remove(); }
+        },
+        install: () => AppUpdates.installUpdate(),
       });
       window.cyword.androidUpdates = updates;
       void updates.check(true);

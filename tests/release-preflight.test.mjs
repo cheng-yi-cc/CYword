@@ -14,7 +14,7 @@ test("publishing preflight checks a fixed production origin and refuses redirect
       assert.equal(options.redirect, "error");
       assert.equal(options.cache, "no-store");
       assert.ok(options.signal);
-      return new Response(null, { status: 404, headers: { "X-CYword-Release-Schemas": "1, 2" } });
+      return new Response(null, { status: 404, headers: { "X-CYword-Release-Schemas": "1, 2", "X-CYword-Android-Differential": "zip-sha256-1m" } });
     });
     assert.equal(calls, 1);
   }
@@ -27,6 +27,7 @@ test("old or unreachable download functions block publishing with a deployment i
     })), /先部署官网函数/);
   }
   await assert.rejects(assertReleaseSchemaSupport(false, async () => { throw new Error("redirect refused"); }), /未写入 R2.*先部署官网函数/);
+  await assert.rejects(assertReleaseSchemaSupport(true, async () => new Response(null, { headers: { "X-CYword-Release-Schemas": "1,2" } })), /安卓差量更新/);
 });
 
 test("download functions advertise schema support even without a usable release pointer", async () => {

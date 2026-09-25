@@ -8,6 +8,7 @@ import { load as parseYaml, dump as writeYaml, JSON_SCHEMA } from "js-yaml";
 import { isReleasePointer, releaseNotesUrl } from "../website/server/release-manifest.ts";
 import { assertReleaseSchemaSupport } from "./release-preflight.mjs";
 import { verifyBlockmap } from "./verify-blockmap.mjs";
+import { apkBlockmap } from "./apk-blockmap.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const bucket = "cyword-downloads";
@@ -45,10 +46,13 @@ async function prepareRelease() {
     };
     const work = path.join(root, ".work", "site-release", `android-${version}-${sha256.slice(0, 16)}`);
     await mkdir(work, { recursive: true });
+    const blocks = await apkBlockmap(installer, path.join(work, `${filename}.blocks.json`));
+    if (blocks.manifest.sha256 !== sha256) throw new Error("APK 在生成分块清单时发生变化");
+    pointer.differential = { path: `/downloads/${pointer.assetPath}.blocks.json`, sha256: blocks.sha256, sizeBytes: blocks.sizeBytes };
     if (!isReleasePointer(pointer, true)) throw new Error("安卓发布清单无效");
     const pointerFile = path.join(work, "current.json");
     await writeFile(pointerFile, `${JSON.stringify(pointer, null, 2)}\n`);
-    return { installer, pointerFile, pointer };
+    return { installer, pointerFile, pointer, apkBlocks: blocks.file };
   }
   const packageJson = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
   const version = packageJson.version;
@@ -206,6 +210,7 @@ if (prepareOnly) {
     await upload(endpoint, prepared.blockmap, prepared.pointer.blockmapPath, "application/octet-stream", immutable);
     await upload(endpoint, prepared.updaterMetadataFile, prepared.pointer.updaterMetadataPath, "application/x-yaml", immutable);
   }
+  if (android) await upload(endpoint, prepared.apkBlocks, prepared.pointer.differential.path.slice("/downloads/".length), "application/json", immutable);
   await upload(endpoint, prepared.pointerFile, android ? "releases/android/current.json" : "releases/current.json", "application/json", "no-store");
   console.log(`官网最新版指针已切换到 v${prepared.pointer.version}。`);
 }

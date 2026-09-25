@@ -30,6 +30,8 @@ export class ProgressSync {
   private adapter: SyncAdapter;
   private imported = false;
   private importMessage = "";
+  private sessionExpired = false;
+  private get localOnly() { return this.adapter.mode === "local" || this.sessionExpired; }
   constructor(adapter: SyncAdapter) { this.adapter = adapter; }
   async open() {
     this.progress = normalizeProgress(await this.adapter.read());
@@ -38,10 +40,10 @@ export class ProgressSync {
     if (this.adapter.reconcile) await this.commit(this.progress);
     if (this.stopped) return;
     this.loaded = true;
-    if (this.adapter.mode === "local") {
+    if (this.localOnly) {
       this.imported = await this.adapter.readImport?.() ?? false;
       if (this.stopped) return;
-      this.notify("local", "进度已保存在本机");
+      this.notify(this.sessionExpired ? "pending" : "local", this.sessionExpired ? "登录已过期，进度已保存在本机" : "进度已保存在本机");
       await this.sync();
       return;
     }
@@ -94,7 +96,7 @@ export class ProgressSync {
       await this.commit(next, changedWords);
       if (this.stopped) throw new Error("账号已切换，请重新进入学习");
       this.localError = "";
-      if (this.adapter.mode === "local") {
+      if (this.localOnly) {
         this.notify(this.importMessage ? "pending" : "local", this.importMessage || "进度已保存在本机");
         return;
       }
@@ -108,7 +110,7 @@ export class ProgressSync {
     }
   }
   sync(): Promise<void> {
-    if (this.stopped || !this.loaded) return Promise.resolve();
+    if (this.stopped || !this.loaded || this.sessionExpired) return Promise.resolve();
     if (this.active) return this.active;
     this.active = (this.adapter.mode === "local" ? this.importOnce() : this.exchange()).finally(() => { this.active = null; });
     return this.active;
@@ -119,13 +121,13 @@ export class ProgressSync {
     try {
       // Local mode only reads the legacy cloud snapshot; it never uploads.
       const response = await this.adapter.request();
-      if (this.stopped) return;
-      if (response.status === 401) throw new Error("旧进度导入需要重新登录，本机记录已保留");
+      if (this.stopped || this.sessionExpired) return;
+      if (response.status === 401) { this.expireSession(); return; }
       if (response.status !== 200 || !Number.isSafeInteger(response.data.revision) || response.data.progress?.version !== 2) {
         throw new Error("旧进度尚未导入，联网后可重试");
       }
       await this.commit(response.data.progress);
-      if (this.stopped) return;
+      if (this.stopped || this.sessionExpired) return;
       // Record completion only after the merged snapshot is durable.
       if (!this.adapter.finishImport || await this.adapter.finishImport() === false) throw new Error("旧进度已保存，导入标记保存失败，请重试");
       this.imported = true;
@@ -142,11 +144,9 @@ export class ProgressSync {
     try {
       let response = await this.adapter.request();
       for (let attempt = 0; attempt <= 5; attempt++) {
-        if (this.stopped) return;
+        if (this.stopped || this.sessionExpired) return;
         if (response.status === 401) {
-          this.message = "登录已过期，进度保留在设备上";
-          this.stop();
-          this.adapter.unauthorized?.();
+          this.expireSession();
           return;
         }
         if (attempt === 5) break;
@@ -154,7 +154,7 @@ export class ProgressSync {
         if (!Number.isSafeInteger(response.data.revision) || response.data.progress?.version !== 2) throw new Error("同步服务尚未就绪，请稍后重试");
         const remote = response.data.progress;
         await this.commit(remote);
-        if (this.stopped) return;
+        if (this.stopped || this.sessionExpired) return;
         const remoteCanonical = mergeProgress(remote, remote);
         if (JSON.stringify(this.progress) === JSON.stringify(remoteCanonical)) {
           this.cloudSynced = true;
@@ -171,10 +171,18 @@ export class ProgressSync {
   async flush(): Promise<FlushResult> {
     clearTimeout(this.timer);
     await this.writes.catch(() => undefined);
-    if (this.adapter.mode !== "local") await this.sync();
+    if (!this.localOnly) await this.sync();
     await this.writes.catch(() => undefined);
     const localSaved = this.loaded && !this.localError;
     return { localSaved, cloudSynced: localSaved && this.cloudSynced, message: this.localError || this.message };
+  }
+  expireSession() {
+    if (this.stopped || this.sessionExpired) return;
+    this.sessionExpired = true;
+    clearTimeout(this.timer);
+    this.importMessage = "登录已过期，进度已保存在本机";
+    if (this.loaded) this.notify(this.localError ? "error" : "pending", this.localError || this.importMessage);
+    this.adapter.unauthorized?.();
   }
   stop() { this.stopped = true; clearTimeout(this.timer); }
 }

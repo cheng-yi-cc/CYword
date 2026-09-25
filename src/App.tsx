@@ -33,6 +33,8 @@ import { AudioButton } from "./components/AudioButton";
 import { useSessionSave, useSessionWord } from "./session-state";
 import { useWordResources } from "./useWordResources";
 import { useSessionDialog } from "./useSessionDialog";
+import { TitleBar, PopupMenu, ShellDialog, ReleaseNotesDialog, SearchIcon } from "./components/AppChrome";
+import { sessionExpiresAt } from "./auth-session";
 import { playPronunciation, stopPronunciation } from "./audio";
 import type {
   AppProgress,
@@ -52,7 +54,6 @@ const navItems: Array<{ id: ViewName; label: string; path: string }> = [
   { id: "plan", label: "词书计划", path: "M4 4h16v16H4z M4 9h16 M9 9v11 M15 9v11 M4 15h16" },
   { id: "today", label: "今日学习", path: "m8 4 12 8-12 8z" },
   { id: "vocabulary", label: "词汇掌握", path: "m12 3 9 9-9 9-9-9z M8 12l3 3 5-6" },
-  { id: "search", label: "单词搜索", path: "M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0 M15 15l6 6" },
 ];
 
 type ViewTransitionDocument = Document & {
@@ -1035,7 +1036,7 @@ function WordSearchView({ catalog, progress, details, loadWords, planDay, savePr
   };
 
   return <div className={`page word-search-page${submittedQuery ? " has-results" : ""}${showSuggestions ? " is-suggesting" : ""}`}>
-    <header className="word-search-header"><h1>单词搜索</h1>
+    <header className="word-search-header">
       <form className={`word-search-form${showSuggestions ? " is-open" : ""}`} role="search" onSubmit={(event) => { event.preventDefault(); submitSearch(); }} onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) { setSuggestionsOpen(false); setActiveSuggestion(-1); }
       }}>
@@ -1169,15 +1170,12 @@ function App() {
   const [session, setSession] = useState<UserSession | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [sessionRestoreError, setSessionRestoreError] = useState("");
+  const [authOpen, setAuthOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [releasesOpen, setReleasesOpen] = useState(false);
   const authGeneration = useRef(0);
   const synced = useSyncedProgress(session, catalog, () => {
-    authGeneration.current += 1;
-    setSession(null);
     setSessionExpired(true);
-    setLogoutNotice(null);
-    setSelectedDayNumber(null);
-    setError("");
-    void window.cyword.clearSession?.().catch((reason) => console.warn("清除过期会话失败:", reason));
   });
   const progress = synced.progress;
   const [sessionChecked, setSessionChecked] = useState(false);
@@ -1191,6 +1189,40 @@ function App() {
   const [logoutNotice, setLogoutNotice] = useState<{ message: string; canLeave: boolean } | null>(null);
   const [error, setError] = useState("");
   const [selectedDayNumber, setSelectedDayNumber] = useState<number | null>(null);
+
+  const openSearch = () => {
+    if (!catalog || !progress || saveLock.current || logoutLock.current || logoutNotice) return;
+    stopPronunciation();
+    setSearchOpen(true);
+  };
+  useEffect(() => {
+    const shortcut = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.altKey || event.key.toLowerCase() !== "k" || event.isComposing) return;
+      event.preventDefault();
+      if (event.repeat) return;
+      if (searchOpen && !document.querySelector(".vocabulary-session")) {
+        document.querySelector<HTMLInputElement>(".quick-search-dialog input")?.focus();
+      } else if (!document.querySelector('[aria-modal="true"]')) openSearch();
+    };
+    window.addEventListener("keydown", shortcut);
+    return () => window.removeEventListener("keydown", shortcut);
+  }, [catalog, progress, searchOpen, logoutNotice]);
+
+  useEffect(() => {
+    if (!session) return;
+    const expiresAt = sessionExpiresAt(session.token);
+    if (expiresAt === null) return;
+    let timer: number;
+    const check = () => {
+      clearTimeout(timer);
+      if (expiresAt <= Date.now()) { setSessionExpired(true); synced.expireSession(); }
+      else timer = window.setTimeout(check, Math.min(expiresAt - Date.now(), 86_400_000));
+    };
+    check();
+    window.addEventListener("focus", check);
+    window.addEventListener("cyword-resume", check);
+    return () => { clearTimeout(timer); window.removeEventListener("focus", check); window.removeEventListener("cyword-resume", check); };
+  }, [session?.token]);
 
   useEffect(() => {
     document.querySelector(".app-shell > main")?.scrollTo({ top: 0, behavior: "auto" });
@@ -1221,6 +1253,8 @@ function App() {
         }
         if (loadedSession?.token) {
           setSession(loadedSession);
+          const expiresAt = sessionExpiresAt(loadedSession.token);
+          setSessionExpired(expiresAt !== null && expiresAt <= Date.now());
         }
       } catch (err) {
         console.warn("Failed to restore session:", err);
@@ -1259,6 +1293,9 @@ function App() {
     setLogoutNotice(null);
     setSelectedDayNumber(null);
     setAutoStartStudy(false);
+    setSearchOpen(false);
+    setAuthOpen(false);
+    setSessionExpired(false);
     transitionView("home");
     setSession(null);
   };
@@ -1279,11 +1316,18 @@ function App() {
       if (generation === authGeneration.current) setLogoutNotice({ message: reason instanceof Error ? reason.message : "退出失败，请重试。", canLeave: false });
     } finally { logoutLock.current = false; setLogoutBusy(false); }
   };
-  if (sessionChecked && !session) return <><AuthModal notice={sessionRestoreError || (sessionExpired ? "登录已过期，请重新登录。本机学习记录已保留。" : undefined)} onSuccess={(s) => { authGeneration.current += 1; setLogoutNotice(null); setSessionRestoreError(""); setSessionExpired(false); setSession(s); }} /><UpdateControl /></>;
-  if (error) return <div className="fatal-error"><span>CYWORD</span><h1>暂时无法继续</h1><p>{error}</p><button onClick={() => location.reload()}>重新连接</button></div>;
-  if (session && bookChecked && !catalog) return <BookDownload onReady={next => setCatalog(applyCurriculum(next))} onLogout={finishLogout} />;
-  if (session && !progress && synced.status === "error") return <div className="fatal-error"><h1>进度读取失败</h1><p>{synced.message}</p><button onClick={() => location.reload()}>重试</button></div>;
-  if (!catalog || !progress || !sessionChecked) return <div className="loading-screen"><div>Cy</div><p>正在铺开今天的词书计划…</p></div>;
+  const onLogin = (next: UserSession) => {
+    authGeneration.current += 1;
+    setLogoutNotice(null); setSessionRestoreError(""); setSessionExpired(false); setAuthOpen(false);
+    if (next.user.id !== session?.user.id) { setSelectedDayNumber(null); setAutoStartStudy(false); setSearchOpen(false); transitionView("home"); }
+    setSession(next);
+  };
+  const titlebar = <TitleBar bookName={catalog?.book.name} ready={Boolean(catalog && progress && session) && !savingProgress && !logoutBusy} onSearch={openSearch} />;
+  if (sessionChecked && !session) return <>{titlebar}<AuthModal notice={sessionRestoreError || undefined} onSuccess={onLogin} /><UpdateControl /></>;
+  if (error) return <>{titlebar}<div className="fatal-error"><span>CYWORD</span><h1>暂时无法继续</h1><p>{error}</p><button onClick={() => location.reload()}>重新连接</button></div></>;
+  if (session && bookChecked && !catalog) return <>{titlebar}<BookDownload onReady={next => setCatalog(applyCurriculum(next))} onLogout={finishLogout} /></>;
+  if (session && !progress && synced.status === "error") return <>{titlebar}<div className="fatal-error"><h1>进度读取失败</h1><p>{synced.message}</p><button onClick={() => location.reload()}>重试</button></div></>;
+  if (!catalog || !progress || !sessionChecked) return <>{titlebar}<div className="loading-screen"><div>Cy</div><p>正在铺开今天的词书计划…</p></div></>;
 
   const plan = buildPlan(catalog);
   const currentDayNumber = currentPlanDayNumber(progress, plan.length);
@@ -1319,24 +1363,26 @@ function App() {
       planDay={selected.day}
     >
       <MeaningBridgeProvider catalog={catalog} progress={progress}>
+      {titlebar}
       <div className="app-wallpaper" aria-hidden="true" />
       <div className="app-shell">
-        <header className="mobile-header"><a className="mobile-brand" href="#" onClick={(event) => { event.preventDefault(); navigate("home"); }}>CYword</a><details className="mobile-account"><summary aria-label={`我的账号，${synced.message}`}><i className={`sync-dot ${synced.status}`} aria-hidden="true" /><span>我的</span><svg className="account-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg></summary><div><b>{session?.user.email}</b><p className="account-sync-message"><i className={`sync-dot ${synced.status}`} aria-hidden="true" />{synced.message}</p>{(cloudProgressEnabled || synced.status === "pending") && <button onClick={() => void synced.sync()}>{cloudProgressEnabled ? "立即同步" : "重试导入旧进度"}</button>}<button disabled={savingProgress || logoutBusy} onClick={() => void handleLogout()}>退出登录</button><AndroidUpdateMenu /></div></details></header>
+        <header className="mobile-header">
+          <button className="mobile-search-button" aria-label="单词搜索" onClick={openSearch}><SearchIcon /></button>
+          <a className="mobile-brand" href="#" onClick={(event) => { event.preventDefault(); navigate("home"); }}>CYword</a>
+          <details className="mobile-account"><summary aria-label={`我的账号，${synced.message}`}><i className={`sync-dot ${synced.status}`} aria-hidden="true" /><span>{sessionExpired ? "未登录" : "我的"}</span><svg className="account-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg></summary><div><b>{session?.user.email}</b><p className="account-sync-message"><i className={`sync-dot ${synced.status}`} aria-hidden="true" />{synced.message}</p>{sessionExpired ? <button onClick={() => setAuthOpen(true)}>重新登录</button> : (cloudProgressEnabled || synced.status === "pending") && <button onClick={() => void synced.sync()}>{cloudProgressEnabled ? "立即同步" : "重试导入旧进度"}</button>}<button onClick={() => setReleasesOpen(true)}>更新日志</button><button disabled={savingProgress || logoutBusy} onClick={() => void handleLogout()}>退出登录</button><AndroidUpdateMenu /></div></details>
+        </header>
         <aside className="sidebar">
           <div className="brand"><b>CYword</b></div>
           <nav>{navItems.map((item) => <button disabled={savingProgress || logoutBusy || Boolean(logoutNotice)} aria-label={item.label} aria-current={view === item.id ? "page" : undefined} className={view === item.id ? "active" : ""} key={item.id} onClick={() => navigate(item.id)}><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d={item.path} /></svg></i><b>{item.label}</b></button>)}</nav>
           {session && (
             <footer className="sidebar-user-footer">
-              <button className={`sync-status ${synced.status}`} title={synced.message} disabled={!cloudProgressEnabled && synced.status !== "pending"} onClick={() => void synced.sync()}><i className={`sync-dot ${synced.status}`} />{synced.message}</button>
-              <div className="sidebar-user-info">
-                <div className="sidebar-user-avatar">
-                  {session.user.email.charAt(0).toUpperCase()}
-                </div>
-                <span className="sidebar-user-email" title={session.user.email}>
-                  {session.user.email}
-                </span>
-              </div>
-              <AndroidUpdateMenu /><button className="btn-logout" disabled={savingProgress || logoutBusy} onClick={() => void handleLogout()}>退出登录</button>
+              <button className="release-notes-entry" onClick={() => setReleasesOpen(true)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v4H7z M7 5H4v16h16V5h-3 M8 11h8 M8 15h6" /></svg><span>更新日志</span></button>
+              {sessionExpired ? <button className="account-trigger" onClick={() => setAuthOpen(true)} disabled={savingProgress || logoutBusy}><span className="sidebar-user-avatar signed-out" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3" /><path d="M5 20v-2a7 7 0 0 1 14 0v2" /></svg></span><span>未登录</span></button> :
+                <PopupMenu className="sidebar-account" disabled={savingProgress || logoutBusy} label={<><span className="sidebar-user-avatar" aria-hidden="true">{session.user.email.charAt(0).toUpperCase()}</span><span className="sidebar-user-email" title={session.user.email}>{session.user.email.split("@")[0]}</span></>}>
+                  <b className="account-email">{session.user.email}</b>
+                  <button className={`sync-status ${synced.status}`} title={synced.message} disabled={!cloudProgressEnabled && synced.status !== "pending"} onClick={() => void synced.sync()}><i className={`sync-dot ${synced.status}`} />{synced.message}</button>
+                  <AndroidUpdateMenu /><button className="btn-logout" disabled={savingProgress || logoutBusy} onClick={() => void handleLogout()}>退出登录</button>
+                </PopupMenu>}
             </footer>
           )}
         </aside>
@@ -1345,9 +1391,10 @@ function App() {
           {view === "plan" && <PlanView plan={plan} progress={progress} current={plan[currentDayNumber - 1] ?? current} onSelectDay={handleSelectPlanDay} />}
           {view === "today" && <>{selected.day !== current.day && <div className="day-preview-banner">正在查看 Day {selected.day}<button disabled={savingProgress} onClick={() => handleSelectPlanDay(current.day)}>返回今日</button></div>}{selected.kind === "study" ? <StudyToday key={`${session?.user.id}:${selected.day}`} catalog={catalog} progress={progress} plan={selected} details={details} loadWords={loadWords} saveProgress={saveProgress} autoStart={autoStartStudy} preview={selected.day !== current.day} /> : <ReviewToday key={`${session?.user.id}:${selected.day}`} catalog={catalog} progress={progress} plan={selected} details={details} loadWords={loadWords} saveProgress={saveProgress} autoStart={autoStartStudy} />}</>}
           {view === "vocabulary" && <VocabularyView catalog={catalog} progress={progress} details={details} loadWords={loadWords} planDay={current.day} saveProgress={saveProgress} />}
-          {view === "search" && <WordSearchView catalog={catalog} progress={progress} details={details} loadWords={loadWords} planDay={current.day} saveProgress={saveProgress} />}
         </main>
-        {!session && <AuthModal onSuccess={(s) => setSession(s)} />}
+        {searchOpen && <ShellDialog label="单词搜索" className="quick-search-dialog" onClose={() => setSearchOpen(false)} busy={savingProgress}><WordSearchView catalog={catalog} progress={progress} details={details} loadWords={loadWords} planDay={current.day} saveProgress={saveProgress} /></ShellDialog>}
+        {releasesOpen && <ReleaseNotesDialog onClose={() => setReleasesOpen(false)} />}
+        {authOpen && <AuthModal initialEmail={session?.user.email} notice="登录已过期，本机学习记录已保留。" beforeSessionChange={async () => { const result = await synced.flush(); if (!result.localSaved) throw new Error(result.message || "本机进度尚未保存，请重试后登录。"); }} onSuccess={onLogin} onClose={() => setAuthOpen(false)} />}
         <UpdateControl />
         {logoutNotice && <LogoutNotice {...logoutNotice} busy={logoutBusy} onRetry={() => void handleLogout()} onContinue={() => void handleLogout(true)} onCancel={() => setLogoutNotice(null)} />}
       </div>

@@ -1,6 +1,8 @@
 # 运行手册
 
-当前正式版本为 Windows 0.4.7 / Android 0.1.4（versionCode 505，2026-09-25 发布）：安装包预装完整词书、全部发音、原配图与音标字体，每日学习取消分段。`npm run build` 首次需在构建机下载全部原发音和配图，分别缓存到 `.work/book-audio/`、`.work/book-images/`；缺失或无效资源会阻断构建，无损转码缓存位于 `.work/book-images-webp/`。详见 [离线模式](OFFLINE.md)。
+本次发布 Windows 0.4.8 / Android 0.1.5（versionCode 506），新增标题栏搜索、离线账号重登、更新日志和差量更新。安装包预装完整词书、全部发音、原配图与音标字体，每日学习取消分段。`npm run build` 首次需在构建机下载全部原发音和配图，分别缓存到 `.work/book-audio/`、`.work/book-images/`；缺失或无效资源会阻断构建，无损转码缓存位于 `.work/book-images-webp/`。详见 [离线模式](OFFLINE.md)。
+
+## Windows 0.4.7 / Android 0.1.4 发布记录（2026-09-25）
 
 2026-09-23 构建并验收的以下原件已于 2026-09-25 发布到 GitHub Release 与官网，未重新打包。Windows 下载清单日期沿用原始 `latest.yml` 的构建日期：
 
@@ -13,7 +15,15 @@
 
 发布源码为 `d0284b3`，标签为 `v0.4.7`、`android-v0.1.4`；Windows 工作流 `36105972953`、Android 工作流 `36105976299` 成功复用原件上传 R2。官网生产部署为 `ec33c003.cyword.pages.dev`。两个平台完整下载的长度与 SHA-256、HEAD、首尾 Range、稳定入口跳转均核验通过；Windows `latest.yml` 的版本、路径和 SHA-512 与原件一致，线上 blockmap 与本地原件逐字节相同。官网安装说明、版本记录与回退信息同步更新，22 项本地下载检查、2 项官网界面回归通过。
 
-Windows 0.4.6 / Android 0.1.3 的首次下载流程继续供旧客户端使用；开发预览首次完整下载后从 IndexedDB 读取。`CYWORD_REAL_AUTH=1` 不会启用上传，只有 `VITE_CYWORD_PROGRESS_MODE=cloud` 显式恢复双向同步。词书重编译后的本地重下载步骤和验证边界见 [OFFLINE.md](OFFLINE.md)。源码与 Release 已公开；官网更新源及生产资源均保留。
+Windows 0.4.6 / Android 0.1.3 的首次下载流程继续供旧客户端使用；当前开发预览默认直读本机资源，旧 IndexedDB 流程需显式开启。`CYWORD_REAL_AUTH=1` 不会启用上传，只有 `VITE_CYWORD_PROGRESS_MODE=cloud` 显式恢复双向同步。资源查找和开发开关见 [OFFLINE.md](OFFLINE.md)。源码与 Release 已公开；官网更新源及生产资源均保留。
+
+## 预览与差量更新
+
+- 预览直接读取编译词条，并按需从现有完整 APK 或 `book` 目录读取媒体。运行 `npm run dev` 即可，不清理学习进度或 IndexedDB。当前已在隔离 Chrome 验证零外部资源请求、零 IndexedDB 打开、图片与音频正常。
+- Windows 官网函数修复旧 blockmap 推导地址中残留新版哈希的问题。保留 NSIS 已安装的旧安装器缓存，electron-updater 优先复用相同分块；缓存缺失或差量失败时仍可能按库原有行为下载全包。首次安装及手动官网下载仍是完整包。
+- 安卓新客户端从已安装 APK 复用相同压缩数据块，变化部分通过单 Range 获取；新版清单包含小文件头数据，减少零碎请求。中断后保留并复核临时 APK 分块，合成后校验整包、包名、递增 versionCode 和相同签名；点击“安装更新”才交给系统。需要额外约一个完整 APK 的临时磁盘空间。0.1.4 及以前需完整升级一次才获得此能力，后续更新才能差量。
+- 发布先部署新版下载函数，再生成新版本两端安装包、创建 GitHub Release；安卓发布脚本从原始签名 APK 生成 `.apk.blocks.json`，校验官网能力，先上传所有不可变资产，再切换安卓指针。不能以同版本重打包覆盖已发布原件。
+- 安卓原生编译、差量重建与失败续传通过；尚未做安卓真机覆盖安装。独立浏览器测试与本地 R2 测试不触碰真实账号和生产桶。
 
 ## Windows 0.4.6 / Android 0.1.3 发布记录（2026-09-21）
 
@@ -53,6 +63,8 @@ Windows 0.4.6 / Android 0.1.3 的首次下载流程继续供旧客户端使用�
 
 ## 环境与首次启动
 
+标题栏界面可用 `npm run dev` 在真实 Electron 窗口预览；`npm run dev:web` 在 `http://127.0.0.1:5173/` 预览页面。左上角搜索支持 Ctrl+K，原生窗口按钮、拖动和最大化需在 Electron 验收。词书菜单仅提供六级当前项与四级预告。`src/release-notes.ts` 保存应用内离线更新日志，正式发布时根据 `docs/CHANGES.md` 增补用户可读摘要，不提前加入待发布内容。
+
 推荐 Windows 10/11、Node.js 24 LTS 和 npm，与标签构建工作流一致。进入仓库后执行：
 
 ```powershell
@@ -62,7 +74,7 @@ npm run dev
 
 `npm run dev` 会先校验六级规范表并生成 `data/`，随后启动 Vite 和 Electron。修改 CSV 后重新启动即可重新编译；不要直接编辑 `data/`。
 
-手机/浏览器预览运行 `npm run dev:mobile`（5173，默认模拟登录与旧进度导入）。开发服务默认读取本地编译的六级词书，Electron 开发窗口同样连接该服务，因此本地增强数据可直接预览。`CYWORD_REAL_AUTH=1` 切换生产认证、旧进度导入及词书代理。桌面词书 API 可由 `CYWORD_BOOK_API_URL` 覆盖，安卓工具链及签名变量见 [ANDROID.md](ANDROID.md)。这些变量不改变正式云端的部署状态。
+手机/浏览器预览运行 `npm run dev:mobile`（5173，默认模拟登录与旧进度导入）。开发服务直读本地编译词书，媒体复用已有资源；Electron 开发窗口同样连接该服务。`CYWORD_REAL_AUTH=1` 切换生产认证和旧进度导入，默认不改变本地词书读取。`VITE_CYWORD_BOOK_DOWNLOAD=1` 才恢复旧下载路径，该路径下桌面 API 可由 `CYWORD_BOOK_API_URL` 覆盖。安卓工具链及签名变量见 [ANDROID.md](ANDROID.md)。这些变量不改变正式云端的部署状态。
 
 以音记形：进入「今日学习」打开任意单词，标题默认完整显示，单击可切换分块与重音；点击音标发音时临时分块，结束、停止和失败后恢复原状态，切词重置。点击「展开音形对照」检查对应关系。`npm run data:audit:pronunciation` 输出 5166 词逐条结构检查报告到 `.work/pronunciation/acceptance.json`。修改增强 JSONL 后需重新编译并刷新预览。
 
@@ -86,7 +98,7 @@ npm run build:web
 - 单词搜索输入 `S`、`SY` 时按词书顺序显示候选，回车或搜索按钮展示完整结果；候选支持方向键和 Esc，打开详情后未评级不能前进，返回保留查询和位置。
 - 提前搜索评级后，相关学习日计入已学；学完剩余未学词即可完成当天，不增加虚构曝光或复习记录。
 - 桌面长难句默认收起，展开动画同时调整三栏；手机可切换词根和长难句标签。
-- 默认本地模式下旧进度导入 401 不清除离线会话；显式云端模式同步 401 才返回登录页，本机进度保留。网络失败均保留登录。相关自动测试位于 `tests/sync.test.ts`，不要用删除真实进度验证。
+- 默认本地模式和显式云端模式遇到 401 均保留离线会话与本机学习，账号入口显示“未登录”，点击才重新验证。网络失败均保留登录。相关自动测试位于 `tests/sync.test.ts`，不要用删除真实进度验证。
 
 ## 生成 Windows 安装包
 
@@ -154,7 +166,7 @@ npm run upload:book-data
 1. `npm ci` 能在干净依赖环境完成。
 2. `npm run data:verify`、`npm test`、`npm run test:ui`、`npm run build:web` 全部通过；修改官网时另检查 `npm run build:site` 与 `npm run test:site:download`。
 3. 包内 `dist/book/`（安卓为 `assets/public/book/`）包含 5166 词、全部发音与配图，资源长度和 SHA-256 与清单一致。首次联网登录后无需二次下载；断网冷启动可学习、搜索、看图和播放发音，评级重启后保留。
-4. 安装版按当前词读取包内文件，再预取后面最多 4 词，不复制到 IndexedDB。浏览器开发预览保留分批下载与持久化流程，线上接口继续兼容旧客户端。
+4. 安装版按当前词读取包内文件，再预取后面最多 4 词，不复制到 IndexedDB。开发预览默认直接读取本机资源；只有显式 `VITE_CYWORD_BOOK_DOWNLOAD=1` 使用分批下载与 IndexedDB，线上接口继续兼容旧客户端。
 5. `release/` 中存在安装器、`latest.yml` 和对应 `.exe.blockmap`；`data/`、`dist/`、`release/` 和检查截图不提交。
 6. 对外发布前检查站内版本记录与实际已发布版本一致，确认真实反馈/删除申请渠道及 [内容来源台账](CONTENT-SOURCES.md) 的未决项；不能将占位提示或来源记录当作渠道开通、版权授权完成的证明。
 
@@ -200,7 +212,7 @@ NSIS 安装包只收录 `dist/`、`electron/` 和发布用 `package.json`。邮�
 
 1. 保留当前 v1 指针，先部署兼容 v1/v2 的官网与下载函数，并验证旧安装包、Range 和 Windows `latest.yml` 仍可读取。
 2. 对 Windows `/downloads/latest.json`、Android `/downloads/android/latest.json` 发 HEAD，确认响应含 `X-CYword-Release-Schemas: 1,2`。新环境暂无指针时，错误响应同样应有此能力头。
-3. 再发布新版本。`scripts/release-preflight.mjs` 在任何 R2 写入前检查对应生产入口是否声明支持 `2`，超时、重定向或缺少支持声明都中止，不绕过检查强写新指针。
+3. 安卓还须声明 `X-CYword-Android-Differential: zip-sha256-1m`，再发布新版本。`scripts/release-preflight.mjs` 在任何 R2 写入前检查 schema v2 和安卓差量能力；超时、重定向或缺少支持声明都中止，不绕过检查强写新指针。
 
 兼容函数部署完成后，常规 Windows 安装包发布可推送与 `package.json` 一致的新标签，或发布包含已验收原件的同名正式 Release；不必为每个安装包改写 `website/src/release.ts` 或重新部署下载函数。官网 `/#release-notes` 的文字是静态内容，新增公开版本记录仍需更新页面并部署。Windows 发布顺序固定为：GitHub Release → 内容寻址安装器 → blockmap → 版本化 `latest.yml` → `releases/current.json`。最后一步之前的任何失败都不会切换最新版。Android 用独立 `android-v<version>` Release、APK 路径及 `releases/android/current.json`，不切换 Windows 指针。
 

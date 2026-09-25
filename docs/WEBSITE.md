@@ -100,7 +100,7 @@ Windows 公开入口包括 `/downloads/latest`、`/downloads/latest.json`、`/do
 - `kind`：`study`、`review` 或 `bookmarks`。
 - `wordIds`：去重前不超过 5166 个规范 UUID。
 
-接口先读取版本清单，把 ID 按学习日分片分组，再顺序读取 R2 并流式返回一个 `words` 对象。该接口供旧客户端和开发预览使用：开发预览首次分批下载，旧客户端也可按当前词及后续少量词请求；复习词序由本机进度决定。Windows 0.4.7 / Android 0.1.4 安装版改为读取包内资源，不调用此接口。响应和错误都不缓存。请求不存在的版本返回 409，参数或非本词书 ID 返回 400，R2 故障返回 503。当前阶段接口公开可读，没有账号登录或授权防复制。
+接口先读取版本清单，把 ID 按学习日分片分组，再顺序读取 R2 并流式返回一个 `words` 对象。该接口供旧客户端和显式开启旧下载流程的开发预览使用：旧流程首次分批下载，旧客户端也可按当前词及后续少量词请求；复习词序由本机进度决定。Windows 0.4.7 / Android 0.1.4 起的安装版改为读取包内资源，不调用此接口。响应和错误都不缓存。请求不存在的版本返回 409，参数或非本词书 ID 返回 400，R2 故障返回 503。当前阶段接口公开可读，没有账号登录或授权防复制。
 
 单词详情可选携带 `pronunciationGuide` 和 `meaningBridges`，格式以 `src/types.ts` 为准。旧数据缺少字段时客户端隐藏增强入口；旧客户端忽略额外字段。上传增强词书会生成新的内容版本，不覆盖旧分片；只有客户端代码合并或安装包升级不会更新 R2 词书。增强源数据和审核规则见[数据说明](../books/cet6/enhancements/README.md)。
 
@@ -165,3 +165,11 @@ curl.exe --fail --head 'https://cyword.chengyi.me/downloads/latest'
 ## 安卓下载
 
 `GET/HEAD /downloads/android/latest.json` 返回安卓独立版本信息；`/downloads/android/latest` 跳转当前 APK。资产采用 `releases/android/<version>/<sha256>/CYword-Android-<version>.apk` 路径，响应类型为 `application/vnd.android.package-archive`，支持 HEAD、Range 和条件缓存。其私有指针 `releases/android/current.json` 不对外暴露。公开仓库的 `android-v<version>` Release 作为内部原件来源，独立 GitHub Actions 上传原始签名 APK 并校验后切换指针，不影响 Windows 的 `latest.yml`。
+
+## 差量下载协议
+
+- Windows 安装器 URL 带内容哈希，electron-updater 推导旧 `.exe.blockmap` 时仅替换版本号，可能保留新哈希。精确对象不存在时，函数只在该旧版本前缀查找唯一合法 blockmap，返回不缓存的 302；多候选或列表截断均拒绝。正常安装包与内容寻址对象仍严格匹配，不覆盖已有资源。
+- 安卓 schema v2 增加可选 `differential: { path, sha256, sizeBytes }`，`path` 必须严格等于 APK 下载路径加 `.blocks.json`，清单限制 16 MiB。旧指针和旧客户端仍兼容；Windows 清单不接受此字段。
+- 分块清单 schema 1 / `zip-sha256-1m` 覆盖 APK 每一字节。ZIP32 压缩数据边界单独切分，最长块 1 MiB，每块记录长度和 SHA-256；不超过 512 字节的块可内嵌 Base64 数据。APK 整包哈希、大小也写入清单。支持最大 2 GiB 的非分卷 ZIP32；ZIP64 或超限包拒绝发布，不能静默产生无效更新。
+- APK 继续使用已有单 Range 流式响应。客户端拒绝不符合请求的 Content-Range、200 整包回退、重定向、截断和校验不符；不会因此暗中下载整个包。
+- `/downloads/android/latest.json` 声明 `X-CYword-Android-Differential: zip-sha256-1m`。发布脚本先检查该能力，APK 与清单先上传核验、独立 `current.json` 最后切换。先部署兼容函数，再发布新增差量字段的版本。

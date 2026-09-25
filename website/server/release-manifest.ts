@@ -15,10 +15,11 @@ export type ReleasePointer = {
   notesUrl: string;
   githubDownloadUrl?: string;
   repositoryUrl?: string;
+  differential?: { path: string; sha256: string; sizeBytes: number };
 };
 
 export type PublicRelease = Pick<ReleasePointer,
-  "version" | "publishedAt" | "filename" | "sizeBytes" | "sha256" | "notesUrl"> & { downloadPath: string };
+  "version" | "publishedAt" | "filename" | "sizeBytes" | "sha256" | "notesUrl" | "differential"> & { downloadPath: string };
 
 export const releaseNotesUrl = "/#release-notes";
 const legacyRepositoryUrl = "https://github.com/cheng-yi-cc/CYword";
@@ -26,6 +27,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 const isHash = (value: unknown): value is string => typeof value === "string" && /^[a-f0-9]{64}$/.test(value);
 const isSize = (value: unknown): value is number => Number.isSafeInteger(value) && Number(value) > 0;
+function validDifferential(value: Record<string, unknown>, path: string, android: boolean) {
+  const map = value.differential;
+  return map === undefined || (android && isRecord(map) && map.path === `${path}.blocks.json` &&
+    isHash(map.sha256) && isSize(map.sizeBytes) && map.sizeBytes <= 16 * 1024 * 1024);
+}
 
 function hasReleaseIdentity(value: Record<string, unknown>, android: boolean): boolean {
   const version = value.version;
@@ -38,6 +44,7 @@ function hasReleaseIdentity(value: Record<string, unknown>, android: boolean): b
 export function isReleasePointer(value: unknown, android = false): value is ReleasePointer {
   if (!isRecord(value) || !hasReleaseIdentity(value, android)) return false;
   const basePath = `releases/${android ? "android/" : ""}${value.version}/${value.sha256}`;
+  if (!validDifferential(value, `/downloads/${basePath}/${value.filename}`, android)) return false;
   if (value.assetPath !== `${basePath}/${value.filename}` || (!android &&
     (value.blockmapPath !== `${basePath}/${value.filename}.blockmap` || value.updaterMetadataPath !== `${basePath}/latest.yml`))) return false;
   // 线上已发布的 v1 指针继续可读，但私有仓库链接不再出现在公开响应中。
@@ -56,6 +63,7 @@ export function toPublicRelease(pointer: ReleasePointer): PublicRelease {
     version: pointer.version, publishedAt: pointer.publishedAt, filename: pointer.filename,
     sizeBytes: pointer.sizeBytes, sha256: pointer.sha256,
     downloadPath: `/downloads/${pointer.assetPath}`, notesUrl: releaseNotesUrl,
+    ...(pointer.differential ? { differential: pointer.differential } : {}),
   };
 }
 
@@ -63,6 +71,7 @@ export function isPublicRelease(value: unknown, android = false): value is Publi
   if (!isRecord(value) || !hasReleaseIdentity(value, android)) return false;
   const path = `/downloads/releases/${android ? "android/" : ""}${value.version}/${value.sha256}/${value.filename}`;
   const legacyTag = `${android ? "android-v" : "v"}${value.version}`;
+  if (!validDifferential(value, path, android)) return false;
   return (value.downloadPath === path || (!android && value.downloadPath === `/downloads/${value.filename}`)) &&
     (value.notesUrl === releaseNotesUrl || value.notesUrl === `${legacyRepositoryUrl}/releases/tag/${legacyTag}`);
 }

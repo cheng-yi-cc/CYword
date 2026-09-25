@@ -107,7 +107,10 @@ test("expired sessions stop syncing and retain locally saved learning records", 
     assert.ok(local.words.w1);
     await sync.sync();
     assert.equal(calls, expireOn, "expired token must not keep retrying");
-    await assert.rejects(sync.save(two()), /账号已切换/);
+    await sync.save(two());
+    assert.ok(local.words.w2, "expired session can continue saving to the same local account");
+    assert.equal((await sync.flush()).localSaved, true);
+    assert.equal(calls, expireOn);
   }
 });
 

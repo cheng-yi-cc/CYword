@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ProgressSync, type SyncStatus, type FlushResult } from "./sync-client";
 import { reconcileCompletion } from "./progress";
 import type { AppProgress, Catalog, UserSession } from "./types";
+import { sessionExpiresAt } from "./auth-session";
 
 export const cloudProgressEnabled = import.meta.env.VITE_CYWORD_PROGRESS_MODE === "cloud";
 
@@ -28,11 +29,12 @@ export function useSyncedProgress(session: UserSession | null, catalog: Catalog 
       change: (progress, status, message) => { if (active) setState({ account: user.id, progress, status, message }); },
       unauthorized: () => {
         if (!active) return;
-        setState({ account: "", progress: null, status: "error", message: "登录已过期" });
         expiredRef.current();
       },
     });
     ref.current = sync;
+    const expiresAt = sessionExpiresAt(token);
+    if (expiresAt !== null && expiresAt <= Date.now()) sync.expireSession();
     void sync.open().catch((error) => { if (active) setState({ account: user.id, progress: null, status: "error", message: `读取本机进度失败：${String(error)}` }); });
     const resume = () => { if (document.visibilityState !== "hidden") void sync.sync(); };
     const interval = cloudProgressEnabled ? window.setInterval(resume, 15000) : undefined;
@@ -53,6 +55,7 @@ export function useSyncedProgress(session: UserSession | null, catalog: Catalog 
       await ref.current.save(next, state.progress);
     },
     sync: () => ref.current?.sync(),
+    expireSession: () => ref.current?.expireSession(),
     flush: (): Promise<FlushResult> => ref.current?.flush() ?? Promise.resolve({ localSaved: false, cloudSynced: false, message: "进度尚未准备好" }),
   };
 }

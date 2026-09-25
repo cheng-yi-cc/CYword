@@ -1,4 +1,4 @@
-export type ViewName = "home" | "plan" | "today" | "vocabulary" | "search";
+export type ViewName = "home" | "plan" | "today" | "vocabulary";
 export type Proficiency = "unmastered" | "unclear" | "mastered";
 
 export interface WordSummary {
@@ -200,6 +200,7 @@ export interface UpdateStatus {
 declare global {
   interface Window {
     cyword: {
+      desktop?: boolean;
       androidUpdates?: import("./android-updates").AndroidUpdates;
       readCatalog: () => Promise<Catalog>;
       readBundledBookFile?: (file: string) => Promise<unknown>;

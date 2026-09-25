@@ -62,6 +62,16 @@ export class BundledBook implements InstalledBook {
 }
 
 export function installedBook(): InstalledBook | undefined {
+  if (import.meta.env?.DEV) {
+    if (import.meta.env.VITE_CYWORD_BOOK_DOWNLOAD === "1") return undefined;
+    const read = async (kind: string, request?: WordsRequest) => {
+      const response = await fetch(`/__local-book/${kind}`, request ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(request) } : undefined);
+      if (!response.ok) throw new Error("本地词书读取失败，请运行 npm run data:build 后刷新");
+      return response.json();
+    };
+    const media = (url: string) => `/__local-book/media?url=${encodeURIComponent(url)}`;
+    return { catalog: () => read("catalog"), words: request => read("words", request), audioUrl: async url => media(url), imageUrl: media };
+  }
   if (!import.meta.env?.PROD) return undefined;
   const resolve = (file: string) => new URL(`./book/${file}`, window.location.href).href;
   return new BundledBook(async file => {

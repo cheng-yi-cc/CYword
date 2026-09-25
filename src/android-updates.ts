@@ -1,12 +1,13 @@
 import { isPublicRelease, type PublicRelease } from "../website/server/release-manifest.ts";
 
 export type AndroidUpdateState = {
-  status: "idle" | "checking" | "current" | "available" | "opening" | "error";
+  status: "idle" | "checking" | "current" | "available" | "opening" | "downloading" | "ready" | "installing" | "error";
   currentVersion: string;
   release?: PublicRelease;
   message?: string;
 };
-export type AndroidUpdates = Pick<AndroidUpdateService, "getSnapshot" | "subscribe" | "check" | "download">;
+export type AndroidUpdates = Pick<AndroidUpdateService, "getSnapshot" | "subscribe" | "check" | "download" | "downloadFull" | "install">;
+export type AndroidDownloadProgress = { phase: string; completed: number; total: number; downloaded: number };
 const origin = "https://cyword.chengyi.me";
 const automaticInterval = 6 * 60 * 60 * 1000;
 
@@ -30,6 +31,8 @@ export class AndroidUpdateService {
     version: () => Promise<string>;
     release: () => Promise<unknown>;
     open: (url: string) => Promise<void>;
+    prepare?: (release: PublicRelease, progress: (value: AndroidDownloadProgress) => void) => Promise<{ downloadedBytes: number }>;
+    install?: () => Promise<{ permissionRequired: boolean }>;
     now?: () => number;
   };
   constructor(dependencies: AndroidUpdateService["dependencies"]) { this.dependencies = dependencies; }
@@ -40,6 +43,7 @@ export class AndroidUpdateService {
   check = (automatic = false): Promise<void> => {
     if (this.checking) return this.checking;
     if (this.opening) return this.opening;
+    if (this.state.status === "ready") return Promise.resolve();
     const now = (this.dependencies.now ?? Date.now)();
     if (automatic && now - this.lastAutomaticCheck < automaticInterval) return Promise.resolve();
     this.lastAutomaticCheck = now;
@@ -61,16 +65,44 @@ export class AndroidUpdateService {
     return this.checking;
   };
 
-  download = (): Promise<void> => {
+  downloadFull = () => this.download(true);
+  download = (full = false): Promise<void> => {
     if (this.opening) return this.opening;
     if (this.checking || this.state.status !== "available" || !this.state.release) return Promise.resolve();
     const ready = this.state;
-    this.set({ ...ready, status: "opening", message: undefined });
+    const differential = !full && Boolean(ready.release?.differential && this.dependencies.prepare);
+    this.set({ ...ready, status: differential ? "downloading" : "opening", message: differential ? "正在准备更新…" : undefined });
     this.opening = Promise.resolve().then(async () => {
       try {
-        await this.dependencies.open(origin + ready.release!.downloadPath);
-        this.set({ ...ready, message: "已打开浏览器，下载后点击 APK 安装" });
-      } catch { this.set({ ...ready, message: "无法打开下载，请重试" }); }
+        if (differential) {
+          const result = await this.dependencies.prepare!(ready.release!, value => {
+            if (this.state.status !== "downloading") return;
+            const message = value.phase === "scanning" ? "正在准备更新…" : value.phase === "verifying" ? "正在校验更新…" : `下载更新 ${value.total ? Math.min(100, Math.floor(value.completed / value.total * 100)) : 100}%`;
+            this.set({ ...this.state, message });
+          });
+          this.set({ ...ready, status: "ready", message: `更新已就绪，下载 ${(result.downloadedBytes / 1048576).toFixed(1)} MB` });
+        } else {
+          await this.dependencies.open(origin + ready.release!.downloadPath);
+          this.set({ ...ready, message: "已打开浏览器，下载后点击 APK 安装" });
+        }
+      } catch (error) { this.set({ ...ready, message: differential ? (error instanceof Error ? error.message : "更新失败，请重试") : "无法打开下载，请重试" }); }
+      finally { this.opening = null; }
+    });
+    return this.opening;
+  };
+  install = (): Promise<void> => {
+    if (this.opening) return this.opening;
+    if (this.state.status !== "ready" || !this.dependencies.install) return Promise.resolve();
+    const ready = this.state;
+    this.set({ ...ready, status: "installing", message: "正在打开安装…" });
+    this.opening = Promise.resolve().then(async () => {
+      try {
+        const result = await this.dependencies.install!();
+        this.set({ ...ready, message: result.permissionRequired ? "允许安装此来源的应用后，返回点击安装" : "请在系统窗口中完成安装" });
+      } catch (error) {
+        const missing = typeof error === "object" && error !== null && "code" in error && error.code === "UPDATE_NOT_READY";
+        this.set({ ...ready, status: missing ? "available" : "ready", message: missing ? "更新文件已失效，请重新下载" : error instanceof Error ? error.message : "安装失败，请重试" });
+      }
       finally { this.opening = null; }
     });
     return this.opening;

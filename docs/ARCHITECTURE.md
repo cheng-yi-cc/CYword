@@ -2,7 +2,7 @@
 
 仓库包含 Windows 桌面应用、Capacitor 安卓应用和独立官网。当前源码将完整词书、全部发音、原配图和音标字体放入 Windows / 安卓安装包，首次联网登录后直接从包内读取；进度按账号写入原有设备存储。旧云端进度只读合并导入一次，默认不上传。资源预装从 Windows 0.4.7 / Android 0.1.4 起启用，设计与恢复开关见 [OFFLINE.md](OFFLINE.md)。
 
-Pages Functions 的认证、同步、只读词书和下载路由，以及 D1、R2、Secrets 均保留；官网仅展示独立示例，不读取用户进度。本文下方的双向同步、轮询和同步 401 清理流程描述保留的 `VITE_CYWORD_PROGRESS_MODE=cloud` 模式及已发布的旧版行为；默认本地模式不启用这些流程。部署记录见 [ANDROID.md](ANDROID.md)。
+Pages Functions 的认证、同步、只读词书和下载路由，以及 D1、R2、Secrets 均保留；官网仅展示独立示例，不读取用户进度。本文下方的双向同步和轮询描述保留的 `VITE_CYWORD_PROGRESS_MODE=cloud` 模式及已发布的旧版行为；默认本地模式不启用这些流程。登录失效保留本机学习并由账号入口重新验证。部署记录见 [ANDROID.md](ANDROID.md)。
 
 ## 数据流
 
@@ -25,10 +25,10 @@ books/<code>/book.json + csv/*.csv + enhancements/*.jsonl（可选）
                                              └─ build-book-api-data.mjs
                                                 .work/book-api/<code>/<version>/
                                                 → 私有 R2 → Pages Functions
-                                                → 旧客户端 / 开发预览
+                                                → 旧客户端 / 显式旧下载预览
 ```
 
-`books/` 是唯一应手工维护和提交的词书源数据，原巧记正文严禁修改。`data/` 是构建生成物，不直接打包；完整目录、单词详情、音频和图片经安装包构建步骤进入 `dist/book/`，由包内清单记录版本及资源哈希。`data/curriculum.json` 包含分组 ID、词 ID 与日程顺序，由两端共用的 `applyCurriculum` 编译进应用。旧客户端和开发预览保留远端 `dataVersion` 请求分片的流程；服务器每个单词只进入首次出现的学习日分片，所有不可变版本文件上传完成后才更新 `current.json`。安装包资源发布不要求修改旧客户端使用的线上词书指针。
+`books/` 是唯一应手工维护和提交的词书源数据，原巧记正文严禁修改。`data/` 是构建生成物，不直接打包；完整目录、单词详情、音频和图片经安装包构建步骤进入 `dist/book/`，由包内清单记录版本及资源哈希。`data/curriculum.json` 包含分组 ID、词 ID 与日程顺序，由两端共用的 `applyCurriculum` 编译进应用。默认开发预览通过 `/__local-book/` 直读编译词条，媒体从本机资源目录或已有 APK 按需读取。旧客户端和显式 `VITE_CYWORD_BOOK_DOWNLOAD=1` 预览保留按 `dataVersion` 请求分片的流程；服务器每个单词只进入首次出现的学习日分片，所有不可变版本文件上传完成后才更新 `current.json`。安装包资源发布不要求修改旧客户端使用的线上词书指针。
 
 ## 桌面边界
 
@@ -41,6 +41,8 @@ Electron 主进程通过限定文件名的 `book:installed-file` IPC 读取安�
 网页预览使用 localStorage，安卓通过 `src/platform.ts` 使用 Capacitor 原生 HTTP；账号进度仍保存在原 Preferences 键，由自有 `DeviceStoragePlugin` 通过 `commit()` 确认写入，失败恢复内存缓存并上报。会话使用 Android Keystore 的 AES-GCM 密文，旧 Preferences 明文仅在密文提交成功后删除，凭据迁移不改变进度文件或账号归属。
 
 正式桌面包启动时检测更新，`autoDownload=true` 自动下载；下载完成后通过安装 IPC 一次点击安装，`autoInstallOnAppQuit=false` 保证普通退出不会触发安装。界面展示下载进度、失败重试和安装入口；开发预览不执行自动更新。
+
+差量更新：Windows 沿用 electron-updater 的 NSIS 分块复用，官网修正旧 blockmap 的哈希路径推导。安卓由发布端按 APK ZIP 压缩数据边界生成 SHA-256 清单，`ApkDelta` 对已安装 APK 使用同一分段算法，复用相同数据、下载缺块并保留可校验的中断结果。整包哈希与应用签名、身份、版本均通过后，经 FileProvider 交给系统安装；元数据、APK 下载继续使用官网独立安卓源。协议及发布门禁见 [WEBSITE.md](WEBSITE.md)。
 
 `useWordResources` 为当前词书代码和 `dataVersion` 创建共享 `WordResourceCache`，默认容量为 256 个详情，采用 LRU 淘汰；版本切换清空旧缓存并丢弃迟到响应，同词并发请求按 ID 去重。学习、复习和列表详情由 `useSessionWord` 先取当前词，成功后只预取随后最多 4 词；加载失败留在局部详情并提供重试，不再以整日或累计复习全量请求驱动缓存。服务端仍根据清单按学习日分片读取 R2 并流式拼接 JSON。`WordHoverContext` 按需加载引用词并提供局部失败重试，不阻塞主学习流。
 
@@ -66,7 +68,7 @@ Electron 主进程通过限定文件名的 `book:installed-file` IPC 读取安�
 - `updateWordProficiency` 仅更新已有词的评级和修改时间，不增加曝光/复习次数，不推进计划日；同步沿用最新评级胜出的规则。
 - `WordBrowseSession` 同时供词汇掌握和单词搜索使用，打开时固定当前分类和搜索后的完整词序（包括后续分页），以本轮评级集合控制前进权限，防止已存在的全局评级绕过重新判断。全屏详情通过 Portal 渲染，背景保留并设为不可交互，退出时恢复焦点和滚动位置；评级不改变本轮词序，返回列表才看到更新后的归类。
 
-“单词搜索”在全书目录上按拼写前缀即时筛选，不区分大小写；`bookWordOrder` 按编译日程及 `exposureOrder` 的首次出现位置去重排列。桌面与手机共用居中标题和搜索框；输入中的查询展示前 8 个候选，提交的查询独立保留完整结果，每页 50 词，提交后搜索框移至顶部。候选支持方向键选择、回车打开、Esc 收起；直接回车或点击搜索展示完整结果。详情打开时固定整个匹配列表，沿用强制评级、跨页浏览和返回恢复行为。`rateSearchWord` 可建立新词评级；`completedStudyExposureKeys` 将原有曝光与已有词汇状态共同用于进度计算。搜索不写复习记录，也不替代复习日判断。
+“单词搜索”在全书目录上按拼写前缀即时筛选，不区分大小写；`bookWordOrder` 按编译日程及 `exposureOrder` 的首次出现位置去重排列。桌面与手机均从顶栏左上角打开搜索弹层，桌面支持 Ctrl+K；输入中的查询展示前 8 个候选，提交的查询独立保留完整结果，每页 50 词，提交后搜索框移至顶部。候选支持方向键选择、回车打开、Esc 收起；直接回车或点击搜索展示完整结果。详情打开时固定整个匹配列表，沿用强制评级、跨页浏览和返回恢复行为。`rateSearchWord` 可建立新词评级；`completedStudyExposureKeys` 将原有曝光与已有词汇状态共同用于进度计算。搜索不写复习记录，也不替代复习日判断。
 
 如需改变这些字段，必须同时提供旧版本迁移逻辑并补充测试，不能直接让已有 `progress.json` 失效。
 
@@ -80,7 +82,7 @@ Electron 主进程通过限定文件名的 `book:installed-file` IPC 读取安�
 
 手机端在 1080 像素以下使用底部导航、单栏内容与固定评级区，词根和长难句通过标签页切换。学习规则直接复用 `src/progress.ts`，不单独实现另一套排课。安卓返回键与应用恢复事件通过 Capacitor App 插件接入。
 
-同步返回 401 时停止旧同步器、清除持久化会话并显示登录页，移除过期账号信息；本机学习进度保留。普通网络故障保留登录态，账号切换后的迟到响应被忽略。
+登录失效：JWT 到期或同步/旧进度导入返回 401 时，暂停远端请求并保留当前账号的本机同步器、受保护会话和串行写入能力，账号入口显示“未登录”。用户点击后重新验证邮箱，验证成功先等待原账号本机保存完成，再保存新会话并按账号重新读取进度；网络故障不会自动判定失效，账号切换后的迟到响应被忽略。旧版显式云端模式曾在 401 后清除会话并显示登录页。
 
 桌面学习页长难句默认收起为侧边按钮，展开通过网格列宽动画调整三栏，收起后空间分配给词根栏与单词栏；减少动态效果设置下直接切换。`memory-display.ts` 仅对单词巧记的页面文本隐藏行首固定引导语，词书数据、后续正文及引用、词根词缀巧记均不改动。
 
@@ -92,7 +94,9 @@ Cloudflare DNS：cyword.chengyi.me → cyword.pages.dev
                     Cloudflare Pages 项目 cyword
                               ├─ /、/assets/* → dist-site/ 静态页面
                               ├─ /downloads/latest{,.json,.yml}
-                               ├─ /downloads/releases/<version>/<sha256>/*
+                              ├─ /downloads/releases/<version>/<sha256>/*
+                              ├─ /downloads/android/latest{,.json}
+                              ├─ /downloads/releases/android/<version>/<sha256>/*
                                             │ GET / HEAD
                                    Pages Function（流式响应）
                                             │ DOWNLOADS 绑定
@@ -121,7 +125,7 @@ Cloudflare DNS：cyword.chengyi.me → cyword.pages.dev
 
 ## 安卓版本检查
 
-安卓 0.1.2 的更新器由 `AndroidUpdateService` 管理检查、已是最新、可下载及错误状态，并合并并发检查、节流自动检查；通过原生 `App.getInfo()` 获取安装版本，经官网独立安卓清单判断是否更新。React 的账号菜单与提示订阅同一份状态；用户点击后由 `AppUpdatesPlugin` 校验官方 APK 地址并启动浏览器。更新流程不访问账号进度，浏览器负责下载，系统负责安装确认。
+安卓更新器由 `AndroidUpdateService` 管理检查、准备、下载、可安装和错误状态，并合并并发检查、节流自动检查；通过原生 `App.getInfo()` 获取安装版本，经官网独立安卓清单判断是否更新。React 的账号菜单与提示订阅同一份状态；用户点击后由 `AppUpdatesPlugin` 执行差量下载和完整校验，再由用户点击启动系统安装。完整 APK 浏览器下载为显式备用入口，更新流程不访问账号进度。
 
 ## 0.4.5 / 0.1.1 验证边界
 

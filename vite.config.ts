@@ -8,6 +8,7 @@ import { emptyProgress } from "./src/progress.ts";
 import type { AppProgress } from "./src/types.ts";
 import type { WordsRequest } from "./src/types.ts";
 import { readLocalBook } from "./scripts/local-book-preview.ts";
+import { previewMedia } from "./scripts/preview-media.mjs";
 
 async function readRequestJson(request: IncomingMessage, timeoutMs = 5_000): Promise<unknown> {
   if ((request as unknown as { body?: unknown }).body) {
@@ -87,11 +88,27 @@ const audioProxy = {
 };
 
 function localDataPreview() {
+  const media = previewMedia(process.cwd());
   return {
     name: "cyword-local-data-preview",
     configureServer(server: { middlewares: { use: (handler: (request: IncomingMessage, response: ServerResponse, next: () => void) => void) => void } }) {
       server.middlewares.use(async (request, response, next) => {
         const url = request.url ?? "";
+        if (url.startsWith("/__local-book/")) {
+          try {
+            response.setHeader("Cache-Control", "no-store");
+            if (request.method === "GET" && url.startsWith("/__local-book/media?")) {
+              const resource = await media(new URL(url, "http://localhost").searchParams.get("url"));
+              const types: Record<string, string> = { mp3: "audio/mpeg", wav: "audio/wav", ogg: "audio/ogg", png: "image/png", jpg: "image/jpeg", webp: "image/webp", gif: "image/gif" };
+              response.setHeader("Content-Type", types[resource.extension]);
+              response.end(resource.bytes);
+            } else if ((request.method === "GET" && url === "/__local-book/catalog") || (request.method === "POST" && url === "/__local-book/words")) {
+              response.setHeader("Content-Type", "application/json; charset=utf-8");
+              response.end(JSON.stringify(await readLocalBook("data", request.method === "POST" ? await readRequestJson(request) as WordsRequest : undefined)));
+            } else { response.statusCode = 404; response.end(); }
+          } catch (error) { response.statusCode = 503; response.end(error instanceof Error ? error.message : "Local resource unavailable"); }
+          return;
+        }
         if (realAuth) return next();
         try {
           let payload: unknown;

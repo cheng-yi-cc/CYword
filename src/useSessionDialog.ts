@@ -24,6 +24,9 @@ export function useSessionDialog({ active, dialogRef, bodyClass, onClose, busy, 
     if (root && !root.contains(dialog)) root.inert = true;
     document.body.style.overflow = "hidden";
     if (bodyClass) document.body.classList.add(bodyClass);
+    const parentDialog = dialogs.at(-1);
+    const parentInert = parentDialog?.inert ?? false;
+    if (parentDialog) parentDialog.inert = true;
     dialogs.push(dialog);
     const targets = () => {
       const elements = [...dialog.querySelectorAll<HTMLElement>(focusableSelector), ...document.querySelectorAll<HTMLElement>(`.word-hover-popover ${focusableSelector.split(", ").join(", .word-hover-popover ")}`)];
@@ -66,6 +69,7 @@ export function useSessionDialog({ active, dialogRef, bodyClass, onClose, busy, 
       document.removeEventListener("focusin", focusin);
       if (bodyClass) document.body.classList.remove(bodyClass);
       if (root) root.inert = previousInert;
+      if (parentDialog) parentDialog.inert = parentInert;
       document.body.style.overflow = previousOverflow;
       window.scrollTo(scroll.x, scroll.y);
       const fallback = ['.word-search-input-row input', '.vocabulary-filters button.active', '.floating-study-start', '.sidebar [aria-current="page"]']

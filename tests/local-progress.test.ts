@@ -18,7 +18,7 @@ function fixture() {
     finishImport: async () => { state.imported = true; return true; },
     request: async payload => { if (payload) state.writes++; else state.reads++; return { status: state.expire ? 401 : 200, data: { revision: 1, progress: structuredClone(state.remote) } }; },
     change: (_, status, message) => { state.status = status; state.message = message; },
-    unauthorized: () => { throw Error("local learning must not log out"); },
+    unauthorized: () => {},
   };
   return { state, adapter, sync: new ProgressSync(adapter) };
 }

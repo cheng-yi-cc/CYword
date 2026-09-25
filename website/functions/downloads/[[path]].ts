@@ -94,6 +94,8 @@ function redirectToLatest(request: Request, release: PublicRelease): Response {
 }
 
 function resolveVersionedAsset(pathname: string): DownloadAsset | null {
+  const apkMap = /^\/downloads\/(releases\/android\/(\d+\.\d+\.\d+)\/[a-f0-9]{64}\/CYword-Android-(\d+\.\d+\.\d+)\.apk\.blocks\.json)$/.exec(pathname);
+  if (apkMap && apkMap[2] === apkMap[3]) return { key: apkMap[1], contentType: "application/json", immutable: true, allowRange: false };
   const apk = /^\/downloads\/(releases\/android\/(\d+\.\d+\.\d+)\/[a-f0-9]{64}\/(CYword-Android-(\d+\.\d+\.\d+)\.apk))$/.exec(pathname);
   if (apk && apk[2] === apk[4]) return {
     key: apk[1], filename: apk[3], contentType: "application/vnd.android.package-archive",
@@ -125,7 +127,21 @@ function resolveLegacyInstaller(pathname: string): DownloadAsset | null {
 
 async function serveObject(request: Request, bucket: R2Bucket, asset: DownloadAsset): Promise<Response> {
   const metadata = await bucket.head(asset.key);
-  if (!metadata) return errorResponse(request, 404, "Download not found");
+  if (!metadata) {
+    // electron-updater substitutes the version but leaves the new installer hash in
+    // the old blockmap URL. Resolve only this known shape to a unique old release.
+    const oldMap = /^releases\/(\d+\.\d+\.\d+)\/[a-f0-9]{64}\/(CYword-Setup-\1\.exe\.blockmap)$/.exec(asset.key);
+    if (oldMap) {
+      const prefix = `releases/${oldMap[1]}/`;
+      const listing = await bucket.list({ prefix, limit: 100 });
+      const candidates = listing.objects.filter(object => new RegExp(`^[a-f0-9]{64}/${oldMap[2].replaceAll(".", "\\.")}$`).test(object.key.slice(prefix.length)));
+      if (!listing.truncated && candidates.length === 1) return new Response(null, { status: 302, headers: {
+        Location: new URL(`/downloads/${candidates[0].key}`, request.url).href,
+        "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",
+      } });
+    }
+    return errorResponse(request, 404, "Download not found");
+  }
 
   const headers = new Headers({
     "Content-Type": asset.contentType,
@@ -207,7 +223,7 @@ const serveDownload: PagesFunction<Env> = async ({ request, env }) => {
     if (pathname === "/downloads/latest.yml") {
       const pointer = await readCurrentRelease(env.DOWNLOADS);
       if (!pointer?.updaterMetadataPath) return errorResponse(request, 404, "Update metadata not published");
-      return serveObject(request, env.DOWNLOADS, {
+      return await serveObject(request, env.DOWNLOADS, {
         key: pointer.updaterMetadataPath,
         contentType: "application/x-yaml; charset=utf-8",
         immutable: false,
@@ -218,7 +234,7 @@ const serveDownload: PagesFunction<Env> = async ({ request, env }) => {
     // 只公开稳定指针、受约束的内容寻址资产和迁移前的版本化安装包；不列目录、不代理任意 URL。
     const asset = resolveVersionedAsset(pathname) ?? resolveLegacyInstaller(pathname);
     if (!asset) return errorResponse(request, 404, "Download not found");
-    return serveObject(request, env.DOWNLOADS, asset);
+    return await serveObject(request, env.DOWNLOADS, asset);
   } catch (error) {
     console.error(JSON.stringify({
       event: "release_download_failed",
@@ -235,6 +251,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   if (pathname === "/downloads/latest.json" || pathname === "/downloads/android/latest.json") {
     // Capability is independent of whether a current release has been published.
     response.headers.set("X-CYword-Release-Schemas", "1,2");
+    if (pathname === "/downloads/android/latest.json") response.headers.set("X-CYword-Android-Differential", "zip-sha256-1m");
   }
   return response;
 };

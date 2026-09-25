@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import { useSessionDialog } from "../useSessionDialog";
 import type { UserSession, VerifyCodeResponse } from "../types";
 
 const EMAIL_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/u;
@@ -13,16 +15,21 @@ function formatAuthError(err: unknown): string {
 interface AuthModalProps {
   onSuccess: (session: UserSession) => void;
   notice?: string;
+  initialEmail?: string;
+  onClose?: () => void;
+  beforeSessionChange?: () => Promise<void>;
 }
 
-export function AuthModal({ onSuccess, notice }: AuthModalProps) {
-  const [email, setEmail] = useState("");
+export function AuthModal({ onSuccess, notice, initialEmail = "", onClose, beforeSessionChange }: AuthModalProps) {
+  const [email, setEmail] = useState(initialEmail);
   const [code, setCode] = useState("");
   const [countdown, setCountdown] = useState(0);
   const [sendingCode, setSendingCode] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [message, setMessage] = useState<{ type: "info" | "error" | "success"; text: string } | null>(notice ? { type: "info", text: notice } : null);
   const timerRef = useRef<number | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useSessionDialog({ active: true, dialogRef, onClose: () => onClose?.(), busy: sendingCode || verifying });
 
   useEffect(() => {
     return () => {
@@ -138,8 +145,9 @@ export function AuthModal({ onSuccess, notice }: AuthModalProps) {
         user: result.user,
       };
 
+      await beforeSessionChange?.();
       if (window.cyword?.writeSession) {
-        await window.cyword.writeSession(session);
+        if (!await window.cyword.writeSession(session)) throw new Error("登录状态保存失败，请重试");
       } else {
         localStorage.setItem("cyword_session", JSON.stringify(session));
       }
@@ -155,9 +163,9 @@ export function AuthModal({ onSuccess, notice }: AuthModalProps) {
     }
   };
 
-  return (
+  return createPortal(
     <div className="auth-overlay">
-      <div className="auth-card">
+      <div className="auth-card" ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="登录 CYword">
         <div className="auth-header">
           <div className="auth-logo">Cy</div>
           <h2>欢迎使用 CYword</h2>
@@ -221,10 +229,11 @@ export function AuthModal({ onSuccess, notice }: AuthModalProps) {
         </form>
 
         <div className="auth-footer">
-          <small>{import.meta.env.VITE_CYWORD_PROGRESS_MODE === "cloud" ? "学习记录先保存在设备上，再自动同步到云端。" : "登录后下载词书和发音，离线学习，进度保存在本机。"}</small>
+          <small>{import.meta.env.VITE_CYWORD_PROGRESS_MODE === "cloud" ? "学习记录先保存在设备上，再自动同步到云端。" : "首次联网登录后可离线学习，进度保存在本机。"}</small>
           <nav aria-label="账号与数据说明"><a href="https://cyword.chengyi.me/#privacy" target="_blank" rel="noreferrer">隐私与数据</a><a href="https://cyword.chengyi.me/#feedback" target="_blank" rel="noreferrer">反馈与删除申请</a></nav>
         </div>
+        {onClose && <button className="dialog-close" aria-label="关闭登录" disabled={sendingCode || verifying} onClick={onClose}>×</button>}
       </div>
-    </div>
+    </div>, document.body
   );
 }
