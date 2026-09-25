@@ -1,6 +1,6 @@
 # 安卓与进度同步
 
-**当前发布版本 Android 0.1.5 / Windows 0.4.8（2026-09-25）**：安装包预装完整词书、全部音频、原配图和音标字体，首次联网登录后直接学习，默认离线学习、本机保存，旧云端进度只读合并导入一次。原生进度提交也负责持久化导入标记，凭据仍使用 Keystore。云端配置完整保留，可显式恢复。详见 [OFFLINE.md](OFFLINE.md)。下方双向同步机制只适用于旧版本或显式启用的云端模式。
+**当前正式版本 Android 0.1.5 / Windows 0.4.8（2026-09-25）**：安装包预装完整词书、全部音频、原配图和音标字体，首次联网登录后直接学习，默认离线学习、本机保存，旧云端进度只读合并导入一次。原生进度提交也负责持久化导入标记，凭据仍使用 Keystore。云端配置完整保留，可显式恢复。详见 [OFFLINE.md](OFFLINE.md)。下方双向同步机制只适用于旧版本或显式启用的云端模式。
 
 安卓 0.1.5 提供 Android 7.0（API 24）及以上安装包。界面与排课逻辑复用 `src/`，通过 Capacitor 打包成本机应用。首次登录需联网，之后可离线使用。2026-09-20 已完成生产 D1 授权、`learning_progress` 建表和官网同步函数部署，未认证请求返回 401；真实账号跨设备读写尚未验证。2026-09-20 已发布 0.1.1（versionCode 502）及配套官网函数，包含单词搜索、已学词进度、缓存、凭据保护和同步修复。
 
@@ -103,14 +103,14 @@ $syncState = Invoke-RestMethod -Uri "https://cyword.chengyi.me/api/progress" -He
 
 2026-09-20 已在 Windows 实际运行 Electron safeStorage/DPAPI，验证旧明文会话转密文、回读及退出清除；安卓 Release 构建通过，0.1.2 APK 签名证书与 0.1.0 / 0.1.1 一致，最低 API 24、目标 API 36。ADB 未连接真机，不能将构建成功视为 Keystore 真机迁移或真实账号跨设备同步已验收。
 
-浏览器移动尺寸检查应覆盖首页、计划、学习、词根/长难句、回看、词汇掌握（筛选/搜索/重新评级）、单词搜索（候选/提交/详情返回）和复习；0.1.4 正式 APK 已完成构建、完整预装资源与签名校验，官网完整下载哈希一致。此前搜索改版通过 390×844 浏览器尺寸检查；仍须在真机安装后确认键盘、安全区域、音频、覆盖升级和凭据迁移。
+浏览器移动尺寸检查应覆盖首页、计划、学习、词根/长难句、回看、词汇掌握（筛选/搜索/重新评级）、单词搜索（候选/提交/详情返回）和复习；0.1.5 正式 APK 已完成构建、完整预装资源与签名校验，官网完整下载哈希一致。此前搜索改版通过 390×844 浏览器尺寸检查；仍须在真机安装后确认键盘、安全区域、音频、覆盖升级和凭据迁移。
 
 ## 独立版本与官网发布
 
-安卓版本统一维护在 `android/version.json`；`versionName` 为公开版本号，`versionCode` 必须递增。首个公开版本为 0.1.0，内部序号为 501，以兼容此前序号 500 的本地测试包覆盖安装。本次版本为 0.1.5，内部序号 506，签名证书沿用旧版。桌面版本继续由 `package.json` 维护。
+安卓版本统一维护在 `android/version.json`；`versionName` 为公开版本号，`versionCode` 必须递增。首个公开版本为 0.1.0，内部序号为 501，以兼容此前序号 500 的本地测试包覆盖安装。当前正式版本为 0.1.5，内部序号 506，签名证书沿用旧版。桌面版本继续由 `package.json` 维护。
 
 正式签名构建后，创建 `android-v<versionName>` 标签及同名 GitHub Release，将对应 APK 上传并将该 Release 标为非最新（`--latest=false`），保留 Windows Release 的最新标识。`.github/workflows/publish-android.yml` 在 Android Release 发布后读取同一份 APK，上传到专用 R2 桶的 `releases/android/<版本>/<sha256>/`，校验长度与 SHA-256 后最后更新 `releases/android/current.json`，已有同路径资产必须字节相同才能复用，不能覆盖。已有 Release 可手动触发工作流并传入标签重试上传，无需重新生成 APK。
 
 GitHub Release 是维护者发布与工作流取件的来源，普通用户从官网受控下载入口获取安装包，源码及 Release 均公开，应用内更新仍使用官网源。
 
-官网读取 `/downloads/android/latest.json`，稳定下载入口为 `/downloads/android/latest`；Windows 自动更新继续使用独立的 `/downloads/latest.yml`。生产下载函数同时接受旧 v1 和新 v2 私有发布指针，公开 JSON 只提供官网路径、版本及校验信息。2026-09-20 已按先兼容函数、后安装包的顺序启用 v2；新环境仍须遵守此顺序。发布脚本在任何 R2 写入前，向固定官网域名的相应 `latest.json` 发起不跟随重定向的 HEAD 请求，只有响应头 `X-CYword-Release-Schemas` 确认支持 2 才继续；未发布 APK 的 404 响应也可声明此能力。普通 Git 推送不会部署官网函数。
+官网读取 `/downloads/android/latest.json`，稳定下载入口为 `/downloads/android/latest`；Windows 自动更新继续使用独立的 `/downloads/latest.yml`。生产下载函数同时接受旧 v1 和新 v2 私有发布指针，公开 JSON 只提供官网路径、版本及校验信息。2026-09-20 已按先兼容函数、后安装包的顺序启用 v2；新环境仍须遵守此顺序。发布脚本在任何 R2 写入前，向固定官网域名的相应 `latest.json` 发起不跟随重定向的 HEAD 请求，只有响应头 `X-CYword-Release-Schemas` 确认支持 2 且声明 `X-CYword-Android-Differential: zip-sha256-1m` 才继续；未发布 APK 的 404 响应也可声明此能力。普通 Git 推送不会部署官网函数。

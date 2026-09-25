@@ -1,6 +1,23 @@
 # 运行手册
 
-本次发布 Windows 0.4.8 / Android 0.1.5（versionCode 506），新增标题栏搜索、离线账号重登、更新日志和差量更新。安装包预装完整词书、全部发音、原配图与音标字体，每日学习取消分段。`npm run build` 首次需在构建机下载全部原发音和配图，分别缓存到 `.work/book-audio/`、`.work/book-images/`；缺失或无效资源会阻断构建，无损转码缓存位于 `.work/book-images-webp/`。详见 [离线模式](OFFLINE.md)。
+当前正式版本 Windows 0.4.8 / Android 0.1.5（versionCode 506），新增标题栏搜索、离线账号重登、更新日志和差量更新。安装包预装完整词书、全部发音、原配图与音标字体，每日学习取消分段。`npm run build` 首次需在构建机下载全部原发音和配图，分别缓存到 `.work/book-audio/`、`.work/book-images/`；缺失或无效资源会阻断构建，无损转码缓存位于 `.work/book-images-webp/`。详见 [离线模式](OFFLINE.md)。
+
+## Windows 0.4.8 / Android 0.1.5 发布记录（2026-09-25）
+
+源码标签 `v0.4.8`、`android-v0.1.5` 均指向 `75b4ca6`。GitHub 原件由 Windows 工作流 `36132706102`、Android 工作流 `36131603529` 成功同步到官网；兼容下载函数先部署，全部资源上传后再切换各自指针。官网版本说明及前后端回退元数据同步部署到 `620cbed3.cyword.pages.dev`。
+
+| 安装包 | 字节数 | SHA-256 |
+| --- | ---: | --- |
+| `release/CYword-Setup-0.4.8.exe` | 1219005231 | `c0af9e229c58424f4544f6826507c75a2d3f03897300b1be7f1989300bbf7a89` |
+| `release/CYword-Android-0.1.5.apk` | 1136241211 | `c01ab33a7a3570b88e464aa8f424950bcb725ca1e484cc5bccee9fbaaa95f65c` |
+
+两端均核验 5166 个词条、5166 条音频、1196 个图片引用（1013 张不同图片）和音标字体；词书版本仍为 `c37a2758c2e255b3`，直接复用了与当前编译数据一致的旧 APK 资源，未重新下载媒体。安卓 versionCode 506，证书 SHA-256 为 `389ff03f29e59fcf25ad2c2969b132bff20e2635a0960f24afe176b1b9a578fa`，与旧版一致。
+
+110 项自动化测试、22 项应用界面回归、24 项本地 R2 下载检查、2 项官网界面回归通过。正式 Windows 解包程序在隔离账号和断网环境下通过首页、Ctrl+K、全书搜索及配图检查。官网两端全部字节的 SHA-256、HEAD、首尾 Range、稳定入口跳转均通过；Windows 全文件以并行 Range 顺序散列核验，`latest.yml` SHA-512 与原件一致，blockmap 逐字节一致，旧版 blockmap 跳转正常；安卓差量清单长度及哈希一致。
+
+Windows 新布局将词书独立打包，程序 ASAR 为 37662339 字节。模拟程序档案小改动后，实际 NSIS 分块计划下载 642952 / 1218980366 字节；测试安装器从未发布。0.4.7 → 0.4.8 的结构迁移仍需约 869928665 字节差量，不能把模拟结果当成本次旧版升级流量。安卓两版 APK 比对的缺块为 4318242 字节，另需 4098902 字节清单；0.1.4 客户端尚不具备此能力，必须完整升级一次到 0.1.5，后续才可差量。实际流量取决于版本变化及可用缓存。
+
+未运行 Windows 安装向导，未连接安卓真机验证覆盖安装和来源权限。过程文件、预览配置、临时重建包及生成目录在 neat-freak 收尾清理；`release/` 保留本次两端安装包、自动更新元数据及 SHA-256 清单。保留的新 APK 可直接供后续本地预览读取媒体。
 
 ## Windows 0.4.7 / Android 0.1.4 发布记录（2026-09-25）
 
@@ -270,7 +287,7 @@ Get-FileHash -Algorithm SHA256 -LiteralPath '.work\download-check.exe'
 | 现象 | 检查与处理 |
 | --- | --- |
 | 首页正常，下载或更新 404 | 检查 `releases/current.json`、其中三个内容寻址对象及 `/downloads/latest.yml`；指针只能在全部资产上传后写入 |
-| 旧客户端或开发预览词书 404/503 | 核对 `BOOKS` 绑定、`books/cet6/current.json` 及其 `catalogKey`；重新上传时必须让版本指针最后写入 |
+| 旧客户端或显式旧下载预览词书 404/503 | 核对 `BOOKS` 绑定、`books/cet6/current.json` 及其 `catalogKey`；重新上传时必须让版本指针最后写入 |
 | 每日词汇返回 409 | 客户端目录版本对应的清单已被删除；恢复该不可变版本，或重启应用重新获取当前目录 |
 | 每日词汇流中断 | 查找 `book_words_stream_failed` 日志，核对清单里的分片是否完整；不要在上传中途更新版本指针 |
 | 下载 503 | 查看 Pages Functions 日志的 `release_download_failed`；核对 `DOWNLOADS` 绑定、指针格式和桶内对象；按 `Retry-After` 稍后重试 |

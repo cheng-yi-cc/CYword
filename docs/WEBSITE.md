@@ -1,6 +1,6 @@
 # 官网说明
 
-官网与函数已于 2026-09-25 更新部署；当前客户端为 Windows 0.4.7、Android 0.1.4。发布与下载核验记录统一见 [运行手册](RUNBOOK.md)。
+官网与函数已于 2026-09-25 更新部署；当前客户端为 Windows 0.4.8、Android 0.1.5。发布与下载核验记录统一见 [运行手册](RUNBOOK.md)。
 
 ## 用途与入口
 
@@ -9,7 +9,7 @@
 - 官网：<https://cyword.chengyi.me/>；Pages 备用域名：<https://cyword.pages.dev/>。
 - Windows 下载：<https://cyword.chengyi.me/downloads/latest>；Android 下载：<https://cyword.chengyi.me/downloads/android/latest>。两者从私有 R2 桶的独立原子版本指针跳转到安装包，支持断点续传，下载无需登录。
 - GitHub 仓库 `https://github.com/cheng-yi-cc/CYword` 已于 2026-09-21 改为公开，官网源码在页脚提供开源入口；现有下载安装与自动更新仍使用官网源。公开版本记录放在 `/#release-notes`，只记录已发布改动；离线模式从 Windows 0.4.6 / Android 0.1.3 起提供。
-- Windows 版本和校验值以 `/downloads/latest.json` 为准，Android 以 `/downloads/android/latest.json` 为准；`website/src/release.ts` 只保留动态指针不可用时已核验的 Windows 0.4.7 回退信息，并在页面明确提示。Android 读取失败显示未知状态与重试入口，不填造版本或哈希。
+- Windows 版本和校验值以 `/downloads/latest.json` 为准，Android 以 `/downloads/android/latest.json` 为准；`website/src/release.ts` 只保留动态指针不可用时已核验的 Windows 0.4.8 回退信息，并在页面明确提示。Android 读取失败显示未知状态与重试入口，不填造版本或哈希。
 - 两个平台分别显示版本、文件大小、校验值及安装步骤，锚点为 `/#guide-windows`、`/#guide-android`。
 - 首屏为不保存记录的交互示例。桌面长难句沿用应用右侧竖排入口，默认收起为 52px；展开时三栏同步调整宽度，内容延迟淡入，收起时先淡出内容，动画时长与应用一致。手机标签按“单词、词根、长难句”切换。各栏独立滚动且隐藏滚动条，采用 `overscroll-behavior: contain` 阻断外层滚动穿透，单词默认完整显示，点击切换分块；点击音标或发音按钮临时分块，结束、停止、失败后恢复。portable 使用已审核的 por·ta·ble，不按词根切分；发音支持停止与失败重试。
 
@@ -126,7 +126,7 @@ curl.exe --fail --head 'https://cyword.chengyi.me/downloads/latest'
 
 官网沿用暖纸色、陶土橙和橄榄绿，品牌只显示 CYword，中文使用系统无衬线字体，英文单词和品牌使用 Georgia。字体、图标、样式不依赖外部 CDN。主线是“逐词巧记 → 构词成组 → 熟练度与累计复习”。
 
-- Windows 0.4.7 / Android 0.1.4 预装完整六级词书、全部发音和原配图；网站本身仅包含独立示例。没有 Mac 版、四级或考研词书。官网正式下载以已经核验的发布指针为准。
+- Windows 0.4.8 / Android 0.1.5 预装完整六级词书、全部发音和原配图；网站本身仅包含独立示例。没有 Mac 版、四级或考研词书。官网正式下载以已经核验的发布指针为准。
 - 计划包含 30 个学习日和 10 个累计复习日，不保证在 40 个自然日内记住全部单词。每天曝光次数以对应版本的编译排课为准，多词根组可重复出现同一词，曝光次数不等于唯一新词数，也不保证记忆效果。
 - 当前安装版首次联网登录后直接离线学习，无需二次下载；0.4.6 / 0.1.3 保留首次下载流程。进度默认保存在本机，旧云端记录导入一次；云端模式及旧版同步服务保留。正常覆盖升级保留进度，旧文件按已登录账号归属迁移。
 - Windows 安装包未签名，安卓 APK 使用项目私有密钥签名；页面应提示核对来源与哈希，不引导用户关闭系统防护，也不把校验一致等同于安全认证。
