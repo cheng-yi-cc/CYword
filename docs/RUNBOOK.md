@@ -1,6 +1,6 @@
 # 运行手册
 
-当前正式版本 Windows 0.4.8 / Android 0.1.5（versionCode 506），新增标题栏搜索、离线账号重登、更新日志和差量更新。安装包预装完整词书、全部发音、原配图与音标字体，每日学习取消分段。`npm run build` 首次需在构建机下载全部原发音和配图，分别缓存到 `.work/book-audio/`、`.work/book-images/`；缺失或无效资源会阻断构建，无损转码缓存位于 `.work/book-images-webp/`。详见 [离线模式](OFFLINE.md)。
+当前正式版本 Windows 0.4.8 / Android 0.1.6（versionCode 507），新增复习日全屏沉浸式。安装包预装完整词书、全部发音、原配图与音标字体，每日学习取消分段。`npm run build` 首次需在构建机下载全部原发音和配图，分别缓存到 `.work/book-audio/`、`.work/book-images/`；缺失或无效资源会阻断构建，无损转码缓存位于 `.work/book-images-webp/`。详见 [离线模式](OFFLINE.md)。
 
 ## Windows 0.4.8 / Android 0.1.5 发布记录（2026-09-25）
 
