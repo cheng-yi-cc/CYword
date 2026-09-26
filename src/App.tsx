@@ -832,40 +832,293 @@ function ReviewToday({ catalog, progress, plan, details, loadWords, saveProgress
 }) {
   const [skipMastered, setSkipMastered] = useState(true);
   const [revealed, setRevealed] = useState(false);
+  const [sessionActive, transitionSession, sessionTransitionPhase] = useSoftTransitionState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [simpleExampleIndex, setSimpleExampleIndex] = useState(0);
+  const [examExampleIndex, setExamExampleIndex] = useState(0);
+  const [longSentenceIndex, setLongSentenceIndex] = useState(0);
+  const [sentencesOpen, setSentencesOpen] = useState(false);
+  const [mobilePanel, setMobilePanel] = useState<"word" | "roots" | "sentences">("word");
   const saving = useSessionSave();
+  const ratingBusy = saving.busy;
+  const ratingLock = saving.lock;
+  const closingSession = useRef(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const day = progress.planDays[String(plan.day)];
   const candidates = reviewCandidates(progress, skipMastered);
-  const queue = day?.reviewWordIds.filter((id) => !day.reviewedWordIds.includes(id)) ?? [];
-  const currentId = queue[0];
+  const wordIds = day?.reviewWordIds ?? [];
+  const reviewedSet = new Set(day?.reviewedWordIds ?? []);
   const finished = isPlanDayComplete(progress, plan.day);
+  const safeIndex = wordIds.length ? Math.min(Math.max(0, activeIndex), wordIds.length - 1) : 0;
+  const currentId = wordIds[safeIndex];
+  const rated = currentId ? reviewedSet.has(currentId) : false;
+  const activeProficiency = currentId ? progress.words[currentId]?.proficiency : undefined;
+  const detail = currentId ? details[currentId] ?? null : null;
+  const word = currentId ? catalog.words[currentId] : null;
   const hover = useWordHover();
-  const resource = useSessionWord(currentId, loadWords, "review", plan.day, queue.slice(1, 5));
+  const resource = useSessionWord(
+    sessionActive ? currentId : undefined,
+    loadWords,
+    "review",
+    plan.day,
+    sessionActive ? wordIds.slice(safeIndex + 1, safeIndex + 5) : [],
+  );
+
+  useEffect(() => {
+    if (activeIndex >= wordIds.length && wordIds.length > 0) setActiveIndex(wordIds.length - 1);
+  }, [wordIds.length, activeIndex]);
   useEffect(() => {
     setRevealed(false);
+    setSimpleExampleIndex(0);
+    setExamExampleIndex(0);
+    setLongSentenceIndex(0);
+    setMobilePanel("word");
     stopPronunciation();
+    document.querySelectorAll(".study-center-scroll, .study-column-scroll").forEach((element) => element.scrollTo(0, 0));
     if (hover && currentId) hover.setCurrentWordId(currentId);
   }, [currentId]);
+  useEffect(() => () => stopPronunciation(), []);
+
+  const openAt = (index: number) => {
+    if (ratingLock.current || !wordIds.length) return;
+    closingSession.current = false;
+    setActiveIndex(Math.min(Math.max(0, index), wordIds.length - 1));
+    setRevealed(false);
+    setSentencesOpen(false);
+    transitionSession(true);
+  };
+  const startSession = () => {
+    if (ratingLock.current || !wordIds.length) return;
+    closingSession.current = false;
+    const nextUnrated = wordIds.findIndex((id) => !reviewedSet.has(id));
+    setActiveIndex(nextUnrated >= 0 ? nextUnrated : 0);
+    setRevealed(false);
+    setSentencesOpen(false);
+    transitionSession(true);
+  };
   const start = () => saving.run(
     () => saveProgress(startReviewDay(progress, plan.day, candidates, skipMastered)),
-    () => setRevealed(false),
+    () => {
+      setActiveIndex(0);
+      setRevealed(false);
+      setSentencesOpen(false);
+      closingSession.current = false;
+      transitionSession(true);
+    },
   );
-  useEffect(() => { if (autoStart && !day) void start(); }, [autoStart]);
-  useEffect(() => () => stopPronunciation(), []);
-  const rate = (level: Proficiency) => {
-    if (!currentId || !details[currentId] || !revealed) return;
-    return saving.run(() => saveProgress(rateReviewWord(progress, plan.day, currentId, level)), () => setRevealed(false));
+  useEffect(() => {
+    if (!autoStart || saving.busy || sessionActive) return;
+    if (!day) void start();
+    else if (!finished && wordIds.length) startSession();
+  }, [autoStart]);
+  const endSession = () => { closingSession.current = true; transitionSession(false); };
+  const closeSession = () => { if (!ratingLock.current) endSession(); };
+  useSessionDialog({ active: sessionActive, dialogRef, bodyClass: "study-mode-active", onClose: closeSession, busy: () => ratingLock.current });
+
+  const move = (direction: -1 | 1) => {
+    if (ratingLock.current || closingSession.current || (direction > 0 && !rated)) return;
+    saving.setError("");
+    setActiveIndex((current) => Math.max(0, Math.min(wordIds.length - 1, current + direction)));
   };
+  const rate = async (level: Proficiency) => {
+    if (!currentId || !detail || !revealed || ratingLock.current || closingSession.current) return;
+    const next = rateReviewWord(progress, plan.day, currentId, level);
+    await saving.run(() => saveProgress(next), () => {
+      const nextDay = next.planDays[String(plan.day)];
+      const nextReviewed = new Set(nextDay?.reviewedWordIds ?? []);
+      const ids = nextDay?.reviewWordIds ?? wordIds;
+      const nextAfter = ids.findIndex((id, index) => index > safeIndex && !nextReviewed.has(id));
+      const anyUnrated = nextAfter >= 0 ? nextAfter : ids.findIndex((id) => !nextReviewed.has(id));
+      if (anyUnrated >= 0) {
+        setActiveIndex(anyUnrated);
+        setRevealed(false);
+      } else {
+        endSession();
+      }
+    });
+  };
+
+  useEffect(() => {
+    if (!sessionActive) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+      const target = event.target as HTMLElement | null;
+      const editing = target?.matches("input, textarea, select, [contenteditable='true']");
+      if (ratingLock.current || closingSession.current) return;
+      if (editing || target?.closest(".sound-memory, .meaning-bridge, .word-hover-popover")) return;
+      if (!revealed) {
+        if (event.key === "Enter" || event.key === " ") {
+          if (target?.closest("button, a, summary, [role='button']")) return;
+          event.preventDefault();
+          setRevealed(true);
+        }
+        return;
+      }
+      if (event.key === "ArrowLeft") { event.preventDefault(); move(-1); return; }
+      if (event.key === "ArrowRight") { event.preventDefault(); if (rated) move(1); return; }
+      if (event.code === "Space") {
+        if (target?.closest("button, a, summary, [role='button']")) return;
+        event.preventDefault();
+        if (!event.repeat && detail?.audioUrl) void playPronunciation(detail.audioUrl);
+        return;
+      }
+      const shortcut: Record<string, Proficiency> = { "1": "unmastered", "2": "unclear", "3": "mastered" };
+      const level = shortcut[event.key];
+      if (level && !event.repeat) { event.preventDefault(); void rate(level); }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [sessionActive, safeIndex, currentId, detail?.audioUrl, ratingBusy, progress, rated, revealed]);
+
   const saveNotice = saving.error && <p className="session-save-error" role="alert">{saving.error} 请重试。</p>;
   if (!day) {
     const counts = proficiencyCounts(progress);
     return <div className="page review-setup"><PageHeader eyebrow={`DAY ${plan.day} · REVIEW`} title="本轮复习" description="先回想词义，再判断熟练度。" /><div className="review-setup-card"><span>本轮复习</span><b>{candidates.length}</b><small>个单词</small><label><input type="checkbox" checked={skipMastered} disabled={saving.busy} onChange={(event) => setSkipMastered(event.target.checked)} /><i />跳过已掌握</label><div><p>未掌握 <b>{counts.unmastered}</b></p><p>不清楚 <b>{counts.unclear}</b></p><p className={skipMastered ? "muted" : ""}>已掌握 <b>{counts.mastered}</b></p></div>{saveNotice}<button disabled={saving.busy} onClick={() => void start()}>{saving.busy ? "正在准备…" : "开始复习"} <b>→</b></button></div></div>;
   }
   if (finished) return <div className="page review-finished"><PageHeader eyebrow={`DAY ${plan.day} · COMPLETE`} title="今天的复习已完成" description={`已保存 ${day.reviewedWordIds.length} 个单词的判断。`} /><div className="review-finished-mark">✓<span>REVIEW COMPLETE</span></div></div>;
-  const word = currentId ? catalog.words[currentId] : null;
-  const detail = currentId ? details[currentId] ?? null : null;
-  return <div className="page review-session"><PageHeader eyebrow={`DAY ${plan.day} · REVIEW`} title="先回想，再查看详情" description={`还剩 ${queue.length} 词`} aside={<div className="today-progress"><b>{day.reviewedWordIds.length}</b><span>/ {day.reviewWordIds.length}</span></div>} />{saveNotice}<div className={`judgment-card ${revealed ? "revealed" : ""}`}>
-    {!revealed && word ? <button className="judgment-front" disabled={saving.busy} onClick={() => setRevealed(true)}><span>查看词义</span><h2>{word.spelling}</h2><p className="ipa">{word.pronunciation}</p></button> : detail ? <WordDetailPanel detail={detail} footer={<ProficiencyPicker disabled={saving.busy} value={currentId ? progress.words[currentId]?.proficiency : undefined} onChange={(level) => void rate(level)} title="重新判断熟练度" />} /> : <div className="vocabulary-loading" role="status"><p>{resource.failed ? "单词详情加载失败" : "正在加载单词详情…"}</p>{resource.failed && <button onClick={resource.retry}>重新加载</button>}</div>}
-  </div></div>;
+
+  const rootPriority = { root: 0, prefix: 1, suffix: 2, base: 3 };
+  const rootLabels = { root: "词根", prefix: "前缀", suffix: "后缀", base: "词基" };
+  const studyPriority = [...(detail?.roots ?? [])].sort((a, b) => rootPriority[a.type] - rootPriority[b.type] || a.order - b.order);
+  const wordOrder = [...(detail?.roots ?? [])].sort((a, b) => a.order - b.order);
+  const longSentences = detail?.longSentences ?? [];
+  const longSentence = longSentences[longSentenceIndex];
+  const remaining = wordIds.length - reviewedSet.size;
+
+  return (
+    <div className={`today-view soft-transition transition-${sessionTransitionPhase}`}>
+      <div className="page today-overview-page review-overview-page">
+        <div className="today-overview-progress" role="progressbar" aria-label="今日复习总进度" aria-valuemin={0} aria-valuemax={wordIds.length} aria-valuenow={reviewedSet.size}><i style={{ width: `${reviewedSet.size / Math.max(1, wordIds.length) * 100}%` }} /></div>
+        <header className="today-plan-header">
+          <h1>Day {plan.day} · 复习</h1>
+          <p>已完成 <b>{reviewedSet.size}</b> / {wordIds.length}{remaining > 0 ? ` · 还剩 ${remaining} 词` : ""}</p>
+        </header>
+        <div className="today-root-ledger review-word-ledger">
+          {wordIds.map((id, index) => {
+            const item = catalog.words[id];
+            const done = reviewedSet.has(id);
+            const proficiency = done ? progress.words[id]?.proficiency : undefined;
+            if (!item) return null;
+            return (
+              <button
+                className="today-word-row"
+                key={id}
+                onClick={() => openAt(index)}
+                title={done ? `回看 ${item.spelling}` : `复习 ${item.spelling}`}
+              >
+                <b>{item.spelling}</b>
+                <span className="ipa">{item.pronunciation || "—"}</span>
+                <p>{done ? item.definitionCn : "先回想，再查看详情"}</p>
+                <i className={proficiency}>{done && proficiency ? proficiencyCopy[proficiency].label : index === safeIndex ? "待复习" : done ? "已复习" : "待复习"}</i>
+              </button>
+            );
+          })}
+        </div>
+        <button className="floating-study-start" onClick={startSession} disabled={!wordIds.length || ratingBusy}><i /><span>{!wordIds.length ? "今日无复习内容" : reviewedSet.size ? "继续复习" : "开始复习"}</span></button>
+      </div>
+
+      {sessionActive && currentId && createPortal(<div ref={dialogRef} tabIndex={-1} className={`study-session-overlay review-session-overlay mobile-panel-${mobilePanel}`} role="dialog" aria-modal="true" aria-label="今日复习">
+        <header className="study-session-topbar">
+          <div><span>{catalog.book.name}</span><b>Day {plan.day} · 复习</b>{revealed && mobilePanel !== "word" && <div className="session-word-anchor"><b>{detail?.spelling || word?.spelling}</b><AudioButton url={detail?.audioUrl} /></div>}</div>
+          <div className="session-progress"><i style={{ width: `${Math.max(reviewedSet.size / Math.max(1, wordIds.length), 1 / Math.max(1, wordIds.length)) * 100}%` }} /></div>
+          <strong>{safeIndex + 1} / {wordIds.length}</strong>
+          <button disabled={ratingBusy} onClick={closeSession}><kbd>Esc</kbd> 返回</button>
+        </header>
+        {revealed && <nav className="study-session-tabs" aria-label="复习内容">
+          {([['word', '单词'], ['roots', '词根'], ['sentences', '长难句']] as const).filter(([id]) => id !== "sentences" || longSentences.length > 0).map(([id, label]) => <button disabled={ratingBusy} key={id} aria-pressed={mobilePanel === id} onClick={() => setMobilePanel(id)}>{label}</button>)}
+        </nav>}
+
+        {!revealed ? (
+          <button className="judgment-front review-recall-front" disabled={ratingBusy} onClick={() => setRevealed(true)} aria-label={`回想 ${word?.spelling} 的词义，点击查看详解`}>
+            <span>先回想，再查看详情</span>
+            <h2>{word?.spelling}</h2>
+            <p className="ipa">{word?.pronunciation}</p>
+            <i>点击屏幕查看详解</i>
+          </button>
+        ) : (
+          <div className={`study-session-grid ${longSentences.length ? sentencesOpen ? "sentences-open" : "sentences-collapsed" : "without-sentences"}`}>
+            <aside className="study-morpheme-column" inert={ratingBusy}>
+              <header><span>MORPHEME NOTES</span><h2>词根词缀</h2></header>
+              <div className="study-column-scroll">
+                {detail ? studyPriority.length ? studyPriority.map((part, index) => <section className={`study-part-card ${part.type}`} key={`${part.id}-${part.order}`}>
+                  <header><span>{rootLabels[part.type]} · {String(index + 1).padStart(2, "0")}</span><b>{part.spelling}</b></header>
+                  <p>{part.meaning}</p>
+                  {part.memoryMethod?.trim() && <div><span>巧记</span><MarkdownBlock value={part.memoryMethod} /></div>}
+                </section>) : <div className="session-empty"><b>{detail.spelling}</b><p>这个单词没有独立词根，按单词整体记忆。</p></div> : <div className="session-loading" role="status">{resource.failed ? <><p>单词详情加载失败</p><button onClick={resource.retry}>重新加载</button></> : "正在准备词根词缀…"}</div>}
+              </div>
+            </aside>
+
+            <main className="study-word-column">
+              <div className="study-center-scroll" inert={ratingBusy}>
+                {detail ? <>
+                  <header className="study-word-hero">
+                    <div><span>复习 · Day {plan.day}</span><FittedWordTitle word={detail.spelling} guide={detail.pronunciationGuide} audioUrl={detail.audioUrl} /><div><AudioButton url={detail.audioUrl} pronunciation={detail.pronunciation || "音标未提供"} /></div></div>
+                    <div><p>{detail.definitionCn}</p></div>
+                  </header>
+                  <PronunciationMemory key={detail.id} guide={detail.pronunciationGuide} />
+                  <section className="session-section"><header><div><span>MEMORY</span><h3>单词巧记</h3></div></header><MarkdownBlock value={wordMemoryDisplay(detail.memoryMarkup)} /></section>
+                  {(wordOrder.length > 0 || detail.etymologyMarkup?.trim()) && <section className="session-section etymology-study"><header><div><span>WORD BUILDING</span><h3>词根词缀分析</h3></div></header>
+                    {wordOrder.length > 0 && <div className="study-word-equation">{wordOrder.map((part, index) => <div className="study-word-equation-piece" key={`${part.id}-${part.order}`}>{index > 0 && <i aria-hidden="true">＋</i>}<span><b>{part.spelling}</b><small>{part.meaning}</small></span></div>)}</div>}
+                    {detail.etymologyMarkup?.trim() && <MarkdownBlock value={detail.etymologyMarkup} />}
+                  </section>}
+                  <MeaningBridgeMemory detail={detail} />
+                  <SentenceSpotlight eyebrow="EXAMPLE" title="简单例句" rows={detail.examples} index={simpleExampleIndex} onNext={() => setSimpleExampleIndex((simpleExampleIndex + 1) % detail.examples.length)} />
+                  <SentenceSpotlight eyebrow="EXAM" title="真题例句" rows={detail.examExamples} index={examExampleIndex} onNext={() => setExamExampleIndex((examExampleIndex + 1) % detail.examExamples.length)} exam />
+                </> : <div className="session-loading center" role="status">{resource.failed ? <><p>单词详情加载失败</p><button onClick={resource.retry}>重新加载</button></> : <>正在展开 {word?.spelling}…</>}</div>}
+              </div>
+              <footer className="study-session-controls">
+                {saving.error && <p className="session-save-error" role="alert">{saving.error} 请重新选择评级重试。</p>}
+                <div className="session-rating">
+                  {(["unmastered", "unclear", "mastered"] as Proficiency[]).map((level, index) => <button className={`${level} ${activeProficiency === level ? "active" : ""}`} disabled={!detail || ratingBusy} onClick={() => void rate(level)} key={level}><kbd>{index + 1}</kbd><b>{proficiencyCopy[level].label}</b></button>)}
+                </div>
+                <div className={`session-navigation ${rated ? "has-next" : ""}`}>
+                  <button disabled={safeIndex === 0 || ratingBusy} onClick={() => move(-1)}><kbd>←</kbd> 上一个</button>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    className="session-audio-trigger"
+                    onClick={() => detail?.audioUrl && void playPronunciation(detail.audioUrl)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        if (detail?.audioUrl) void playPronunciation(detail.audioUrl);
+                      }
+                    }}
+                    title="播放发音"
+                  >
+                    <kbd>空格</kbd> 发音
+                  </span>
+                  {rated && (
+                    <button disabled={safeIndex === wordIds.length - 1 || ratingBusy} onClick={() => move(1)}>下一个 <kbd>→</kbd></button>
+                  )}
+                </div>
+              </footer>
+            </main>
+
+            {longSentences.length > 0 && <aside className="study-sentence-column" inert={ratingBusy}>
+              <button className="sentence-toggle" aria-expanded={sentencesOpen} aria-controls="review-sentence-content" aria-label={sentencesOpen ? "收起长难句" : "展开长难句"} onClick={() => setSentencesOpen((open) => !open)}><span aria-hidden="true">‹</span><b>长难句</b></button>
+              <div className="study-sentence-content" id="review-sentence-content" inert={!sentencesOpen && mobilePanel !== "sentences"}>
+              <header><span>LONG SENTENCE</span><h2>长难句</h2><p>{longSentences.length ? `第 ${longSentenceIndex + 1} 句，共 ${longSentences.length} 句` : "跟随当前单词显示"}</p></header>
+              <div className="study-column-scroll long-sentence-scroll">
+                {detail ? longSentence ? <article>
+                  <p className="long-sentence-copy">{String(longSentence.sentence || "")}</p>
+                  <p className="long-sentence-translation">{String(longSentence.translation || "")}</p>
+                  {longSentence.segments?.length > 0 && <section><h3>结构拆分</h3>{longSentence.segments.map((segment, index) => <div className="session-segment" key={index}><span>{segment.role_label || segment.role}</span><b>{segment.text}</b><small>{segment.gloss}</small></div>)}</section>}
+                  {longSentence.analyses?.length > 0 && <section><h3>难点分析</h3>{longSentence.analyses.map((analysis, index) => <div className="session-analysis" key={index}><span>{analysis.dimension || "解析"}</span><p>{analysis.analysis_text}</p></div>)}</section>}
+                </article> : <div className="session-empty"><b>暂无长难句</b><p>当前单词没有匹配的长难句分析。</p></div> : <div className="session-loading">正在准备长难句…</div>}
+              </div>
+              {longSentences.length > 1 && <footer className="long-sentence-pagination">
+                <button disabled={longSentenceIndex === 0} onClick={() => setLongSentenceIndex((current) => Math.max(0, current - 1))}>‹</button>
+                <div>{longSentences.map((item, index) => <button className={index === longSentenceIndex ? "active" : ""} aria-label={`查看第 ${index + 1} 条长难句`} onClick={() => setLongSentenceIndex(index)} key={String(item.long_sentence_id ?? index)} />)}</div>
+                <button disabled={longSentenceIndex === longSentences.length - 1} onClick={() => setLongSentenceIndex((current) => Math.min(longSentences.length - 1, current + 1))}>›</button>
+              </footer>}
+              </div>
+            </aside>}
+          </div>
+        )}
+      </div>, document.body)}
+    </div>
+  );
 }
 function WordBrowseSession({ wordIds, initialIndex, category, progress, details, loadWords, planDay, saveProgress, onClose }: {
   wordIds: string[];

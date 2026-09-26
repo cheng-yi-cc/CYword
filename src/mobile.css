@@ -60,6 +60,9 @@ body.study-mode-active .app-content { position: relative; z-index: 100; view-tra
   .today-word-row { grid-template-columns: minmax(0,1fr) auto; gap: 5px 10px; padding: 14px 16px; min-height: 86px; }.today-word-row b { font-size: 22px; overflow-wrap: anywhere; }.today-word-row > span { grid-column: 1; grid-row: 2; font-size: 12px; }.today-word-row p { grid-column: 1 / -1; grid-row: 3; font-size: 13px; }.today-word-row > i { grid-column: 2; grid-row: 1 / span 2; font-size: 11px; }
   .floating-study-start { bottom: calc(92px + env(safe-area-inset-bottom)); left: 50%; width: 180px; height: 54px; border-radius: 18px; display: flex; justify-content: center; gap: 12px; }.floating-study-start > i { border-top-width: 6px; border-bottom-width: 6px; border-left-width: 9px; }
   .study-session-overlay { min-width: 0; padding-top: env(safe-area-inset-top); grid-template-rows: 58px 48px minmax(0,1fr); }
+  .review-session-overlay:not(:has(.study-session-tabs)) { grid-template-rows: 58px minmax(0,1fr); }
+  .review-session-overlay .review-recall-front { min-height: calc(100dvh - 58px); height: 100%; }
+  .review-word-ledger { margin: 0 0 100px; }
   .study-session-topbar { gap: 8px; padding: 0 16px; }.study-session-topbar > div:first-child { flex-direction: column; gap: 3px; min-width: 0; }.study-session-topbar > div:first-child span { font-size: 10px; }.study-session-topbar > div:first-child b { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }.study-session-topbar > strong { margin-left: auto; font-size: 12px; white-space: nowrap; }.study-session-topbar > button { min-width: 48px; min-height: 44px; padding: 8px; font-size: 13px; }
   .study-session-topbar kbd,.study-session-controls kbd { display: none; }
   .study-session-topbar:has(.session-word-anchor) { min-height: 100px; }

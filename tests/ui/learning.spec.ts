@@ -401,20 +401,24 @@ test("review reveals only on request and local word failure can be retried", asy
   await setup(page, ids);
   await page.evaluate(() => { (window as any).__test.failLoads = true; });
   await page.getByRole("button", { name: "继续学习" }).click();
-  await expect(page.locator(".judgment-front h2")).toHaveText("first");
-  await expect(page.getByText("单词巧记", { exact: true })).toHaveCount(0);
-  await page.locator(".judgment-front").click();
-  await expect(page.locator(".judgment-card")).toContainText("单词详情加载失败");
+  const review = page.getByRole("dialog", { name: "今日复习" });
+  await expect(review.locator(".review-recall-front h2")).toHaveText("first");
+  await expect(review.getByText("单词巧记", { exact: true })).toHaveCount(0);
+  await review.locator(".review-recall-front").click();
+  await expect(review.locator(".study-center-scroll")).toContainText("单词详情加载失败");
   await page.evaluate(() => {
     const state = (window as any).__test;
     state.failLoads = false;
     const book = (window as any).__offlineBook, original = book.readWords.bind(book);
     book.readWords = (request: any) => request.wordIds.includes("a") ? original(request) : new Promise(() => {});
   });
-  await page.getByRole("button", { name: "重新加载" }).click();
-  await expect(page.locator(".word-hero h2")).toHaveText("first");
-  await page.locator(".proficiency-picker button.unmastered").click();
-  await expect(page.locator(".judgment-front h2")).toHaveText("symposium");
+  await review.locator(".study-center-scroll").getByRole("button", { name: "重新加载" }).click();
+  await expect(review.locator(".study-word-hero h1")).toHaveText("first");
+  // 详解与学习日一致：三栏沉浸式布局，而不是旧的页面内卡片。
+  await expect(review.locator(".study-morpheme-column")).toBeVisible();
+  await expect(review.locator(".study-word-column")).toBeVisible();
+  await review.locator(".session-rating button.unmastered").click();
+  await expect(review.locator(".review-recall-front h2")).toHaveText("symposium");
   expect(await page.evaluate(() => (window as any).__test.local.reviewHistory.length)).toBe(1);
 });
 
