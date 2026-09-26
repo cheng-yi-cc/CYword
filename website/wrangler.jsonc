@@ -5,6 +5,11 @@
   "compatibility_date": "2026-08-31",
   "compatibility_flags": ["nodejs_compat"],
   "send_metrics": false,
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "https://snowy-poetry-f884.cloudflareaccess.com",
+    "CF_ACCOUNT_ID": "14aca8529820351292170f75fb8caac5",
+    "CF_PAGES_SCRIPT_NAME": "pages-worker--18658977-production"
+  },
   "r2_buckets": [
     { "binding": "DOWNLOADS", "bucket_name": "cyword-downloads" },
     { "binding": "BOOKS", "bucket_name": "cyword-book-data" }

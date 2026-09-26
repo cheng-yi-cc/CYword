@@ -25,6 +25,7 @@ export type AuthUser = {
 export type JWTPayload = {
   sub: string;
   email: string;
+  tokenVersion?: number;
   iat: number;
   exp: number;
 };
@@ -241,13 +242,23 @@ export async function verifyAndAuthenticate(
   const record = await db.prepare(
     `INSERT INTO users (id, email, created_at, last_login_at, login_count) VALUES (?, ?, ?, ?, 1)
      ON CONFLICT(email) DO UPDATE SET last_login_at = excluded.last_login_at, login_count = users.login_count + 1
-     RETURNING id, email, created_at, last_login_at, login_count`
-  ).bind(crypto.randomUUID(), email, now, now).first<{ id: string; email: string; created_at: number; last_login_at: number; login_count: number }>();
-  if (!record) throw new Error("账号保存失败，请重新登录");
+       WHERE users.status = 'active'
+     RETURNING id, email, created_at, last_login_at, login_count, token_version`
+  ).bind(crypto.randomUUID(), email, now, now).first<{ id: string; email: string; created_at: number; last_login_at: number; login_count: number; token_version: number }>();
+  if (!record) return { success: false, error: "此账号已被限制登录，请联系维护者" };
   const user: AuthUser = { id: record.id, email: record.email, createdAt: record.created_at, lastLoginAt: record.last_login_at, loginCount: record.login_count };
 
   // 5. 签发 JWT
-  const token = await signJWT({ sub: user.id, email: user.email }, jwtSecret);
+  const token = await signJWT({ sub: user.id, email: user.email, tokenVersion: record.token_version }, jwtSecret);
+
+  // Event history starts when the admin migration is installed. A monitoring
+  // write failure must not prevent a successful user login.
+  try {
+    await db.prepare("INSERT INTO auth_events(id, user_id, kind, created_at) VALUES (?, ?, 'login_success', ?)")
+      .bind(crypto.randomUUID(), user.id, now).run();
+  } catch (error) {
+    console.error("[CYWORD AUTH] login event write failed:", error);
+  }
 
   return { success: true, token, user };
 }
@@ -267,11 +278,11 @@ export async function getUserFromRequest(
 
   await ensureAuthTables(db);
   const user = await db
-    .prepare("SELECT id, email, created_at, last_login_at, login_count FROM users WHERE id = ?")
+    .prepare("SELECT id, email, created_at, last_login_at, login_count, status, token_version FROM users WHERE id = ?")
     .bind(payload.sub)
-    .first<{ id: string; email: string; created_at: number; last_login_at: number; login_count: number }>();
+    .first<{ id: string; email: string; created_at: number; last_login_at: number; login_count: number; status: string; token_version: number }>();
 
-  if (!user) return null;
+  if (!user || user.status !== "active" || user.token_version !== (payload.tokenVersion ?? 0)) return null;
 
   return {
     id: user.id,

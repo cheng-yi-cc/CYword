@@ -189,6 +189,8 @@ npm run upload:book-data
 
 ## 官网运行与部署
 
+管理后台的权限、数据口径、迁移和本地预览见 [管理控制台说明](ADMIN.md)。
+
 官网和桌面端独立构建，不需要生成词书数据。`npm run dev:site` 监听 `http://127.0.0.1:5174/`；`npm run build:site` 后可用 `npm run preview:site` 在 `http://127.0.0.1:4174/` 查看产物。Vite 不模拟 R2，通过 `/downloads/` 代理读取正式域名的发布信息和安装包。
 
 | 配置 | 约定 |
