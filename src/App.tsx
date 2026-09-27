@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useExitProtection } from "./useExitProtection";
 import { createPortal } from "react-dom";
-import { bookMarkdown } from "./book-markdown";
+import { bookMarkdown, handleBookImageError } from "./book-markdown";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import {
   buildPlan,
   completedStudyExposureKeys,
@@ -13,6 +15,8 @@ import {
   rateStudyWord,
   rateSearchWord,
   reviewCandidates,
+  reviewAccess,
+  reviewedWords,
   startReviewDay,
   studyExposures,
   updateWordProficiency,
@@ -20,7 +24,7 @@ import {
 } from "./progress";
 import { AuthModal } from "./components/AuthModal";
 import { AndroidUpdateMenu } from "./components/AndroidUpdates";
-import { useSyncedProgress, cloudProgressEnabled } from "./useSyncedProgress";
+import { useSyncedProgress } from "./useSyncedProgress";
 import { offlineBook } from "./offline-book";
 import { BookDownload } from "./components/BookDownload";
 import { wordMemoryDisplay } from "./memory-display";
@@ -127,6 +131,7 @@ function MarkdownBlock({ value, empty = "当前数据没有提供这部分内容
   return (
     <div
       className="rich-text"
+      onErrorCapture={handleBookImageError}
       dangerouslySetInnerHTML={{ __html: html }}
       onMouseOver={handleMouseOver}
       onMouseOut={handleMouseOut}
@@ -274,7 +279,7 @@ function SentenceSpotlight({
   );
 }
 
-function WordDetailPanel({
+export function WordDetailPanel({
   detail,
   footer,
   compact = false,
@@ -442,17 +447,21 @@ function HomeView({
   progress,
   current,
   goToday,
+  allComplete = false,
 }: {
   catalog?: Catalog;
   progress: AppProgress;
   plan?: PlanDay[];
   current: PlanDay;
   goToday: () => void;
+  allComplete?: boolean;
 }) {
   const fraction = planDayFraction(progress, current);
   const dayState = progress.planDays[String(current.day)];
   const completed = current.kind === "study" ? completedStudyExposureKeys(progress, current).length : (dayState?.reviewedWordIds.length ?? 0);
-  const target = current.kind === "study" ? current.appearanceCount : (dayState?.reviewWordIds.length ?? reviewCandidates(progress, true).length);
+  const target = current.kind === "study" ? current.appearanceCount : (dayState?.reviewWordIds.length ?? reviewCandidates(progress, true, current).length);
+
+  if (allComplete) return <div className="page review-finished"><PageHeader eyebrow="COMPLETE" title="全计划已完成" description="所有学习日与复习日均已完成。" /><div className="review-finished-mark">✓</div></div>;
 
   return (
     <div className="page home-page">
@@ -473,7 +482,7 @@ function HomeView({
 
 function PlanView({ plan, progress, current, onSelectDay }: { plan: PlanDay[]; progress: AppProgress; current: PlanDay; onSelectDay: (dayNumber: number) => void }) {
   const today = progress.planDays[String(current.day)];
-  const todayTotal = current.kind === "study" ? current.appearanceCount : (today?.reviewWordIds.length ?? reviewCandidates(progress, true).length);
+  const todayTotal = current.kind === "study" ? current.appearanceCount : (today?.reviewWordIds.length ?? reviewCandidates(progress, true, current).length);
   const todayDone = current.kind === "study" ? completedStudyExposureKeys(progress, current).length : (today?.reviewedWordIds.length ?? 0);
   const todayFraction = todayTotal ? Math.min(1, todayDone / todayTotal) : (today?.completedAt ? 1 : 0);
   return (
@@ -496,18 +505,19 @@ function PlanView({ plan, progress, current, onSelectDay }: { plan: PlanDay[]; p
       <div className="plan-calendar" role="region" aria-label="日期卡片" tabIndex={0}><div className="plan-grid">
         {plan.map((day) => {
           const fraction = planDayFraction(progress, day);
-          const dayProgress = progress.planDays[String(day.day)];
-          const finished = Boolean(dayProgress?.completedAt);
+          const finished = isPlanDayComplete(progress, day);
+          const locked = day.kind === "review" && !reviewAccess(progress, plan, day.day).allowed;
           const isCurrent = day.day === current.day;
           const count = day.kind === "study" ? `${day.appearanceCount} 词` : `最多 ${day.plannedReviewWordCount} 词`;
           return (
             <button
-              className={`${day.kind} ${isCurrent ? "current" : ""} ${finished ? "finished" : ""}`}
+              className={`${day.kind} ${isCurrent ? "current" : ""} ${finished ? "finished" : ""} ${locked ? "locked" : ""}`}
               key={day.day}
               onClick={() => onSelectDay(day.day)}
-              title={`查看 Day ${day.day} 学习内容`}
+              title={locked ? reviewAccess(progress, plan, day.day).reason : `查看 Day ${day.day} 学习内容`}
+              aria-label={`Day ${day.day} ${day.kind === "study" ? "学习" : "复习"}${locked ? "，未解锁" : ""}`}
             >
-              <span>{day.kind === "study" ? `学习 ${day.studyDay}` : "集中复习"}</span>
+              <span>{day.kind === "study" ? `学习 ${day.studyDay}` : "集中复习"}{locked && <svg className="review-lock" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>}</span>
               <b>Day {day.day}</b>
               <p>{count}</p>
               <small>{Math.round(fraction * 100)}%</small>
@@ -546,7 +556,7 @@ function StudyToday({
   const exposures = useMemo(() => studyExposures(plan, groups), [plan, groups]);
   const completedKeys = useMemo(() => new Set(completedStudyExposureKeys(progress, plan)), [progress, plan]);
   const completedCount = completedKeys.size;
-  const finished = isPlanDayComplete(progress, plan.day);
+  const finished = isPlanDayComplete(progress, plan);
   const [sessionActive, transitionSession, sessionTransitionPhase] = useSoftTransitionState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [simpleExampleIndex, setSimpleExampleIndex] = useState(0);
@@ -831,6 +841,7 @@ function ReviewToday({ catalog, progress, plan, details, loadWords, saveProgress
   autoStart?: boolean;
 }) {
   const [skipMastered, setSkipMastered] = useState(true);
+  const [sessionOrder, setSessionOrder] = useState<string[]>([]);
   const [revealed, setRevealed] = useState(false);
   const [sessionActive, transitionSession, sessionTransitionPhase] = useSoftTransitionState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -845,10 +856,14 @@ function ReviewToday({ catalog, progress, plan, details, loadWords, saveProgress
   const closingSession = useRef(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const day = progress.planDays[String(plan.day)];
-  const candidates = reviewCandidates(progress, skipMastered);
-  const wordIds = day?.reviewWordIds ?? [];
-  const reviewedSet = new Set(day?.reviewedWordIds ?? []);
-  const finished = isPlanDayComplete(progress, plan.day);
+  const fullPlan = useMemo(() => buildPlan(catalog), [catalog]);
+  const access = reviewAccess(progress, fullPlan, plan.day);
+  const candidates = reviewCandidates(progress, skipMastered, plan);
+  const queue = day?.reviewWordIds ?? [];
+  // Keep the displayed word stable while another device contributes to this round.
+  const wordIds = sessionActive ? [...sessionOrder, ...queue.filter((id) => !sessionOrder.includes(id))] : queue;
+  const reviewedSet = new Set(reviewedWords(progress, plan));
+  const finished = isPlanDayComplete(progress, plan);
   const safeIndex = wordIds.length ? Math.min(Math.max(0, activeIndex), wordIds.length - 1) : 0;
   const currentId = wordIds[safeIndex];
   const rated = currentId ? reviewedSet.has(currentId) : false;
@@ -880,7 +895,8 @@ function ReviewToday({ catalog, progress, plan, details, loadWords, saveProgress
   useEffect(() => () => stopPronunciation(), []);
 
   const openAt = (index: number) => {
-    if (ratingLock.current || !wordIds.length) return;
+    if (ratingLock.current || !wordIds.length || !access.allowed) return;
+    setSessionOrder(wordIds);
     closingSession.current = false;
     setActiveIndex(Math.min(Math.max(0, index), wordIds.length - 1));
     setRevealed(false);
@@ -888,7 +904,8 @@ function ReviewToday({ catalog, progress, plan, details, loadWords, saveProgress
     transitionSession(true);
   };
   const startSession = () => {
-    if (ratingLock.current || !wordIds.length) return;
+    if (ratingLock.current || !wordIds.length || !access.allowed) return;
+    setSessionOrder(wordIds);
     closingSession.current = false;
     const nextUnrated = wordIds.findIndex((id) => !reviewedSet.has(id));
     setActiveIndex(nextUnrated >= 0 ? nextUnrated : 0);
@@ -896,19 +913,26 @@ function ReviewToday({ catalog, progress, plan, details, loadWords, saveProgress
     setSentencesOpen(false);
     transitionSession(true);
   };
-  const start = () => saving.run(
-    () => saveProgress(startReviewDay(progress, plan.day, candidates, skipMastered)),
+  const start = (confirmEmpty = false) => {
+    let started = progress;
+    return saving.run(
     () => {
+      started = startReviewDay(progress, fullPlan, plan.day, skipMastered, confirmEmpty);
+      return saveProgress(started);
+    },
+    () => {
+      setSessionOrder(started.planDays[String(plan.day)].reviewWordIds);
       setActiveIndex(0);
       setRevealed(false);
       setSentencesOpen(false);
       closingSession.current = false;
-      transitionSession(true);
+      if (candidates.length) transitionSession(true);
     },
-  );
+    );
+  };
   useEffect(() => {
-    if (!autoStart || saving.busy || sessionActive) return;
-    if (!day) void start();
+    if (!autoStart || saving.busy || sessionActive || !access.allowed) return;
+    if (!day && candidates.length) void start();
     else if (!finished && wordIds.length) startSession();
   }, [autoStart]);
   const endSession = () => { closingSession.current = true; transitionSession(false); };
@@ -922,11 +946,14 @@ function ReviewToday({ catalog, progress, plan, details, loadWords, saveProgress
   };
   const rate = async (level: Proficiency) => {
     if (!currentId || !detail || !revealed || ratingLock.current || closingSession.current) return;
-    const next = rateReviewWord(progress, plan.day, currentId, level);
-    await saving.run(() => saveProgress(next), () => {
+    let next = progress;
+    await saving.run(() => {
+      next = rateReviewWord(progress, fullPlan, plan.day, currentId, level);
+      return saveProgress(next);
+    }, () => {
       const nextDay = next.planDays[String(plan.day)];
       const nextReviewed = new Set(nextDay?.reviewedWordIds ?? []);
-      const ids = nextDay?.reviewWordIds ?? wordIds;
+      const ids = wordIds;
       const nextAfter = ids.findIndex((id, index) => index > safeIndex && !nextReviewed.has(id));
       const anyUnrated = nextAfter >= 0 ? nextAfter : ids.findIndex((id) => !nextReviewed.has(id));
       if (anyUnrated >= 0) {
@@ -971,11 +998,12 @@ function ReviewToday({ catalog, progress, plan, details, loadWords, saveProgress
   }, [sessionActive, safeIndex, currentId, detail?.audioUrl, ratingBusy, progress, rated, revealed]);
 
   const saveNotice = saving.error && <p className="session-save-error" role="alert">{saving.error} 请重试。</p>;
+  if (!access.allowed) return <div className="page review-setup"><PageHeader eyebrow={`DAY ${plan.day}`} title="复习尚未开放" description={access.reason} /></div>;
   if (!day) {
     const counts = proficiencyCounts(progress);
-    return <div className="page review-setup"><PageHeader eyebrow={`DAY ${plan.day} · REVIEW`} title="本轮复习" description="先回想词义，再判断熟练度。" /><div className="review-setup-card"><span>本轮复习</span><b>{candidates.length}</b><small>个单词</small><label><input type="checkbox" checked={skipMastered} disabled={saving.busy} onChange={(event) => setSkipMastered(event.target.checked)} /><i />跳过已掌握</label><div><p>未掌握 <b>{counts.unmastered}</b></p><p>不清楚 <b>{counts.unclear}</b></p><p className={skipMastered ? "muted" : ""}>已掌握 <b>{counts.mastered}</b></p></div>{saveNotice}<button disabled={saving.busy} onClick={() => void start()}>{saving.busy ? "正在准备…" : "开始复习"} <b>→</b></button></div></div>;
+    return <div className="page review-setup"><PageHeader eyebrow={`DAY ${plan.day} · REVIEW`} title="本轮复习" description="先回想词义，再判断熟练度。" /><div className="review-setup-card"><span>本轮复习</span><b>{candidates.length}</b><small>个单词</small><label><input type="checkbox" checked={skipMastered} disabled={saving.busy} onChange={(event) => setSkipMastered(event.target.checked)} /><i />跳过已掌握</label><div><p>未掌握 <b>{counts.unmastered}</b></p><p>不清楚 <b>{counts.unclear}</b></p><p className={skipMastered ? "muted" : ""}>已掌握 <b>{counts.mastered}</b></p></div>{saveNotice}{!candidates.length && <p>本轮没有需要复习的单词</p>}<button disabled={saving.busy} onClick={() => void start(!candidates.length)}>{saving.busy ? "正在准备…" : candidates.length ? "开始复习" : "确认完成本轮"} <b>→</b></button></div></div>;
   }
-  if (finished) return <div className="page review-finished"><PageHeader eyebrow={`DAY ${plan.day} · COMPLETE`} title="今天的复习已完成" description={`已保存 ${day.reviewedWordIds.length} 个单词的判断。`} /><div className="review-finished-mark">✓<span>REVIEW COMPLETE</span></div></div>;
+  if (finished && !sessionActive) return <div className="page review-finished"><PageHeader eyebrow={`DAY ${plan.day} · COMPLETE`} title="今天的复习已完成" description={`已保存 ${day.reviewedWordIds.length} 个单词的判断。`} /><div className="review-finished-mark">✓<span>REVIEW COMPLETE</span></div></div>;
 
   const rootPriority = { root: 0, prefix: 1, suffix: 2, base: 3 };
   const rootLabels = { root: "词根", prefix: "前缀", suffix: "后缀", base: "词基" };
@@ -1431,6 +1459,7 @@ function App() {
     setSessionExpired(true);
   });
   const progress = synced.progress;
+  const exitLock = useExitProtection(synced.flush, Boolean(progress));
   const [sessionChecked, setSessionChecked] = useState(false);
   const [view, transitionView, viewTransitionPhase] = useSoftTransitionState<ViewName>("home");
   const { details, loadWords } = useWordResources(catalog);
@@ -1532,7 +1561,7 @@ function App() {
   }, [session?.user.id]);
 
   const saveProgress = async (next: AppProgress) => {
-    if (saveLock.current || logoutLock.current || logoutNotice) throw new Error("正在保存，请稍后重试。");
+    if (exitLock.current || saveLock.current || logoutLock.current || logoutNotice) throw new Error("正在保存，请稍后重试。");
     saveLock.current = true;
     setSavingProgress(true);
     try { await synced.save(next); }
@@ -1562,7 +1591,7 @@ function App() {
         const result = await synced.flush();
         if (generation !== authGeneration.current) return;
         if (!result.localSaved) { setLogoutNotice({ message: result.message || "本机保存失败，请重试后退出。", canLeave: false }); return; }
-        if (cloudProgressEnabled && !result.cloudSynced) { setLogoutNotice({ message: "本机记录已保存，但云端同步未完成。继续退出后，请勿清理当前设备数据；在其他设备上可能暂时看不到本次进度。", canLeave: true }); return; }
+        if (!result.cloudSynced) { setLogoutNotice({ message: "本机记录已保存，但云端同步未完成。继续退出后，请勿清理当前设备数据；在其他设备上可能暂时看不到本次进度。", canLeave: true }); return; }
       }
       await finishLogout();
     } catch (reason) {
@@ -1579,13 +1608,14 @@ function App() {
   if (sessionChecked && !session) return <>{titlebar}<AuthModal notice={sessionRestoreError || undefined} onSuccess={onLogin} /><UpdateControl /></>;
   if (error) return <>{titlebar}<div className="fatal-error"><span>CYWORD</span><h1>暂时无法继续</h1><p>{error}</p><button onClick={() => location.reload()}>重新连接</button></div></>;
   if (session && bookChecked && !catalog) return <>{titlebar}<BookDownload onReady={next => setCatalog(applyCurriculum(next))} onLogout={finishLogout} /></>;
-  if (session && !progress && synced.status === "error") return <>{titlebar}<div className="fatal-error"><h1>进度读取失败</h1><p>{synced.message}</p><button onClick={() => location.reload()}>重试</button></div></>;
+  if (session && !progress && (synced.status === "error" || synced.status === "expired")) return <>{titlebar}<div className="fatal-error"><h1>进度尚未恢复</h1><p>{synced.message}</p>{sessionExpired ? <button onClick={() => setAuthOpen(true)}>重新登录</button> : <button onClick={() => location.reload()}>重试</button>}</div>{authOpen && <AuthModal initialEmail={session.user.email} onSuccess={onLogin} onClose={() => setAuthOpen(false)} />}</>;
   if (!catalog || !progress || !sessionChecked) return <>{titlebar}<div className="loading-screen"><div>Cy</div><p>正在铺开今天的词书计划…</p></div></>;
 
   const plan = buildPlan(catalog);
-  const currentDayNumber = currentPlanDayNumber(progress, plan.length);
-  const activeDayNumber = selectedDayNumber ?? currentDayNumber;
-  const current = plan[currentDayNumber - 1] ?? plan[0];
+  const currentDayNumber = currentPlanDayNumber(progress, plan);
+  const allComplete = currentDayNumber === null;
+  const activeDayNumber = selectedDayNumber ?? currentDayNumber ?? plan.length;
+  const current = plan[(currentDayNumber ?? plan.length) - 1];
   const selected = plan[activeDayNumber - 1] ?? current;
 
   const navigate = (nextView: ViewName) => {
@@ -1593,7 +1623,7 @@ function App() {
     setAutoStartStudy(false);
     if (nextView !== view || (nextView === "today" && selectedDayNumber !== null)) {
       if (nextView === "today") {
-        setSelectedDayNumber(null);
+        setSelectedDayNumber(allComplete ? null : current.day);
       }
       stopPronunciation();
       transitionView(nextView);
@@ -1622,7 +1652,7 @@ function App() {
         <header className="mobile-header">
           <button className="mobile-search-button" aria-label="单词搜索" onClick={openSearch}><SearchIcon /></button>
           <a className="mobile-brand" href="#" onClick={(event) => { event.preventDefault(); navigate("home"); }}>CYword</a>
-          <details className="mobile-account"><summary aria-label={`我的账号，${synced.message}`}><i className={`sync-dot ${synced.status}`} aria-hidden="true" /><span>{sessionExpired ? "未登录" : "我的"}</span><svg className="account-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg></summary><div><b>{session?.user.email}</b><p className="account-sync-message"><i className={`sync-dot ${synced.status}`} aria-hidden="true" />{synced.message}</p>{sessionExpired ? <button onClick={() => setAuthOpen(true)}>重新登录</button> : (cloudProgressEnabled || synced.status === "pending") && <button onClick={() => void synced.sync()}>{cloudProgressEnabled ? "立即同步" : "重试导入旧进度"}</button>}<button onClick={() => setReleasesOpen(true)}>更新日志</button><button disabled={savingProgress || logoutBusy} onClick={() => void handleLogout()}>退出登录</button><AndroidUpdateMenu /></div></details>
+          <details className="mobile-account"><summary aria-label={`我的账号，${synced.message}`}><i className={`sync-dot ${synced.status}`} aria-hidden="true" /><span>{sessionExpired ? "未登录" : "我的"}</span><svg className="account-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg></summary><div><b>{session?.user.email}</b><p className="account-sync-message"><i className={`sync-dot ${synced.status}`} aria-hidden="true" />{synced.message}</p>{sessionExpired ? <button onClick={() => setAuthOpen(true)}>重新登录</button> : <button onClick={() => void synced.sync()}>立即同步</button>}<button onClick={() => setReleasesOpen(true)}>更新日志</button><button disabled={savingProgress || logoutBusy} onClick={() => void handleLogout()}>退出登录</button><AndroidUpdateMenu /></div></details>
         </header>
         <aside className="sidebar">
           <div className="brand"><b>CYword</b></div>
@@ -1633,21 +1663,29 @@ function App() {
               {sessionExpired ? <button className="account-trigger" onClick={() => setAuthOpen(true)} disabled={savingProgress || logoutBusy}><span className="sidebar-user-avatar signed-out" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3" /><path d="M5 20v-2a7 7 0 0 1 14 0v2" /></svg></span><span>未登录</span></button> :
                 <PopupMenu className="sidebar-account" disabled={savingProgress || logoutBusy} label={<><span className="sidebar-user-avatar" aria-hidden="true">{session.user.email.charAt(0).toUpperCase()}</span><span className="sidebar-user-email" title={session.user.email}>{session.user.email.split("@")[0]}</span></>}>
                   <b className="account-email">{session.user.email}</b>
-                  <button className={`sync-status ${synced.status}`} title={synced.message} disabled={!cloudProgressEnabled && synced.status !== "pending"} onClick={() => void synced.sync()}><i className={`sync-dot ${synced.status}`} />{synced.message}</button>
+                  <button className={`sync-status ${synced.status}`} title={synced.message} onClick={() => void synced.sync()}><i className={`sync-dot ${synced.status}`} />{synced.message}</button>
                   <AndroidUpdateMenu /><button className="btn-logout" disabled={savingProgress || logoutBusy} onClick={() => void handleLogout()}>退出登录</button>
                 </PopupMenu>}
             </footer>
           )}
         </aside>
         <main className={`app-content soft-transition transition-${viewTransitionPhase}`}>
-          {view === "home" && <HomeView catalog={catalog} progress={progress} plan={plan} current={current} goToday={() => handleSelectPlanDay(currentDayNumber, !isPlanDayComplete(progress, currentDayNumber))} />}
-          {view === "plan" && <PlanView plan={plan} progress={progress} current={plan[currentDayNumber - 1] ?? current} onSelectDay={handleSelectPlanDay} />}
-          {view === "today" && <>{selected.day !== current.day && <div className="day-preview-banner">正在查看 Day {selected.day}<button disabled={savingProgress} onClick={() => handleSelectPlanDay(current.day)}>返回今日</button></div>}{selected.kind === "study" ? <StudyToday key={`${session?.user.id}:${selected.day}`} catalog={catalog} progress={progress} plan={selected} details={details} loadWords={loadWords} saveProgress={saveProgress} autoStart={autoStartStudy} preview={selected.day !== current.day} /> : <ReviewToday key={`${session?.user.id}:${selected.day}`} catalog={catalog} progress={progress} plan={selected} details={details} loadWords={loadWords} saveProgress={saveProgress} autoStart={autoStartStudy} />}</>}
+          <ErrorBoundary key={`${view}:${selected.day}`} onBack={() => navigate("home")}>
+          {view === "home" && <HomeView catalog={catalog} progress={progress} plan={plan} current={current} allComplete={allComplete} goToday={() => handleSelectPlanDay(current.day, !allComplete)} />}
+          {view === "plan" && <PlanView plan={plan} progress={progress} current={current} onSelectDay={handleSelectPlanDay} />}
+          {view === "today" && allComplete && selectedDayNumber === null && <HomeView progress={progress} current={current} goToday={() => {}} allComplete />}
+          {view === "today" && !(allComplete && selectedDayNumber === null) && <>{selected.day !== current.day && <div className="day-preview-banner">正在查看 Day {selected.day}<button disabled={savingProgress} onClick={() => handleSelectPlanDay(current.day)}>返回今日</button></div>}{selected.kind === "study" ? <StudyToday key={`${session?.user.id}:${selected.day}`} catalog={catalog} progress={progress} plan={selected} details={details} loadWords={loadWords} saveProgress={saveProgress} autoStart={autoStartStudy} preview={selected.day !== current.day} /> : <ReviewToday key={`${session?.user.id}:${selected.day}`} catalog={catalog} progress={progress} plan={selected} details={details} loadWords={loadWords} saveProgress={saveProgress} autoStart={autoStartStudy} />}</>}
           {view === "vocabulary" && <VocabularyView catalog={catalog} progress={progress} details={details} loadWords={loadWords} planDay={current.day} saveProgress={saveProgress} />}
+          </ErrorBoundary>
         </main>
-        {searchOpen && <ShellDialog label="单词搜索" className="quick-search-dialog" onClose={() => setSearchOpen(false)} busy={savingProgress}><WordSearchView catalog={catalog} progress={progress} details={details} loadWords={loadWords} planDay={current.day} saveProgress={saveProgress} /></ShellDialog>}
+        {searchOpen && <ShellDialog label="单词搜索" className="quick-search-dialog" onClose={() => setSearchOpen(false)} busy={savingProgress}><ErrorBoundary><WordSearchView catalog={catalog} progress={progress} details={details} loadWords={loadWords} planDay={current.day} saveProgress={saveProgress} /></ErrorBoundary></ShellDialog>}
         {releasesOpen && <ReleaseNotesDialog onClose={() => setReleasesOpen(false)} />}
-        {authOpen && <AuthModal initialEmail={session?.user.email} notice="登录已过期，本机学习记录已保留。" beforeSessionChange={async () => { const result = await synced.flush(); if (!result.localSaved) throw new Error(result.message || "本机进度尚未保存，请重试后登录。"); }} onSuccess={onLogin} onClose={() => setAuthOpen(false)} />}
+        {authOpen && <AuthModal initialEmail={session?.user.email} notice="登录已过期，本机学习记录已保留。" beforeSessionChange={async next => {
+          const result = await synced.flush();
+          if (!result.localSaved) throw new Error(result.message || "本机进度尚未保存，请重试后登录。");
+          if (next.user.id !== session?.user.id && !result.cloudSynced
+            && !window.confirm("当前账号的进度已保存本机，但尚未上传。切换后请保留设备数据，并重新登录原账号完成同步。继续切换？")) throw new Error("已取消切换，当前账号和进度均已保留。");
+        }} onSuccess={onLogin} onClose={() => setAuthOpen(false)} />}
         <UpdateControl />
         {logoutNotice && <LogoutNotice {...logoutNotice} busy={logoutBusy} onRetry={() => void handleLogout()} onContinue={() => void handleLogout(true)} onCancel={() => setLogoutNotice(null)} />}
       </div>

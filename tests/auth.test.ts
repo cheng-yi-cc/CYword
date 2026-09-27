@@ -14,11 +14,12 @@ import {
   EMAIL_PATTERN,
   OTP_PATTERN,
 } from "../website/server/auth.ts";
+import { allowedAuthSource, claimMailBudget } from "../website/server/auth-guard.ts";
 
 const TEST_JWT_SECRET = "test-secret-key-with-at-least-32-characters";
 
 // Execute the actual SQL instead of reimplementing query behavior in a Map mock.
-const authSchema = readFileSync(new URL("../migrations/0001_create_auth_tables.sql", import.meta.url), "utf8");
+const authSchema = readFileSync(new URL("../migrations/0001_create_auth_tables.sql", import.meta.url), "utf8") + "\n" + readFileSync(new URL("../website/migrations/0003_auth_mail_budget.sql", import.meta.url), "utf8");
 function createSqliteD1(): D1Database {
   const sqlite = new DatabaseSync(":memory:");
   sqlite.exec(authSchema);
@@ -45,6 +46,24 @@ test("email & otp regex patterns validate correctly", () => {
   assert.ok(!OTP_PATTERN.test("12345"));
   assert.ok(!OTP_PATTERN.test("1234567"));
   assert.ok(!OTP_PATTERN.test("abcdef"));
+});
+
+test("auth source guard permits native JSON and trusted web origins, rejecting unrelated browser sites", () => {
+  const request = (headers: Record<string, string>) => new Request("https://cyword.chengyi.me/api/auth/send-code", { method: "POST", headers });
+  assert.equal(allowedAuthSource(request({ "Content-Type": "application/json" })), true);
+  assert.equal(allowedAuthSource(request({ "Content-Type": "application/json; charset=utf-8", Origin: "https://cyword.chengyi.me" })), true);
+  assert.equal(allowedAuthSource(request({ "Content-Type": "application/json", Origin: "https://attacker.example" })), false);
+  assert.equal(allowedAuthSource(request({ "Content-Type": "text/plain", Origin: "https://cyword.chengyi.me" })), false);
+  assert.equal(allowedAuthSource(request({ "Content-Type": "application/json", "Sec-Fetch-Site": "cross-site" })), false);
+});
+
+test("global mail budget atomically bounds concurrent requests and resets hourly without resetting daily usage", async () => {
+  const db = createSqliteD1(), now = 86400;
+  const attempts = await Promise.all(Array.from({ length: 20 }, () => claimMailBudget(db, now, 5, 8)));
+  assert.equal(attempts.filter(Boolean).length, 5);
+  const nextHour = await Promise.all(Array.from({ length: 10 }, () => claimMailBudget(db, now + 3600, 5, 8)));
+  assert.equal(nextHour.filter(Boolean).length, 3);
+  assert.equal(await claimMailBudget(db, now + 86400, 5, 8), true);
 });
 
 test("JWT signing and verification works with standard Web Crypto HMAC", async () => {

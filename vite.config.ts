@@ -1,14 +1,20 @@
 import { defineConfig } from "vite";
+import { buildChannel } from "./scripts/build-channel.mjs";
 import react from "@vitejs/plugin-react";
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { validProgress } from "./website/server/progress-sync.ts";
 import { emptyProgress } from "./src/progress.ts";
+import { canonicalProgress } from "./src/progress-business.ts";
+import { mergeProgress } from "./src/sync-merge.ts";
+import { encodeProgressWire, decodeProgressWire } from "./src/progress-compression.ts";
+import { progressCatalog, progressProtocol } from "./website/server/progress-curriculum.ts";
 import type { AppProgress } from "./src/types.ts";
 import type { WordsRequest } from "./src/types.ts";
 import { readLocalBook } from "./scripts/local-book-preview.ts";
 import { previewMedia } from "./scripts/preview-media.mjs";
+import { createProgressPreview } from "./scripts/progress-preview.ts";
 
 async function readRequestJson(request: IncomingMessage, timeoutMs = 5_000): Promise<unknown> {
   if ((request as unknown as { body?: unknown }).body) {
@@ -77,6 +83,7 @@ async function readRequestJson(request: IncomingMessage, timeoutMs = 5_000): Pro
 const devOtpCodes = new Map<string, { code: string; createdAt: number }>();
 const devUsers = new Map<string, { id: string; email: string; createdAt: number; lastLoginAt: number; loginCount: number }>();
 const devProgress = new Map<string, { revision: number; progress: AppProgress }>();
+const devIncremental = new Map<string, ReturnType<typeof createProgressPreview>>();
 const realAuth = process.env.CYWORD_REAL_AUTH === "1";
 // Browser previews cannot fetch the audio CDN directly because it has no CORS header.
 // Native apps use their own HTTP transport; this proxy accepts only book audio paths.
@@ -116,6 +123,15 @@ function localDataPreview() {
             payload = await readLocalBook("data");
           } else if (request.method === "POST" && url === "/api/books/cet6/words") {
             payload = await readLocalBook("data", await readRequestJson(request) as WordsRequest);
+          } else if (url === "/api/progress-incremental" && request.method === "POST") {
+            const token = (request.headers.authorization || "").replace(/^Bearer /, "");
+            const user = Array.from(devUsers.values()).find(item => `dev-jwt-token-${item.id}` === token);
+            if (!user) { response.statusCode = 401; payload = { error: "登录已过期，请重新登录后同步" }; }
+            else {
+              if (!devIncremental.has(user.id)) devIncremental.set(user.id, createProgressPreview(progressCatalog, { remote: emptyProgress(), revision: 0 }));
+              const result = await devIncremental.get(user.id)!(await readRequestJson(request) as Record<string, unknown>);
+              response.statusCode = result.status; payload = result.data;
+            }
           } else if (url === "/api/progress") {
             const token = (request.headers.authorization || "").replace(/^Bearer /, "");
             const user = Array.from(devUsers.values()).find((item) => `dev-jwt-token-${item.id}` === token);
@@ -125,10 +141,16 @@ function localDataPreview() {
               if (request.method === "GET") payload = current;
               else if (request.method === "PUT") {
                 const input = await readRequestJson(request) as { revision: number; progress: AppProgress };
+                input.progress = await decodeProgressWire(input.progress) as AppProgress;
                 if (!validProgress(input.progress) || !Number.isSafeInteger(input.revision)) { response.statusCode = 400; payload = { error: "学习进度格式无效" }; }
                 else if (current.revision !== input.revision) { response.statusCode = 409; payload = current; }
-                else { payload = { revision: current.revision + 1, progress: input.progress }; devProgress.set(user.id, payload as typeof current); }
+                else { payload = { revision: current.revision + 1, progress: canonicalProgress(mergeProgress(current.progress, input.progress), progressCatalog) }; devProgress.set(user.id, payload as typeof current); }
               } else { response.statusCode = 405; payload = { error: "Method not allowed" }; }
+              if (response.statusCode === 200 || response.statusCode === 409) payload = { ...progressProtocol, ...payload as object };
+              if (request.headers["x-cyword-progress-format"] === "compact-v1" && (response.statusCode === 200 || response.statusCode === 409)) {
+                const snapshot = payload as { progress: AppProgress };
+                payload = { ...snapshot, progress: await encodeProgressWire(snapshot.progress) };
+              }
             }
           } else if (request.method === "POST" && url === "/api/auth/send-code") {
             const input = await readRequestJson(request) as { email?: string };
@@ -210,6 +232,7 @@ function localDataPreview() {
 }
 
 export default defineConfig({
+  define: { 'import.meta.env.VITE_CYWORD_API_ORIGIN': JSON.stringify(buildChannel().origin) },
   plugins: [react(), localDataPreview(), {
     name: "cyword-installed-book",
     apply: "build",

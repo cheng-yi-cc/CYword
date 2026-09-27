@@ -27,11 +27,11 @@ public class AppUpdatesPlugin extends Plugin {
     private final AtomicBoolean busy = new AtomicBoolean();
     private File prepared;
     private String preparedHash, preparedVersion;
-    private static final String ORIGIN = "https://cyword.chengyi.me";
+    private static final String ORIGIN = BuildConfig.API_ORIGIN;
     private long lastProgress;
 
     private static boolean validUrl(String url) {
-        return url.matches("https://cyword\\.chengyi\\.me/downloads/releases/android/(\\d+\\.\\d+\\.\\d+)/[a-f0-9]{64}/CYword-Android-\\1\\.apk");
+        return url.matches(java.util.regex.Pattern.quote(ORIGIN) + "/downloads/releases/android/(\\d+\\.\\d+\\.\\d+)/[a-f0-9]{64}/CYword-Android-\\1\\.apk");
     }
     private void progress(String phase, long completed, long total, long downloaded) {
         long now = System.nanoTime();

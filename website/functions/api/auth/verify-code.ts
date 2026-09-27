@@ -1,5 +1,6 @@
 import { jsonError, readRequestJson } from "../../../server/book-api.ts";
 import { EMAIL_PATTERN, OTP_PATTERN, verifyAndAuthenticate } from "../../../server/auth.ts";
+import { allowedAuthSource } from "../../../server/auth-guard.ts";
 
 type VerifyCodeRequest = {
   email?: unknown;
@@ -8,6 +9,7 @@ type VerifyCodeRequest = {
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   try {
+    if (!allowedAuthSource(context.request)) return jsonError(403, "请求来源无效，请从 CYword 重新登录");
     const contentLength = Number(context.request.headers.get("Content-Length") ?? "0");
     if (contentLength > 10_000) return jsonError(413, "Request is too large");
 
@@ -21,9 +23,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const email = typeof input.email === "string" ? input.email.trim().toLowerCase() : "";
     const code = typeof input.code === "string" ? input.code.trim() : "";
 
-    if (!email || !EMAIL_PATTERN.test(email)) {
+    if (!email || email.length > 254 || !EMAIL_PATTERN.test(email)) {
       return jsonError(400, "请输入有效的邮箱地址");
     }
+    if (context.env.ACCEPTANCE_EMAIL && email !== context.env.ACCEPTANCE_EMAIL.trim().toLowerCase()) return jsonError(403, "此验收环境仅允许专用测试账号");
 
     if (!code || !OTP_PATTERN.test(code)) {
       return jsonError(400, "请输入 6 位数字验证码");
@@ -62,8 +65,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       },
     });
   } catch (error) {
-    console.error("[CYWORD AUTH] verify-code error:", error);
-    return jsonError(500, error instanceof Error ? error.message : "服务端处理异常");
+    console.error("[CYWORD AUTH] verify-code failed");
+    return jsonError(503, "认证服务暂时不可用，请稍后重试");
   }
 };
 

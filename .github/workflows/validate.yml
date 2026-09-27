@@ -1,0 +1,50 @@
+name: Validate CYword
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - name: Rule, synchronization, recovery and full curriculum tests
+        run: npm test
+      - name: Website types and build
+        run: npm run build:site
+      - name: Browser regression
+        run: npx playwright test
+      - name: Build complete installed resources
+        run: npm run build:web
+      - name: Audit all built words, media and font
+        run: node scripts/audit-bundled-book.mjs
+      - name: Render every built word and content tab
+        run: node scripts/audit-book-render.mjs
+      - name: Installed-book browser regression with both animation modes
+        run: npm run test:bundled:ui
+      - name: Preserve validation evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: first-release-validation
+          path: |
+            .work/preflight/
+            .work/ui-results/
+            .work/bundled-ui-results/
+          retention-days: 14

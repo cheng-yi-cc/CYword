@@ -10,7 +10,7 @@ import React, {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { bookMarkdown } from "../book-markdown";
+import { bookMarkdown, handleBookImageError } from "../book-markdown";
 import { wordMemoryDisplay } from "../memory-display";
 import type { Catalog, WordDetail, WordSummary } from "../types";
 import { buildPlan, studyExposures } from "../progress";
@@ -165,6 +165,7 @@ function PopoverCard({
                 <h4>单词巧记</h4>
                 <div
                   className="popover-rich-text"
+                  onErrorCapture={handleBookImageError}
                   dangerouslySetInnerHTML={{ __html: memoryHtml }}
                 />
               </div>

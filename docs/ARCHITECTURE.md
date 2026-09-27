@@ -1,8 +1,23 @@
 # 架构
 
-仓库包含 Windows 桌面应用、Capacitor 安卓应用和独立官网。当前源码将完整词书、全部发音、原配图和音标字体放入 Windows / 安卓安装包，首次联网登录后直接从包内读取；进度按账号写入原有设备存储。旧云端进度只读合并导入一次，默认不上传。资源预装从 Windows 0.4.7 / Android 0.1.4 起启用，设计与恢复开关见 [OFFLINE.md](OFFLINE.md)。
+仓库包含 Windows 桌面应用、Capacitor 安卓应用和独立官网。客户端将完整词书、全部发音、原配图和音标字体放入 Windows / 安卓安装包，首次联网登录后直接从包内读取；进度按账号可靠保存本机，再自动双向同步。没有一次性导入或仅本机模式开关。设计和保障边界见 [OFFLINE.md](OFFLINE.md)。
 
-Pages Functions 的认证、同步、只读词书和下载路由，以及 D1、R2、Secrets 均保留；官网仅展示独立示例，不读取用户进度。本文下方的双向同步和轮询描述保留的 `VITE_CYWORD_PROGRESS_MODE=cloud` 模式及已发布的旧版行为；默认本地模式不启用这些流程。登录失效保留本机学习并由账号入口重新验证。部署记录见 [ANDROID.md](ANDROID.md)。
+Pages Functions 的认证、同步、只读词书和下载路由，以及 D1、R2、Secrets 均保留；官网仅展示独立示例，不读取用户进度。当前默认双向同步与前台轮询，登录失效保留本机学习并由账号入口重新验证。真实验收范围见 [FIRST-RELEASE-ACCEPTANCE.md](FIRST-RELEASE-ACCEPTANCE.md)。
+
+增量协议 2 的边界为：`ProgressSync` 串行本机保存及合并；`IncrementalProgressTransport` 负责按词差异、暂存批次、原子提交和稳定分页；Electron IPC / Capacitor HTTP 只负责认证传输。服务端每次验证有界记录，D1 事务处理跨记录前置条件、统计、CAS 和按小时保留的分块快照。整批提交前不会向其他设备暴露部分队列。旧全量协议及表保留，客户端不自动回退。免费环境的实际耗时与恢复证据见验收记录。
+
+## 云端数据模型
+
+旧 `users`、`otp_codes`、`learning_progress` 及管理表保留。新增表均由 `website/migrations/0002` 至 `0004` 创建：
+
+| 表 | 职责 |
+|---|---|
+| `progress_heads_v2` / `progress_records_v2` | 账号与词书修订号，以及已提交的词汇、日期记录 |
+| `progress_batches_v2` / `progress_parts_v2` / `progress_staging_v2` | 有界批次、分片摘要、不可见暂存；提交事务统一发布 |
+| `progress_learning_stats_v2` / `progress_review_stats_v2` | 同事务维护的学习覆盖和复习前置统计 |
+| `progress_checkpoints_v2` / `progress_recovery_archive_v2` | 有界分块快照及人工单账号恢复前的原始档案 |
+| `progress_snapshots` / `progress_recovery_archive` | 保留的旧协议快照及恢复档案 |
+| `auth_mail_budget` | 全局小时与日期发信预算 |
 
 ## 数据流
 
@@ -70,19 +85,19 @@ Electron 主进程通过限定文件名的 `book:installed-file` IPC 读取安�
 
 “单词搜索”在全书目录上按拼写前缀即时筛选，不区分大小写；`bookWordOrder` 按编译日程及 `exposureOrder` 的首次出现位置去重排列。桌面与手机均从顶栏左上角打开搜索弹层，桌面支持 Ctrl+K；输入中的查询展示前 8 个候选，提交的查询独立保留完整结果，每页 50 词，提交后搜索框移至顶部。候选支持方向键选择、回车打开、Esc 收起；直接回车或点击搜索展示完整结果。详情打开时固定整个匹配列表，沿用强制评级、跨页浏览和返回恢复行为。`rateSearchWord` 可建立新词评级；`completedStudyExposureKeys` 将原有曝光与已有词汇状态共同用于进度计算。搜索不写复习记录，也不替代复习日判断。
 
-如需改变这些字段，必须同时提供旧版本迁移逻辑并补充测试，不能直接让已有 `progress.json` 失效。
+本次尚无历史用户，不设计旧安装矩阵；维护者已有记录须保留，无法识别的数据先隔离保留，再走有效副本或云端恢复。
 
 重排学习日时，`reconcileCompletion` 汇总稳定的“组 ID × 单词 ID”曝光键并分配回新日程，重新计算完成状态，移除错误继承的旧完成标记；同时根据已有词汇评级计算各组及学习日完成状态；熟练度可以带来学习进度，但不会增加另一个词根的实际评级曝光记录。单词评级、时间、复习队列和复习历史保持不变。同步合并按稳定曝光键去重，旧设备带来的原日期记录会再次归位；本机读取时也迁移，不依赖云端请求成功。
 
 `ProgressSync` 将保存与远端合并串行持久化，写盘成功后才更新可见快照并允许上传；保存失败保留旧快照，失败评级不会被下一次同步带入云端。`save(next, baseline)` 按原渲染基线识别真正改动的词，避免把旧快照中其他词误判为新评级。`flush()` 返回 `{ localSaved, cloudSynced, message }`，区分本机保存失败与仅云端未完成；退出账号时前者阻止退出，后者明确提示并允许用户决定是否继续。
 
-合并继续按稳定曝光键取并集并重算完成状态；熟练度沿用旧客户端的 `lastSeenAt` 规则，收藏保留删除标记。保存本次评级时，将该词时间设为用户有效时间与已观察该词时间加 1 毫秒中的较大值，保证已看到快时钟评级后仍可重新评级，不新增同步协议字段。没有观察到彼此更新的离线并发继续按相同既有时间和平局规则收敛，不能据此保证真实墙钟上最后一次操作胜出。
+合并按稳定曝光键取并集并重算完成状态；熟练度使用每词逻辑版本 `(counter, actor)`，修改时在已观察计数上加一，离线并发相同计数按 actor 字典序收敛。允许降低熟练度，不以设备墙上时间决定新评级先后。时间用于记录，不能保证还原无法观测的真实操作顺序。复习按稳定轮次和逐词有效记录合并；旧收藏删除标记仍保留，但不进入词汇掌握列表。
 
-前台定期同步并在恢复网络/回到应用时补同步。D1 `learning_progress` 表按账号与词书隔离，保存 gzip 快照、修订号和更新时间；条件写入防止并发覆盖，409 返回新快照供客户端再次合并。超过请求或存储限额时保留本机记录并显示错误。
+前台每 5 秒检查更新，并在恢复网络/回到应用时补同步。默认协议 2 使用 `progress_heads_v2` 和 `progress_records_v2`，按账号与词书隔离；暂存批次通过修订号检查后原子提交，409 触发重新读取合并。旧 `learning_progress` gzip 快照接口保留，但客户端不自动回退。超过请求或存储限额时保留本机记录并显示错误。
 
 手机端在 1080 像素以下使用底部导航、单栏内容与固定评级区，词根和长难句通过标签页切换。学习规则直接复用 `src/progress.ts`，不单独实现另一套排课。安卓返回键与应用恢复事件通过 Capacitor App 插件接入。
 
-登录失效：JWT 到期或同步/旧进度导入返回 401 时，暂停远端请求并保留当前账号的本机同步器、受保护会话和串行写入能力，账号入口显示“未登录”。用户点击后重新验证邮箱，验证成功先等待原账号本机保存完成，再保存新会话并按账号重新读取进度；网络故障不会自动判定失效，账号切换后的迟到响应被忽略。旧版显式云端模式曾在 401 后清除会话并显示登录页。
+登录失效：JWT 到期或同步返回 401 时，暂停远端请求并保留当前账号的本机同步器、受保护会话和串行写入能力，账号入口显示“未登录”。用户点击后重新验证邮箱，验证成功先等待原账号本机保存完成，再保存新会话并按账号重新读取进度；网络故障不会自动判定失效，账号切换后的迟到响应被忽略。
 
 桌面学习页长难句默认收起为侧边按钮，展开通过网格列宽动画调整三栏，收起后空间分配给词根栏与单词栏；减少动态效果设置下直接切换。`memory-display.ts` 仅对单词巧记的页面文本隐藏行首固定引导语，词书数据、后续正文及引用、词根词缀巧记均不改动。
 
@@ -106,6 +121,8 @@ Cloudflare DNS：cyword.chengyi.me → cyword.pages.dev
                                    Pages Function（批量流式响应）
                                             │ BOOKS 绑定
                                    R2 私有桶 cyword-book-data
+                               ├─ /api/progress-incremental（协议 2）
+                               ├─ /api/progress（保留的旧协议）
                                └─ /api/auth/{send-code,verify-code,me}
                                             │ POST / GET
                                    Pages Function（用户认证与 JWT 签发）
@@ -113,7 +130,7 @@ Cloudflare DNS：cyword.chengyi.me → cyword.pages.dev
                                    D1 数据库 cyword-db
 ```
 
-`website/vite.config.ts` 把 `website/` 构建到 `dist-site/`；`website/wrangler.jsonc` 定义 Pages 项目、输出目录、两个 R2 绑定和 D1 数据库绑定。必需的 `RESEND_API_KEY`、`JWT_SECRET` 通过 Pages Production 加密 Secret 单独管理，不写入配置文件。`website/public/_routes.json` 让 `/downloads/*`、`/api/books/*`、`/api/auth/*` 和 `/api/progress` 调用函数，首页与静态资源不占用函数请求额度。
+`website/vite.config.ts` 把 `website/` 构建到 `dist-site/`；`website/wrangler.jsonc` 定义 Pages 项目、输出目录、两个 R2 绑定和 D1 数据库绑定。必需的 `RESEND_API_KEY`、`JWT_SECRET` 通过 Pages Production 加密 Secret 单独管理，不写入配置文件。`website/public/_routes.json` 让 `/downloads/*`、`/api/books/*`、`/api/auth/*`、`/api/progress-incremental` 和历史 `/api/progress` 调用函数，首页与静态资源不占用函数请求额度。
 
 下载处理器 `website/functions/downloads/[[path]].ts` 只接受稳定最新版入口、受约束的内容寻址资产和迁移前安装包路径。认证处理器 `website/functions/api/auth/*.ts` 基于 Cloudflare D1 存储用户数据与验证码，通过专用发信域 `auth.cyword.chengyi.me` 的 Resend Key 发送邮件，并使用强随机 Secret 和 Web Crypto 签发/校验 HMAC-SHA256 JWT；任一密钥缺失时生产接口关闭，不降级为模拟模式。验证码的匹配、有效期和次数检查与核销通过单条 `DELETE ... RETURNING` 原子执行；错误次数在条件 UPDATE 中递增，发码冷却与占位使用条件 UPSERT，账号创建及登录次数也由 UPSERT 保证。Electron `userData/session.json` 保存加密令牌与账号信息，该目录不进入安装包。
 
@@ -127,6 +144,6 @@ Cloudflare DNS：cyword.chengyi.me → cyword.pages.dev
 
 安卓更新器由 `AndroidUpdateService` 管理检查、准备、下载、可安装和错误状态，并合并并发检查、节流自动检查；通过原生 `App.getInfo()` 获取安装版本，经官网独立安卓清单判断是否更新。React 的账号菜单与提示订阅同一份状态；用户点击后由 `AppUpdatesPlugin` 执行差量下载和完整校验，再由用户点击启动系统安装。完整 APK 浏览器下载为显式备用入口，更新流程不访问账号进度。
 
-## 0.4.5 / 0.1.1 验证边界
+## 验证边界
 
-同步测试覆盖本机失败不污染云端、上传期间评级、修订冲突、设备时差、新旧客户端合并一致与旧渲染基线；本地真实 D1 测试覆盖 OTP 并发核销及次数限制。缓存、音频、连续学习和安装包资源读取有对应行为测试。Windows 实际 Electron/DPAPI 的旧会话迁移、密文回读与退出清除已通过，安卓 Release 构建与延续旧版证书的签名校验已通过；未连接安卓真机，尚不能声称 Keystore 升级迁移、真实账号跨设备同步和移动设备音频已验收。两个平台已发布，正式下载验证记录见 [运行手册](RUNBOOK.md)。
+同步测试覆盖本机失败不污染云端、上传期间评级、修订冲突、设备时差和旧渲染基线；本地真实 D1 测试覆盖 OTP 并发核销、次数限制与增量提交。缓存、音频、连续学习和安装包资源读取有对应行为测试。2026-09-27 已在隔离安装的 Windows 与 USB 安卓真机完成真实登录、双向同步、离线并发、发音、覆盖安装及异常恢复；各候选版本、完整证据与性能限制见 [首发验收记录](FIRST-RELEASE-ACCEPTANCE.md)。正式版本记录见 [运行手册](RUNBOOK.md)。

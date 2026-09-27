@@ -435,13 +435,13 @@ const faqs = [
   { question: "支持手机、Mac，或者其他词书吗？", answer: "本页提供 Windows 10 / 11 桌面版与 Android 7.0 及以上安卓安装包，使用相同的记忆和词汇掌握规则。当前支持含 5,166 个唯一单词的六级词书，尚无 Mac 版、四级或考研词书。" },
   { question: "安装时出现 Windows 安全提示怎么办？", answer: "当前安装包尚未进行代码签名，Windows 可能提示无法识别发布者。这不等于已经确认软件安全。请先确认文件来自本页的官方发布地址、文件名和版本一致；不确定来源时不要运行，也无需关闭系统安全防护。下载区提供文件校验值，供需要时核对。" },
   { question: "词汇掌握页面会收录哪些词？", answer: "安卓端和电脑端按同一规则展示全书掌握统计：已掌握、未掌握、不清楚和未学习。待巩固列表只收录已学过且评级为“未掌握”或“不清楚”的词；改为“已掌握”后自动移出，学习记录仍然保留。尚未学习、未评级的词不会混入列表。" },
-  { question: "学习进度会保存吗？更新后还在吗？", answer: "学习记录和熟练度自动保存在当前设备，正常覆盖升级会保留。新版在每台设备按账号导入旧云端记录一次，此后不再自动跨设备同步。卸载或清理应用数据前，请先备份本机数据。" },
+  { question: "学习进度会保存吗？换设备还能继续吗？", answer: "评级先可靠保存本机，再自动同步到云端。在电脑和手机登录同一账号，即可接续已经同步的进度。断网仍可学习，联网后自动补同步；正常覆盖升级会保留本机记录。卸载或清理应用数据前，请先确认已同步。" },
   { question: "下载没有开始，或者下载速度很慢？", answer: "主下载由本站通过 Cloudflare R2 提供，无需访问 GitHub，支持断点续传。跨境线路仍可能较慢，部分地区也可能无法连接。请先查看浏览器下载列表，尝试继续下载或稍后重试；也可以复制本站下载地址重试，并核对下载区的 SHA-256。" },
 ];
 
 function InstallGuide() {
   return <section className="guide-section section-wrap" id="guide" aria-labelledby="guide-title">
-    <div className="section-heading"><div><span className="eyebrow">START WITH CYWORD</span><h2 id="guide-title">装好，登录，开始今天。</h2></div><p>完整词书、发音和配图已随安装包提供，邮箱验证码登录后即可离线学习。<br />进度保存在当前设备，旧云端记录只导入一次。</p></div>
+    <div className="section-heading"><div><span className="eyebrow">START WITH CYWORD</span><h2 id="guide-title">装好，登录，开始今天。</h2></div><p>完整词书、发音和配图随包离线可用，进度自动保存到云端，电脑手机接续学习。<br />完成当天安排即进入下一天，不按自然日期推进。</p></div>
     <div className="platform-guide">
       <article id="guide-windows"><h3><Icon name="windows" />Windows 10 / 11 · 64 位</h3><ol>
         <li>下载 Windows 安装包，核对文件名、版本和下载区校验值。</li>
@@ -461,6 +461,8 @@ function ReleaseNotes() {
   return <section className="information-section section-wrap" id="release-notes" aria-labelledby="release-notes-title">
     <div className="section-heading"><h2 id="release-notes-title">版本记录</h2><p>这里记录已发布的客户端改动，安装包版本以下载区为准。</p></div>
     <div className="release-notes-grid">
+      <article><span className="eyebrow">2026.09.27</span><h3>Windows 0.4.13 / Android 0.1.11</h3><p>进度先保存本机，再自动同步到云端；手机与电脑登录同一账号即可接续，断网学习后自动补同步。计划按完成情况立即推进，复习需完成前置学习与复习。加强异常恢复和关闭、更新时的保存保护，资源加载失败可就地重试；完整词书继续随包离线可用。</p></article>
+      <article><span className="eyebrow">2026.09.26</span><h3>Android 0.1.6</h3><p>复习日采用全屏回想与三栏详解，评级后自动进入下一待复习词，返回总览时保留记录。</p></article>
       <article><span className="eyebrow">2026.09.25</span><h3>Windows 0.4.8 / Android 0.1.5</h3><p>搜索移到左上角，桌面支持 Ctrl+K；新增词书菜单与更新日志。账号入口更简洁，登录失效后仍可本机学习。Windows 独立打包词书，减少后续差量更新流量；安卓从本版开始支持后续差量下载与续传。旧版首次迁移仍可能需要完整包，升级保留本机记录。</p></article>
       <article><span className="eyebrow">2026.09.25</span><h3>Windows 0.4.7 / Android 0.1.4</h3><p>完整六级词书、全部发音和巧记配图随安装包提供，登录后无需二次下载。每日学习连续进行，取消中途分段休息页；内置音标字体，减少手机字体缺字问题。升级保留本机学习记录。</p></article>
       <article><span className="eyebrow">2026.09.21</span><h3>Windows 0.4.6 / Android 0.1.3</h3><p>登录后下载完整词书与发音，支持离线学习；进度默认保存本机，旧云端记录导入一次。单词默认完整显示，点击切换分割，发音时临时分割并在结束后恢复，官网示例同步支持。</p></article>
@@ -474,7 +476,7 @@ function PrivacyNotice() {
   return <section className="information-section section-wrap" id="privacy" aria-labelledby="privacy-title">
     <div className="section-heading"><h2 id="privacy-title">隐私与数据</h2><p>更新于 2026 年 9 月 21 日</p></div>
     <div className="privacy-details">
-      <details open><summary>账号与学习记录<Icon name="plus" /></summary><p>客户端用邮箱接收登录验证码，服务端保存邮箱、账号标识与登录时间。新版学习进度、熟练度和复习记录默认只保存在当前设备；每台设备按账号导入旧云端记录一次，此后不再自动同步。旧云端记录仍保留，旧版客户端可能继续同步。退出登录保留本机记录；卸载或清理应用数据会删除本机记录，但不会删除云端记录。</p></details>
+      <details open><summary>账号与学习记录<Icon name="plus" /></summary><p>客户端用邮箱接收登录验证码，服务端保存邮箱、账号标识与登录时间。学习进度、熟练度和复习记录先保存本机，再经认证自动同步到云端，用于同账号跨设备接续和异常恢复；服务端保留有数量和时间上限的有效快照。退出登录保留本机记录。卸载或清理应用数据会删除本机记录，尚未上传的离线记录无法从云端恢复；已同步记录与账号需单独申请删除。</p></details>
       <details><summary>网站、发音与服务提供方<Icon name="plus" /></summary><p>官网交互示例只保存在当前页面内存中，刷新即重置，不读取客户端学习记录；官网没有添加统计脚本。下载、账号与同步服务使用 Cloudflare，验证码邮件通过 Resend 发送；点播放发音时，浏览器会请求词书音频服务 cdn.aimwords.com。这些网络服务会接收完成请求所需的网络信息。</p></details>
       <details id="feedback" open><summary>反馈与数据删除<Icon name="plus" /></summary><p>账号、云端记录与本机数据需要分别处理。删除云端记录前，请先保留需要的学习进度，并停止其他设备的同步，避免记录再次上传。</p><p>反馈或申请删除账号及云端学习记录，请联系 <a href="mailto:cyi907369@gmail.com">cyi907369@gmail.com</a>。删除申请请使用登录邮箱发送。</p></details>
     </div>

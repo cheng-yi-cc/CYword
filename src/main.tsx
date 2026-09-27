@@ -8,6 +8,7 @@ import { installPlatform } from "./platform";
 import { AndroidUpdateNotice } from "./components/AndroidUpdates";
 import { pronunciationPlayer } from "./audio";
 import { offlineBook } from "./offline-book";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 installPlatform();
 if (window.cyword.desktop) document.documentElement.classList.add("desktop-app");
@@ -15,7 +16,9 @@ pronunciationPlayer.setSourceResolver(url => offlineBook.audioUrl(url));
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
+    <ErrorBoundary root>
     <App />
     <AndroidUpdateNotice />
+    </ErrorBoundary>
   </React.StrictMode>,
 );

@@ -1,12 +1,21 @@
 apply plugin: 'com.android.application'
 
 def androidVersion = new groovy.json.JsonSlurper().parse(rootProject.file('version.json'))
+def acceptanceOrigin = System.getenv('CYWORD_ACCEPTANCE_ORIGIN')
+def apiOrigin = acceptanceOrigin ?: 'https://cyword.chengyi.me'
+if (acceptanceOrigin && (!acceptanceOrigin.matches('https://[a-zA-Z0-9.-]+(:[0-9]+)?') || acceptanceOrigin == 'https://cyword.chengyi.me')) {
+    throw new GradleException('验收包必须使用独立的 HTTPS 服务地址')
+}
 
 android {
+    buildFeatures { buildConfig = true }
     namespace = "me.chengyi.cyword"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "me.chengyi.cyword"
+        if (acceptanceOrigin) applicationIdSuffix ".acceptance"
+        buildConfigField 'String', 'API_ORIGIN', '"' + apiOrigin + '"'
+        manifestPlaceholders = [cywordAppLabel: acceptanceOrigin ? 'CYword 验收' : 'CYword']
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode androidVersion.versionCode

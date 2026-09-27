@@ -4,15 +4,15 @@
     <application
         android:allowBackup="false"
         android:icon="@drawable/cyword_icon"
-        android:label="@string/app_name"
+        android:label="${cywordAppLabel}"
         android:roundIcon="@drawable/cyword_icon"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
-            android:name=".MainActivity"
-            android:label="@string/title_activity_main"
+            android:name="me.chengyi.cyword.MainActivity"
+            android:label="${cywordAppLabel}"
             android:theme="@style/AppTheme.NoActionBarLaunch"
             android:launchMode="singleTask"
             android:exported="true">

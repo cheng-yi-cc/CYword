@@ -1,6 +1,6 @@
 # 官网说明
 
-官网与函数已于 2026-09-25 更新部署；当前客户端为 Windows 0.4.8、Android 0.1.5。发布与下载核验记录统一见 [运行手册](RUNBOOK.md)。
+官网与函数支持 Windows 0.4.13、Android 0.1.11 的自动增量同步及独立更新渠道。实际发布、部署和下载核验记录见 [运行手册](RUNBOOK.md)。
 
 ## 用途与入口
 
@@ -9,7 +9,7 @@
 - 官网：<https://cyword.chengyi.me/>；Pages 备用域名：<https://cyword.pages.dev/>。
 - Windows 下载：<https://cyword.chengyi.me/downloads/latest>；Android 下载：<https://cyword.chengyi.me/downloads/android/latest>。两者从私有 R2 桶的独立原子版本指针跳转到安装包，支持断点续传，下载无需登录。
 - GitHub 仓库 `https://github.com/cheng-yi-cc/CYword` 已于 2026-09-21 改为公开，官网源码在页脚提供开源入口；现有下载安装与自动更新仍使用官网源。公开版本记录放在 `/#release-notes`，只记录已发布改动；离线模式从 Windows 0.4.6 / Android 0.1.3 起提供。
-- Windows 版本和校验值以 `/downloads/latest.json` 为准，Android 以 `/downloads/android/latest.json` 为准；`website/src/release.ts` 只保留动态指针不可用时已核验的 Windows 0.4.8 回退信息，并在页面明确提示。Android 读取失败显示未知状态与重试入口，不填造版本或哈希。
+- Windows 版本和校验值以 `/downloads/latest.json` 为准，Android 以 `/downloads/android/latest.json` 为准；`website/src/release.ts` 只保留动态指针不可用时已核验的 Windows 回退信息，并在页面明确提示。Android 读取失败显示未知状态与重试入口，不填造版本或哈希。
 - 两个平台分别显示版本、文件大小、校验值及安装步骤，锚点为 `/#guide-windows`、`/#guide-android`。
 - 首屏为不保存记录的交互示例。桌面长难句沿用应用右侧竖排入口，默认收起为 52px；展开时三栏同步调整宽度，内容延迟淡入，收起时先淡出内容，动画时长与应用一致。手机标签按“单词、词根、长难句”切换。各栏独立滚动且隐藏滚动条，采用 `overscroll-behavior: contain` 阻断外层滚动穿透，单词默认完整显示，点击切换分块；点击音标或发音按钮临时分块，结束、停止、失败后恢复。portable 使用已审核的 por·ta·ble，不按词根切分；发音支持停止与失败重试。
 
@@ -52,6 +52,8 @@ npm run preview:site
 | `website/functions/api/auth/verify-code.ts` | 校验验证码、自动建号并签发 JWT 接口 |
 | `website/functions/api/auth/me.ts` | 校验 Bearer Token 并返回当前用户数据接口 |
 | `website/server/book-api.ts` | 词书 R2 结构、参数校验和错误响应共用逻辑 |
+| `website/functions/api/progress-incremental.ts` / `website/server/incremental-store.ts` | 协议 2 分页、暂存、原子提交与快照 |
+| `website/server/auth-guard.ts` | 认证来源检查与全局发信预算 |
 | `website/functions/api/progress.ts` | 认证后的进度读取、修订号检查与原子写入 |
 | `website/server/progress-sync.ts` | 进度校验和压缩快照编解码 |
 | `website/server/auth.ts` | JWT 签发/验签、OTP 生成与 D1/Resend 交互逻辑 |
@@ -112,6 +114,10 @@ Windows 公开入口包括 `/downloads/latest`、`/downloads/latest.json`、`/do
 
 ## 进度同步 HTTP 协议
 
+当前客户端使用 `POST /api/progress-incremental`（协议 2）：认证身份来自 Bearer 令牌，固定 `bookCode` 与 `curriculumVersion`；`read` 按修订号和游标读取最多 32 条记录，`stage` 暂存最多 24 条记录，`commit` 在 D1 事务中检查修订号和业务前置条件后原子发布。409 触发客户端读取、合并、重试；暂存不作为“已同步”。迁移 `0004_incremental_progress.sql` 须先于函数及安装包部署。每词记录包含其曝光和各轮复习记录；每日记录独立。免费环境不再对每次评级解析整份全书快照。详细恢复边界见 [OFFLINE.md](OFFLINE.md)。来源限制与发信预算由 `website/server/auth-guard.ts` 实现，D1 `auth_mail_budget` 限制全局每小时 200 封、每日 1000 封，保留同邮箱冷却、错误次数及原子核销，不额外设置过低的共享 IP 阈值。发信有超时，失败允许稍后重试。
+
+以下全量接口属于保留的历史协议，客户端不自动回退使用它。
+
 2026-09-20 已完成授权、建表与同步函数部署，官网提供词汇掌握演示和安卓下载入口。0.4.4 新增 `GET /api/progress` 与 `PUT /api/progress`，均需同样的 Bearer 登录令牌。GET 返回 `{ revision, progress }`，PUT 提交对应结构；修订号不一致返回 409 和最新记录，客户端合并后重试。D1 表 `learning_progress` 必须在发布函数前创建。身份隔离、限额、合并规则和部署步骤见 [安卓与同步说明](ANDROID.md)。官网展示页面不会调用该接口。
 
 HEAD 示例：
@@ -126,11 +132,11 @@ curl.exe --fail --head 'https://cyword.chengyi.me/downloads/latest'
 
 官网沿用暖纸色、陶土橙和橄榄绿，品牌只显示 CYword，中文使用系统无衬线字体，英文单词和品牌使用 Georgia。字体、图标、样式不依赖外部 CDN。主线是“逐词巧记 → 构词成组 → 熟练度与累计复习”。
 
-- Windows 0.4.8 / Android 0.1.5 预装完整六级词书、全部发音和原配图；网站本身仅包含独立示例。没有 Mac 版、四级或考研词书。官网正式下载以已经核验的发布指针为准。
+- Windows 0.4.13 / Android 0.1.11 预装完整六级词书、全部发音和原配图；网站本身仅包含独立示例。没有 Mac 版、四级或考研词书。官网正式下载以已经核验的发布指针为准。
 - 计划包含 30 个学习日和 10 个累计复习日，不保证在 40 个自然日内记住全部单词。每天曝光次数以对应版本的编译排课为准，多词根组可重复出现同一词，曝光次数不等于唯一新词数，也不保证记忆效果。
-- 当前安装版首次联网登录后直接离线学习，无需二次下载；0.4.6 / 0.1.3 保留首次下载流程。进度默认保存在本机，旧云端记录导入一次；云端模式及旧版同步服务保留。正常覆盖升级保留进度，旧文件按已登录账号归属迁移。
+- 当前安装版首次联网登录后直接离线学习，无需二次下载；0.4.6 / 0.1.3 保留首次下载流程。当前客户端文案统一为进度先保存本机，再自动双向同步；正常覆盖升级保留进度，清理设备前须确认已同步。计划按完成情况推进。
 - Windows 安装包未签名，安卓 APK 使用项目私有密钥签名；页面应提示核对来源与哈希，不引导用户关闭系统防护，也不把校验一致等同于安全认证。
-- `/#privacy` 说明账号、学习记录、官网示例与服务提供方：认证接口在 D1 保存邮箱、账号标识、登录时间和短期验证码，新版学习记录按账号保存在设备，旧 D1 记录只读导入一次，旧客户端或显式云端模式仍可同步；两个私有 R2 桶分别保存公开安装包和服务端词书分片。官网没有统计脚本或公开表单，交互示例只保留 React 内存状态，刷新即重置，不访问客户端会话、学习进度或 localStorage。发音播放会请求 `cdn.aimwords.com`；下载、账号与同步使用 Cloudflare，验证码邮件使用 Resend。
+- `/#privacy` 说明账号、学习记录、官网示例与服务提供方：认证接口在 D1 保存邮箱、账号标识、登录时间和短期验证码，学习记录按账号保存本机并自动同步到 D1，保留有界的账号快照用于异常恢复；两个私有 R2 桶分别保存公开安装包和服务端词书分片。官网没有统计脚本或公开表单，交互示例只保留 React 内存状态，刷新即重置，不访问客户端会话、学习进度或 localStorage。发音播放会请求 `cdn.aimwords.com`；下载、账号与同步使用 Cloudflare，验证码邮件使用 Resend。
 - `/#feedback` 提供反馈与删除说明，维护者确认的公开邮箱为 `cyi907369@gmail.com`，通过 `mailto:` 链接打开邮件客户端。删除申请提示使用登录邮箱发送；这是人工申请入口，没有自助删除接口，实际收件及处理流程仍需维护者验证。退出登录、清理本机数据与删除云端数据是不同操作。
 - 官网固定示例混合使用原词书节选与页面编写内容；portable、transport、porter 及部分例句、长难句来自规范词书。逐项来源见 [内容来源台账](CONTENT-SOURCES.md)，不将上游“原创”标注等同于本项目原创或授权证明。不打包完整词书或词书远程图片。
 - 2026-08-31 核对：5166 词均有 `memory_markup`，4877 词有 `etymology_markup`；12813 条构词关联中 6390 条有独立 `memory_method`。不能宣传每个构词元素都有独立巧记，也不能把所有词都说成有真正词根。

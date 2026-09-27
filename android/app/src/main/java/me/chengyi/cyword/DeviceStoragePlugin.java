@@ -22,6 +22,15 @@ import org.json.JSONObject;
 public class DeviceStoragePlugin extends Plugin {
     private static final String ALIAS = "me.chengyi.cyword.session.v1";
     private static final String SESSION = "cyword_session";
+    private String preservedSession = null;
+
+    private void preserveDamagedSession() {
+        String raw = credentials().getString(SESSION, null);
+        if (raw != null && !raw.equals(preservedSession)) {
+            if (!persist(credentials(), SESSION + ".corrupt." + java.util.UUID.randomUUID(), raw)) throw new IllegalStateException("无法保留异常凭据，请检查存储空间");
+            preservedSession = raw;
+        }
+    }
 
     private SharedPreferences preferences() {
         return getContext().getSharedPreferences("CapacitorStorage", Context.MODE_PRIVATE);
@@ -84,7 +93,11 @@ public class DeviceStoragePlugin extends Plugin {
             JSObject result = new JSObject();
             result.put("value", value == null ? JSONObject.NULL : value);
             call.resolve(result);
-        } catch (Exception error) { call.reject("读取受保护凭据失败，请重新登录", error); }
+        } catch (Exception error) {
+            try { preserveDamagedSession(); }
+            catch (Exception preservation) { call.reject("无法保留异常凭据，请检查存储空间后重试", preservation); return; }
+            call.reject("读取受保护凭据失败，异常原件已保留，请重新登录", error);
+        }
     }
     @PluginMethod
     public synchronized void writeSession(PluginCall call) {
@@ -104,7 +117,20 @@ public class DeviceStoragePlugin extends Plugin {
         if (name == null || !(name.startsWith("cyword-progress:") || name.startsWith("cyword-cloud-import:")) || value == null) { call.reject("进度格式无效"); return; }
         // Preferences.set uses apply(), which cannot report disk failures. Acknowledged
         // study saves use commit() so the UI advances only after durable persistence.
-        if (!persist(preferences(), name, value)) { call.reject("设备进度保存失败，请检查存储空间"); return; }
+        String backup = call.getString("backup");
+        SharedPreferences store = preferences();
+        String previous = store.getString(name, null), previousBackup = store.getString(name + ":backup", null);
+        SharedPreferences.Editor change = store.edit().putString(name, value);
+        if (backup != null) change.putString(name + ":backup", backup);
+        if (!change.commit()) {
+            SharedPreferences.Editor rollback = store.edit();
+            if (previous == null) rollback.remove(name); else rollback.putString(name, previous);
+            if (backup != null) {
+                if (previousBackup == null) rollback.remove(name + ":backup"); else rollback.putString(name + ":backup", previousBackup);
+            }
+            rollback.commit();
+            call.reject("设备进度保存失败，请检查存储空间"); return;
+        }
         call.resolve();
     }
 }

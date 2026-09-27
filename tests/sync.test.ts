@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { emptyProgress, rateStudyWord, startReviewDay, rateReviewWord, reconcileCompletion } from "../src/progress.ts";
+import { buildPlan, emptyProgress, rateStudyWord, startReviewDay, rateReviewWord, reconcileCompletion } from "../src/progress.ts";
 import { mergeProgress } from "../src/sync-merge.ts";
 import { ProgressSync } from "../src/sync-client.ts";
 import { validProgress, packProgress, unpackProgress } from "../website/server/progress-sync.ts";
@@ -37,9 +37,12 @@ test("newer ratings win and removed bookmarks cannot reappear from stale devices
 });
 
 test("review merging preserves priority order, combines completion, and deduplicates history", () => {
-  const started = startReviewDay(mergeProgress(one(), two()), 4, ["w2", "w1"], true);
-  const a = rateReviewWord(started, 4, "w2", "mastered");
-  const b = rateReviewWord(started, 4, "w1", "unmastered");
+  const plans = buildPlan({ groups: [group], schedule: [plan, { ...plan, day: 2 }, { ...plan, day: 3 }] } as Catalog);
+  const prior = mergeProgress(one(), two());
+  prior.words.w2.proficiency = "unmastered";
+  const started = startReviewDay(prior, plans, 4, true);
+  const a = rateReviewWord(started, plans, 4, "w2", "mastered");
+  const b = rateReviewWord(started, plans, 4, "w1", "unmastered");
   const merged = mergeProgress(a, b);
   assert.deepEqual(merged.planDays["4"].reviewWordIds, ["w2", "w1"]);
   assert.ok(merged.planDays["4"].completedAt);
@@ -145,7 +148,7 @@ test("failed local saves never publish or upload unpersisted ratings, even after
   failing = true;
   await assert.rejects(sync.save(one()), /disk full/);
   assert.equal(sync.progress.words.w1, undefined);
-  assert.equal(announced.some((progress) => Boolean(progress.words.w1)), false);
+  assert.equal(announced.some((progress) => Boolean(progress?.words.w1)), false);
   failing = false;
   await sync.sync();
   assert.equal(cloud.words.w1, undefined);
@@ -178,7 +181,7 @@ test("flush distinguishes durable offline progress, unsaved progress, and cloud 
   busy.stop();
 });
 
-test("a slower device uses a monotonic rating time after observing a faster device", async () => {
+test("logical rating versions allow downgrades even after observing a faster clock", async () => {
   const future = one();
   future.words.w1.lastSeenAt = "2035-01-01T00:00:00.000Z";
   let cloud = future, revision = 1;
@@ -191,26 +194,29 @@ test("a slower device uses a monotonic rating time after observing a faster devi
   next.words.w1.proficiency = "mastered";
   next.words.w1.lastSeenAt = "2026-09-20T00:00:00.000Z";
   await sync.save(next);
-  assert.equal(sync.progress.words.w1.lastSeenAt, "2035-01-01T00:00:00.001Z");
+  assert.equal(sync.progress.words.w1.lastSeenAt, "2026-09-20T00:00:00.000Z");
+  assert.equal(sync.progress.words.w1.ratingVersion?.counter, 1);
   assert.equal((await sync.flush()).cloudSynced, true);
   assert.equal(cloud.words.w1.proficiency, "mastered");
   assert.equal(cloud.words.w1.learnedAt, future.words.w1.learnedAt);
   const laterRemote = structuredClone(cloud);
   laterRemote.words.w1.lastSeenAt = "2036-01-01T00:00:00.000Z";
   laterRemote.words.w1.proficiency = "unclear";
+  laterRemote.words.w1.ratingVersion = { counter: 2, actor: "remote" };
   cloud = laterRemote;
   await sync.sync();
   const reassessed = structuredClone(sync.progress);
   reassessed.words.w1.proficiency = "unmastered";
   reassessed.words.w1.lastSeenAt = "2026-09-20T00:00:01.000Z";
   await sync.save(reassessed);
-  assert.equal(sync.progress.words.w1.lastSeenAt, "2036-01-01T00:00:00.001Z");
+  assert.equal(sync.progress.words.w1.lastSeenAt, "2026-09-20T00:00:01.000Z");
+  assert.equal(sync.progress.words.w1.ratingVersion?.counter, 3);
   assert.equal(mergeProgress(sync.progress, future).words.w1.proficiency, "unmastered");
   assert.equal(validProgress(sync.progress), true);
   sync.stop();
 });
 
-test("new and released timestamp-only clients select the same winner for skewed and concurrent ratings", () => {
+test("unversioned maintainer snapshots merge deterministically until the first new rating", () => {
   // Released clients compare lastSeenAt, breaking equal timestamps by serialized value.
   const legacyWinner = (a: AppProgress, b: AppProgress) => {
     const x = a.words.w1, y = b.words.w1;
@@ -248,7 +254,7 @@ test("a rating based on an earlier render does not re-rate unrelated words updat
   await sync.sync();
   const next = structuredClone(rendered); next.words.w1.proficiency = "mastered";
   await sync.save(next, rendered);
-  assert.equal(sync.progress.words.w1.lastSeenAt, "2026-09-17T00:00:00.001Z");
+  assert.equal(sync.progress.words.w1.ratingVersion?.counter, 1);
   assert.equal(sync.progress.words.w2.lastSeenAt, "2035-01-01T00:00:00.000Z");
   assert.equal(sync.progress.words.w2.proficiency, "mastered");
   sync.stop();

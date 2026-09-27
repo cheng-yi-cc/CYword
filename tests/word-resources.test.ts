@@ -3,7 +3,7 @@ import test from "node:test";
 import { WordResourceCache } from "../src/word-resources.ts";
 import type { WordDetail, WordsRequest } from "../src/types.ts";
 
-const word = (id: string) => ({ id, bookCode: "cet6" } as WordDetail);
+const word = (id: string) => ({ id, bookCode: "cet6", spelling: id, pronunciation: "", definitionCn: "", audioUrl: "", memoryMarkup: "", etymologyMarkup: "", roots: [], examples: [], examExamples: [], collocations: [], frequencies: [], relations: [], longSentences: [], sentenceZones: [] } as unknown as WordDetail);
 const response = (ids: string[], version = "v1") => ({ dataVersion: version, wordCount: ids.length, words: Object.fromEntries(ids.map(id => [id, word(id)])) });
 function deferred<T>() { let resolve!: (value: T) => void; const promise = new Promise<T>(done => { resolve = done; }); return { promise, resolve }; }
 
@@ -44,6 +44,15 @@ test("a superseded response cannot repopulate a cleared cache", async () => {
   pending.resolve(response(["a"]));
   assert.equal(await load, false);
   assert.deepEqual(cache.snapshot(), {});
+});
+
+test("damaged detail is not made available to rating controls and can be retried", async () => {
+  let damaged = true;
+  const cache = new WordResourceCache({ bookCode: "cet6", dataVersion: "v1", request: async () => ({ dataVersion: "v1", wordCount: 1, words: { a: { ...word("a"), roots: damaged ? null : [] } as unknown as WordDetail } }) });
+  assert.equal(await cache.load(["a"], "study", 1), false);
+  assert.deepEqual(cache.snapshot(), {});
+  damaged = false;
+  assert.equal(await cache.load(["a"], "study", 1), true);
 });
 
 test("bounded LRU retains recently viewed words and rejects another book or version", async () => {

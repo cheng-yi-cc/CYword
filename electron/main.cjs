@@ -1,22 +1,69 @@
 const { app, BrowserWindow, ipcMain, shell, dialog, safeStorage, screen } = require("electron");
 const { createSessionStore } = require("./session-store.cjs");
+const { createProgressStore } = require("./progress-store.cjs");
+const { createExitGuard } = require("./exit-guard.cjs");
+const { validStoredProgress, encodeProgressWire, decodeProgressWire } = require("./generated/progress-validation.cjs");
 const { readBundledBookFile } = require("./bundled-book.cjs");
 const { autoUpdater } = require("electron-updater");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { createHash, randomUUID } = require("node:crypto");
+const channel = require("./generated/channel.json");
+if (channel.name === "acceptance") {
+  app.setName(channel.productName);
+  app.setPath("userData", path.join(app.getPath("appData"), channel.productName));
+}
 
 const devUrl = process.env.VITE_DEV_SERVER_URL;
 const bookApiUrl = process.env.CYWORD_BOOK_API_URL || (devUrl
   ? `${devUrl.replace(/\/$/, "")}/api/books/cet6`
-  : "https://cyword.chengyi.me/api/books/cet6");
+  : `${channel.origin}/api/books/cet6`);
 const authApiUrl = devUrl
   ? `${devUrl.replace(/\/$/, "")}/api/auth`
-  : "https://cyword.chengyi.me/api/auth";
+  : `${channel.origin}/api/auth`;
 let updateState = {
   status: "idle",
   currentVersion: app.getVersion(),
 };
+const progressStores = new Map();
+let exitAllowed = false;
+const exitReady = new WeakSet();
+const exitSeen = new WeakSet();
+const preparations = new Map();
+function prepareWindow(window) {
+  const sender = window.webContents;
+  if (!exitSeen.has(sender)) return Promise.resolve({ localSaved: true, cloudSynced: true });
+  if (!exitReady.has(sender)) return Promise.reject(new Error("界面正在恢复，请稍后再次关闭。"));
+  return new Promise((resolve, reject) => {
+    const nonce = randomUUID();
+    const timer = setTimeout(() => {
+      preparations.delete(nonce);
+      reject(new Error("保存仍未确认，窗口已保留。请检查设备存储后重试。"));
+    }, 30000);
+    preparations.set(nonce, { sender, resolve: result => { clearTimeout(timer); resolve(result); } });
+    sender.send("app:prepare-exit", nonce);
+  });
+}
+const exitGuard = createExitGuard({
+  prepare: async () => {
+    const results = await Promise.all(BrowserWindow.getAllWindows().filter(w => !w.isDestroyed()).map(prepareWindow));
+    return { localSaved: results.every(r => r.localSaved === true), cloudSynced: results.every(r => r.cloudSynced === true), message: results.find(r => !r.localSaved)?.message };
+  },
+  drain: async () => { for (const store of progressStores.values()) await store.drain(); },
+  warn: message => dialog.showMessageBox({ type: "error", title: "暂时无法退出", message, buttons: ["返回应用"], noLink: true }),
+  confirmPending: async () => (await dialog.showMessageBox({ type: "warning", title: "进度已保存本机", message: "云端同步尚未完成。退出后请保留当前设备数据，下次打开会继续同步。", buttons: ["返回应用", "继续退出"], defaultId: 0, cancelId: 0, noLink: true })).response === 1,
+  release: () => { for (const window of BrowserWindow.getAllWindows()) if (!window.isDestroyed()) window.webContents.send("app:release-exit"); },
+  perform: action => {
+    exitAllowed = true;
+    try { if (action === "install") autoUpdater.quitAndInstall(true, true); else app.quit(); }
+    catch (error) { exitAllowed = false; throw error; }
+  },
+});
+function accountStore(accountId) {
+  if (typeof accountId !== "string" || !accountId || accountId.length > 200) throw new Error("账号无效");
+  if (!progressStores.has(accountId)) progressStores.set(accountId, createProgressStore(progressPath(accountId), validStoredProgress, { encode: encodeProgressWire, decode: decodeProgressWire }));
+  return progressStores.get(accountId);
+}
 
 function publishUpdateState(next) {
   updateState = { ...updateState, ...next };
@@ -32,6 +79,7 @@ function updateErrorMessage(error) {
 
 function configureAutoUpdater() {
   if (!app.isPackaged) return;
+  if (channel.name === "acceptance") autoUpdater.setFeedURL({ provider: "generic", url: `${channel.origin}/downloads/`, channel: "latest", useMultipleRangeRequest: false });
 
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = false;
@@ -121,32 +169,23 @@ async function fetchAuthJson(pathname, options = {}) {
   return data;
 }
 
-async function readJson(filePath, fallback = null) {
-  try {
-    return JSON.parse(await fs.readFile(filePath, "utf8"));
-  } catch (error) {
-    if (error && error.code === "ENOENT") return fallback;
-    throw error;
-  }
-}
-
 async function registerIpc() {
+  ipcMain.on("app:exit-ready", (event, ready) => {
+    if (!BrowserWindow.getAllWindows().some(w => w.webContents === event.sender)) return;
+    if (ready === true) { exitSeen.add(event.sender); exitReady.add(event.sender); }
+    else exitReady.delete(event.sender);
+  });
+  ipcMain.on("app:exit-prepared", (event, nonce, result) => {
+    const pending = preparations.get(nonce);
+    if (!pending || pending.sender !== event.sender || !result || typeof result.localSaved !== "boolean" || typeof result.cloudSynced !== "boolean") return;
+    preparations.delete(nonce);
+    pending.resolve({ localSaved: result.localSaved, cloudSynced: result.cloudSynced, message: typeof result.message === "string" ? result.message.slice(0, 500) : "" });
+  });
   ipcMain.handle("book:installed-file", (_event, file) => readBundledBookFile(path.join(app.getAppPath(), "dist", "book"), file));
-  const legacySession = await readJson(sessionPath(), null);
   const sessions = createSessionStore(sessionPath(), safeStorage);
-  ipcMain.handle("progress:import-read", async (_event, accountId) => {
-    if (typeof accountId !== "string" || !accountId) throw new Error("账号无效");
-    return Boolean(await readJson(path.join(path.dirname(progressPath(accountId)), "cloud-import.json")));
-  });
-  ipcMain.handle("progress:import-finish", async (_event, accountId) => {
-    if (typeof accountId !== "string" || !accountId) throw new Error("账号无效");
-    const target = path.join(path.dirname(progressPath(accountId)), "cloud-import.json");
-    await fs.mkdir(path.dirname(target), { recursive: true });
-    const temporary = `${target}.${randomUUID()}.tmp`;
-    await fs.writeFile(temporary, JSON.stringify({ completedAt: new Date().toISOString() }));
-    await fs.rename(temporary, target);
-    return true;
-  });
+  let sessionRestoreError = null;
+  // Credential damage must reach the login UI, never abort window creation.
+  await sessions.read().catch((error) => { sessionRestoreError = error; return null; });
   ipcMain.handle("book:audio", async (_event, value) => {
     const url = new URL(value);
     if (url.origin !== "https://cdn.aimwords.com" || !/^\/audio\/[a-f0-9]+\.(?:mp3|wav)$/i.test(url.pathname) || url.search || url.username || url.password) throw new Error("词书音频地址无效");
@@ -195,64 +234,51 @@ async function registerIpc() {
   });
 
   ipcMain.handle("session:read", async () => {
+    if (sessionRestoreError) throw sessionRestoreError;
     return sessions.read();
   });
 
   ipcMain.handle("session:write", async (_event, session) => {
-    return sessions.write(session);
+    const saved = await sessions.write(session);
+    sessionRestoreError = null;
+    return saved;
   });
 
   ipcMain.handle("session:clear", async () => {
-    return sessions.clear();
+    const cleared = await sessions.clear();
+    sessionRestoreError = null;
+    return cleared;
   });
 
   ipcMain.handle("progress:read", async (_event, accountId) => {
-    if (accountId) {
-      const saved = await readJson(progressPath(accountId), null);
-      if (saved) return saved;
-      const ownerPath = path.join(app.getPath("userData"), "progress-owner.json");
-      const owner = await readJson(ownerPath, null);
-      if (!owner && legacySession?.user?.id === accountId) {
-        const legacy = await readJson(progressPath(), null);
-        // Claim the legacy data once, retaining the old file for recovery.
-        await fs.mkdir(path.dirname(progressPath(accountId)), { recursive: true });
-        if (legacy) await fs.writeFile(progressPath(accountId), JSON.stringify(legacy), "utf8");
-        await fs.writeFile(ownerPath, JSON.stringify({ accountId }), "utf8");
-        return legacy;
-      }
-    }
-    return (
-      (await readJson(progressPath(accountId), null)) ?? {
-        version: 2,
-        planDays: {},
-        words: {},
-        bookmarks: {},
-        reviewHistory: [],
-      }
-    );
+    return accountStore(accountId).read();
   });
 
   ipcMain.handle("progress:write", async (_event, progress, accountId) => {
-    if (!progress || progress.version !== 2 || typeof progress.words !== "object") {
-      throw new Error("学习进度格式无效");
-    }
-    const target = progressPath(accountId);
-    const temporary = `${target}.${randomUUID()}.tmp`;
-    await fs.mkdir(path.dirname(target), { recursive: true });
-    await fs.writeFile(temporary, JSON.stringify(progress, null, 2), "utf8");
-    await fs.rename(temporary, target);
-    return true;
+    return accountStore(accountId).write(progress);
   });
 
-  ipcMain.handle("progress:sync", async (_event, token, payload) => {
+  ipcMain.handle("progress:sync", async (_event, token, payload, etag) => {
     if (typeof token !== "string" || token.length > 10000) throw new Error("登录状态无效");
-    const endpoint = devUrl ? `${devUrl.replace(/\/$/, "")}/api/progress` : "https://cyword.chengyi.me/api/progress";
+    const endpoint = devUrl ? `${devUrl.replace(/\/$/, "")}/api/progress` : `${channel.origin}/api/progress`;
     const response = await fetch(endpoint, {
       method: payload ? "PUT" : "GET",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: payload ? JSON.stringify(payload) : undefined,
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "X-CYword-Progress-Format": "compact-v1", ...(!payload && typeof etag === "string" && etag.length < 250 ? { "If-None-Match": etag } : {}) },
+      body: payload ? JSON.stringify({ ...payload, progress: await encodeProgressWire(payload.progress) }) : undefined,
       signal: AbortSignal.timeout(30000),
     });
+    const data = response.status === 304 ? {} : await response.json();
+    if (response.status === 200 || response.status === 409) data.progress = await decodeProgressWire(data.progress);
+    return { status: response.status, data };
+  });
+
+  ipcMain.handle("progress:incremental", async (_event, token, operation) => {
+    if (typeof token !== "string" || token.length > 10000) throw new Error("登录状态无效");
+    const body = JSON.stringify(operation);
+    if (!body || Buffer.byteLength(body) > 96000) throw new Error("增量请求过大");
+    const endpoint = `${(devUrl || channel.origin).replace(/\/$/, "")}/api/progress-incremental`;
+    const response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body, signal: AbortSignal.timeout(30000) });
     return { status: response.status, data: await response.json() };
   });
 
@@ -274,10 +300,9 @@ async function registerIpc() {
     return updateState;
   });
 
-  ipcMain.handle("update:install", () => {
+  ipcMain.handle("update:install", async () => {
     if (!app.isPackaged || updateState.status !== "downloaded") return false;
-    setImmediate(() => autoUpdater.quitAndInstall(true, true));
-    return true;
+    return exitGuard.request("install");
   });
 }
 
@@ -304,6 +329,11 @@ function createWindow() {
     },
   });
 
+  window.on("close", event => {
+    if (exitAllowed) return;
+    event.preventDefault();
+    void exitGuard.request("close");
+  });
   window.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:/i.test(url)) shell.openExternal(url);
     return { action: "deny" };
@@ -327,13 +357,16 @@ const singleInstance = app.requestSingleInstanceLock();
 if (!singleInstance) app.quit();
 
 app.whenReady().then(async () => {
-  app.setAppUserModelId("com.cyword.desktop");
+  app.setAppUserModelId(channel.desktopId);
   configureAutoUpdater();
   await registerIpc();
   createWindow();
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+}).catch((error) => {
+  dialog.showErrorBox("CYword 启动失败", error instanceof Error ? error.message : "初始化失败，请重试");
+  app.quit();
 });
 
 app.on("second-instance", () => {
@@ -350,4 +383,10 @@ process.on("uncaughtException", (error) => {
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
+});
+
+app.on("before-quit", event => {
+  if (exitAllowed || BrowserWindow.getAllWindows().length === 0) return;
+  event.preventDefault();
+  void exitGuard.request("close");
 });

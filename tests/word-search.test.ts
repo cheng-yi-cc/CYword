@@ -81,7 +81,8 @@ test("20 searched words start a 100-word day at 20; rating the remaining 80 comp
 
 test("search does not complete scheduled reviews or inflate counts when rerated and synced", async () => {
   let progress = rateSearchWord(emptyProgress(), "sword", "unclear");
-  progress = startReviewDay(progress, 4, ["sword"], true);
+  for (const id of ["system", "syntax", "essay"]) progress = rateSearchWord(progress, id, "mastered");
+  progress = startReviewDay(progress, buildPlan(catalog), 4, true);
   const rerated = rateSearchWord(progress, "sword", "mastered");
   assert.equal(rerated.words.sword.learnedAt, progress.words.sword.learnedAt);
   assert.deepEqual(rerated.planDays[4], progress.planDays[4]);
@@ -103,5 +104,5 @@ test("search does not complete scheduled reviews or inflate counts when rerated 
   assert.equal(cloud.planDays[4].completedAt, undefined);
   assert.equal(cloud.words.sword.exposures, 0);
   assert.equal(mergeProgress(cloud, rerated).words.sword.exposures, 0);
-  assert.ok(rateReviewWord(cloud, 4, "sword", "unclear").planDays[4].completedAt);
+  assert.ok(rateReviewWord(cloud, buildPlan(catalog), 4, "sword", "unclear").planDays[4].completedAt);
 });

@@ -9,5 +9,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(DeviceStoragePlugin.class);
         registerPlugin(AppUpdatesPlugin.class);
         super.onCreate(savedInstanceState);
+        // Only the separate acceptance package exposes WebView debugging to ADB.
+        if (BuildConfig.APPLICATION_ID.endsWith(".acceptance")) android.webkit.WebView.setWebContentsDebuggingEnabled(true);
     }
 }

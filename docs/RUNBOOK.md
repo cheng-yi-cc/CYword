@@ -1,6 +1,20 @@
 # 运行手册
 
-当前正式版本 Windows 0.4.8 / Android 0.1.6（versionCode 507），新增复习日全屏沉浸式。安装包预装完整词书、全部发音、原配图与音标字体，每日学习取消分段。`npm run build` 首次需在构建机下载全部原发音和配图，分别缓存到 `.work/book-audio/`、`.work/book-images/`；缺失或无效资源会阻断构建，无损转码缓存位于 `.work/book-images-webp/`。详见 [离线模式](OFFLINE.md)。
+## 单账号快照恢复
+
+先暂停待恢复账号的学习操作，核对数据库、内部账号 ID 和目标快照。使用 `node scripts/restore-progress.mjs --account <Cloudflare账号ID> --database <D1数据库ID> --user <内部账号ID>` 只读列出当前修订号与快照；不要把邮箱当内部账号 ID。命令使用 `CLOUDFLARE_API_TOKEN` 或本机 Wrangler 登录凭据，凭据不打印、不写入仓库。
+
+选定后追加 `--slot <小时槽> --revision <当前修订号>`，默认仍只校验。核对结果后追加 `--apply` 才执行恢复。默认处理增量协议 2；历史快照须显式传 `--protocol 1`。恢复只涉及该账号当前词书，以修订号防止覆盖期间的新写入；v2 被替换的原始记录写入 `progress_recovery_archive_v2`，有效快照经过当前计划业务校验，词汇及复习评级逻辑版本提高，统计在同一事务中重建。操作没有公开 HTTP 恢复入口，不执行整库回滚。必须先应用 `0004_incremental_progress.sql`；历史 v1 使用 `0002_progress_snapshots.sql`。
+
+恢复后重新登录或返回前台，检查进度和同步状态。恢复不会凭空找回从未上传且已被清空的设备记录；未知离线设备后续上传的操作仍可能重新合并，不能宣称恢复会消除所有离线分支。快照保留最近 7 天内最多 24 个小时槽；人工恢复档案供排障保留，正常评级不会写入档案。
+
+2026-09-27 在独立远程 D1 完成损坏记录拒绝、旧修订号拒绝、原字节保留、有效快照可读和另一账号不变的演练。v2 修订 5 → 6 恢复 5166 词及 28953 条复习，已被安装后的 Windows/Android 读回。完整验收摘要、免费环境性能限制和回退边界见 [验收记录](FIRST-RELEASE-ACCEPTANCE.md)。
+
+## 安装器构建纪律
+
+构建期间不要修改被打包的 `dist/`、`electron/` 或 `package.json`，也不要并行运行会重建这些目录的任务。`afterPack` 调用 `scripts/verify-packaged-app.cjs` 校验 ASAR 内所有打包文件的长度、偏移和 SHA-256，失败时停止生成安装器。首次隔离构建曾因流式打包期间源文件变化产生损坏归档，已由该检查复现并阻断；构建成功仍需实际安装启动验证。
+
+当前版本 Windows 0.4.13 / Android 0.1.11（versionCode 512），默认自动双向增量同步，计划按完成情况推进。安装包预装完整词书、全部发音、原配图与音标字体，每日学习取消分段。`npm run build` 首次需在构建机下载全部原发音和配图，分别缓存到 `.work/book-audio/`、`.work/book-images/`；缺失或无效资源会阻断构建，无损转码缓存位于 `.work/book-images-webp/`。详见 [离线模式](OFFLINE.md)。
 
 ## Windows 0.4.8 / Android 0.1.5 发布记录（2026-09-25）
 
@@ -32,7 +46,7 @@ Windows 新布局将词书独立打包，程序 ASAR 为 37662339 字节。模�
 
 发布源码为 `d0284b3`，标签为 `v0.4.7`、`android-v0.1.4`；Windows 工作流 `36105972953`、Android 工作流 `36105976299` 成功复用原件上传 R2。官网生产部署为 `ec33c003.cyword.pages.dev`。两个平台完整下载的长度与 SHA-256、HEAD、首尾 Range、稳定入口跳转均核验通过；Windows `latest.yml` 的版本、路径和 SHA-512 与原件一致，线上 blockmap 与本地原件逐字节相同。官网安装说明、版本记录与回退信息同步更新，22 项本地下载检查、2 项官网界面回归通过。
 
-Windows 0.4.6 / Android 0.1.3 的首次下载流程继续供旧客户端使用；当前开发预览默认直读本机资源，旧 IndexedDB 流程需显式开启。`CYWORD_REAL_AUTH=1` 不会启用上传，只有 `VITE_CYWORD_PROGRESS_MODE=cloud` 显式恢复双向同步。资源查找和开发开关见 [OFFLINE.md](OFFLINE.md)。源码与 Release 已公开；官网更新源及生产资源均保留。
+上述是历史发布记录。当前首发候选默认双向同步，开发预览默认使用隔离模拟；`CYWORD_REAL_AUTH=1` 会启用实际认证和进度读写。词书始终默认直读本机资源，旧 IndexedDB 流程只在回归时显式开启。资源查找和开发开关见 [OFFLINE.md](OFFLINE.md)。源码与历史 Release 已公开；官网更新源及生产资源均保留，候选发布仍待授权。
 
 ## 预览与差量更新
 
@@ -91,7 +105,7 @@ npm run dev
 
 `npm run dev` 会先校验六级规范表并生成 `data/`，随后启动 Vite 和 Electron。修改 CSV 后重新启动即可重新编译；不要直接编辑 `data/`。
 
-手机/浏览器预览运行 `npm run dev:mobile`（5173，默认模拟登录与旧进度导入）。开发服务直读本地编译词书，媒体复用已有资源；Electron 开发窗口同样连接该服务。`CYWORD_REAL_AUTH=1` 切换生产认证和旧进度导入，默认不改变本地词书读取。`VITE_CYWORD_BOOK_DOWNLOAD=1` 才恢复旧下载路径，该路径下桌面 API 可由 `CYWORD_BOOK_API_URL` 覆盖。安卓工具链及签名变量见 [ANDROID.md](ANDROID.md)。这些变量不改变正式云端的部署状态。
+手机/浏览器预览运行 `npm run dev:mobile`（5173，默认模拟登录与双向同步）。开发服务直读本地编译词书，媒体复用已有资源；Electron 开发窗口同样连接该服务。`CYWORD_REAL_AUTH=1` 切换生产认证和双向进度读写（会更新实际账号），默认不改变本地词书读取。`VITE_CYWORD_BOOK_DOWNLOAD=1` 才恢复旧下载路径，该路径下桌面 API 可由 `CYWORD_BOOK_API_URL` 覆盖。安卓工具链及签名变量见 [ANDROID.md](ANDROID.md)。这些变量不改变正式云端的部署状态。
 
 以音记形：进入「今日学习」打开任意单词，标题默认完整显示，单击可切换分块与重音；点击音标发音时临时分块，结束、停止和失败后恢复原状态，切词重置。点击「展开音形对照」检查对应关系。`npm run data:audit:pronunciation` 输出 5166 词逐条结构检查报告到 `.work/pronunciation/acceptance.json`。修改增强 JSONL 后需重新编译并刷新预览。
 
@@ -115,7 +129,7 @@ npm run build:web
 - 单词搜索输入 `S`、`SY` 时按词书顺序显示候选，回车或搜索按钮展示完整结果；候选支持方向键和 Esc，打开详情后未评级不能前进，返回保留查询和位置。
 - 提前搜索评级后，相关学习日计入已学；学完剩余未学词即可完成当天，不增加虚构曝光或复习记录。
 - 桌面长难句默认收起，展开动画同时调整三栏；手机可切换词根和长难句标签。
-- 默认本地模式和显式云端模式遇到 401 均保留离线会话与本机学习，账号入口显示“未登录”，点击才重新验证。网络失败均保留登录。相关自动测试位于 `tests/sync.test.ts`，不要用删除真实进度验证。
+- 自动同步遇到 401 时保留离线会话与本机学习，账号入口显示“未登录”，点击才重新验证。网络失败均保留登录。相关自动测试位于 `tests/sync.test.ts`，不要用删除真实进度验证。
 
 ## 生成 Windows 安装包
 

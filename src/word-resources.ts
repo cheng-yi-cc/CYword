@@ -1,4 +1,5 @@
 import type { WordDetail, WordsRequest, WordsResponse } from "./types.ts";
+import { validWordDetail } from "./word-validation.ts";
 
 type WordKind = WordsRequest["kind"];
 type Options = {
@@ -61,7 +62,7 @@ export class WordResourceCache {
         try {
           const response = await this.options.request({ dataVersion: this.options.dataVersion, kind, planDay, wordIds: missing });
           if (generation !== this.generation) return false;
-          if (response.dataVersion !== this.options.dataVersion || missing.some(id => response.words?.[id]?.id !== id || response.words[id].bookCode !== this.options.bookCode)) return false;
+          if (response.dataVersion !== this.options.dataVersion || missing.some(id => !validWordDetail(response.words?.[id]) || response.words[id].id !== id || response.words[id].bookCode !== this.options.bookCode)) return false;
           for (const id of missing) {
             this.entries.delete(this.key(id));
             this.entries.set(this.key(id), response.words[id]);

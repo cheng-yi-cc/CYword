@@ -59,8 +59,8 @@ test("review defaults can skip mastered words and ratings remain adjustable", ()
   progress = rateStudyWord(progress, plan, groupA, "w2", "unclear");
   assert.deepEqual(reviewCandidates(progress, true), ["w2"]);
   assert.deepEqual(new Set(reviewCandidates(progress, false)), new Set(["w1", "w2"]));
-  progress = startReviewDay(progress, 4, ["w2"], true);
-  progress = rateReviewWord(progress, 4, "w2", "mastered");
+  progress = startReviewDay(progress, buildPlan(catalog), 4, true);
+  progress = rateReviewWord(progress, buildPlan(catalog), 4, "w2", "mastered");
   assert.equal(progress.words.w2.proficiency, "mastered");
   assert.ok(progress.planDays["4"].completedAt);
 });
@@ -76,15 +76,16 @@ test("vocabulary membership follows learned ratings, not legacy bookmarks or oth
   assert.deepEqual(overview.ids, ["w2"]);
   assert.deepEqual(overview.counts, { mastered: 1, unclear: 1, unmastered: 0, unlearned: 1 });
   assert.equal(overview.total, 3);
-  progress = startReviewDay(progress, 4, ["w2"], true);
-  progress = rateReviewWord(progress, 4, "w2", "mastered");
+  progress = startReviewDay(progress, buildPlan(catalog), 4, true);
+  progress = rateReviewWord(progress, buildPlan(catalog), 4, "w2", "mastered");
   assert.deepEqual(vocabularyOverview(progress, vocabularyCatalog).ids, []);
   assert.ok(progress.words.w2.learnedAt, "mastered words keep their learning records");
 });
 
 test("reassessing vocabulary updates mastery without crediting planned learning or review", () => {
   let progress = rateStudyWord(emptyProgress(), buildPlan(catalog)[0], groupA, "w1", "unclear");
-  progress = startReviewDay(progress, 4, ["w1"], true);
+  progress = rateStudyWord(progress, buildPlan(catalog)[0], groupA, "w2", "mastered");
+  progress = startReviewDay(progress, buildPlan(catalog), 4, true);
   progress.words.w1.lastSeenAt = "2026-01-01T00:00:00.000Z";
   const next = updateWordProficiency(progress, "w1", "mastered");
   assert.deepEqual(next.planDays, progress.planDays);

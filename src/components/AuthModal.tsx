@@ -17,7 +17,7 @@ interface AuthModalProps {
   notice?: string;
   initialEmail?: string;
   onClose?: () => void;
-  beforeSessionChange?: () => Promise<void>;
+  beforeSessionChange?: (session: UserSession) => Promise<void>;
 }
 
 export function AuthModal({ onSuccess, notice, initialEmail = "", onClose, beforeSessionChange }: AuthModalProps) {
@@ -29,6 +29,7 @@ export function AuthModal({ onSuccess, notice, initialEmail = "", onClose, befor
   const [message, setMessage] = useState<{ type: "info" | "error" | "success"; text: string } | null>(notice ? { type: "info", text: notice } : null);
   const timerRef = useRef<number | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const verifiedSession = useRef<{ email: string; code: string; session: UserSession } | null>(null);
   useSessionDialog({ active: true, dialogRef, onClose: () => onClose?.(), busy: sendingCode || verifying });
 
   useEffect(() => {
@@ -125,7 +126,9 @@ export function AuthModal({ onSuccess, notice, initialEmail = "", onClose, befor
 
     try {
       let result: VerifyCodeResponse;
-      if (window.cyword?.verifyAuthCode) {
+      if (verifiedSession.current?.email === trimmedEmail && verifiedSession.current.code === trimmedCode) {
+        result = { success: true, ...verifiedSession.current.session };
+      } else if (window.cyword?.verifyAuthCode) {
         result = await window.cyword.verifyAuthCode(trimmedEmail, trimmedCode);
       } else {
         const res = await fetch("/api/auth/verify-code", {
@@ -145,7 +148,8 @@ export function AuthModal({ onSuccess, notice, initialEmail = "", onClose, befor
         user: result.user,
       };
 
-      await beforeSessionChange?.();
+      verifiedSession.current = { email: trimmedEmail, code: trimmedCode, session };
+      await beforeSessionChange?.(session);
       if (window.cyword?.writeSession) {
         if (!await window.cyword.writeSession(session)) throw new Error("登录状态保存失败，请重试");
       } else {
@@ -229,7 +233,7 @@ export function AuthModal({ onSuccess, notice, initialEmail = "", onClose, befor
         </form>
 
         <div className="auth-footer">
-          <small>{import.meta.env.VITE_CYWORD_PROGRESS_MODE === "cloud" ? "学习记录先保存在设备上，再自动同步到云端。" : "首次联网登录后可离线学习，进度保存在本机。"}</small>
+          <small>完整词书离线可用，学习记录先保存本机，再自动同步到云端。</small>
           <nav aria-label="账号与数据说明"><a href="https://cyword.chengyi.me/#privacy" target="_blank" rel="noreferrer">隐私与数据</a><a href="https://cyword.chengyi.me/#feedback" target="_blank" rel="noreferrer">反馈与删除申请</a></nav>
         </div>
         {onClose && <button className="dialog-close" aria-label="关闭登录" disabled={sendingCode || verifying} onClick={onClose}>×</button>}

@@ -4,10 +4,17 @@ import { homedir } from 'node:os';
 import path from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { buildChannel } from './build-channel.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const release = process.argv[2] === 'release';
 const env = { ...process.env };
+// Configure the bridge before WebView creation. Re-enabling its global debugging
+// socket after recreation can collide with the previous socket on real devices.
+const capacitorPath = path.join(root, 'android/app/src/main/assets/capacitor.config.json');
+const capacitorConfig = JSON.parse(readFileSync(capacitorPath, 'utf8'));
+capacitorConfig.android = { ...capacitorConfig.android, webContentsDebuggingEnabled: !release || buildChannel(env).name === 'acceptance' };
+writeFileSync(capacitorPath, JSON.stringify(capacitorConfig, null, 2));
 const localJdks = 'D:/tools/cyword-android';
 if (!env.CYWORD_JAVA_HOME && existsSync(localJdks)) {
   const candidate = readdirSync(localJdks).find((name) => name.startsWith('jdk-21') && existsSync(path.join(localJdks, name, 'bin/java.exe')));
@@ -38,6 +45,8 @@ if (build.status !== 0) process.exit(build.status || 1);
 const variant = release ? 'release' : 'debug';
 const version = JSON.parse(readFileSync(path.join(root, 'android/version.json'), 'utf8')).versionName;
 mkdirSync(path.join(root, 'release'), { recursive: true });
-const target = path.join(root, 'release', `CYword-Android-${version}${release ? '' : '-debug'}.apk`);
+const output = path.join(root, 'release', env.CYWORD_ACCEPTANCE_ORIGIN ? 'acceptance' : '');
+mkdirSync(output, { recursive: true });
+const target = path.join(output, `CYword-Android-${version}${release ? '' : '-debug'}.apk`);
 copyFileSync(path.join(root, `android/app/build/outputs/apk/${variant}/app-${variant}.apk`), target);
 console.log(`APK: ${target}`);

@@ -1,4 +1,5 @@
 import { isPublicRelease, type PublicRelease } from "../website/server/release-manifest.ts";
+import { apiOrigin as origin } from "./api-origin.ts";
 
 export type AndroidUpdateState = {
   status: "idle" | "checking" | "current" | "available" | "opening" | "downloading" | "ready" | "installing" | "error";
@@ -8,7 +9,6 @@ export type AndroidUpdateState = {
 };
 export type AndroidUpdates = Pick<AndroidUpdateService, "getSnapshot" | "subscribe" | "check" | "download" | "downloadFull" | "install">;
 export type AndroidDownloadProgress = { phase: string; completed: number; total: number; downloaded: number };
-const origin = "https://cyword.chengyi.me";
 const automaticInterval = 6 * 60 * 60 * 1000;
 
 export function isNewerVersion(candidate: string, installed: string): boolean {

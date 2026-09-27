@@ -13,8 +13,9 @@ function oldProgress() {
   let progress = rateStudyWord(emptyProgress(), plan(1, [a]), a, "w1", "mastered");
   progress = rateStudyWord(progress, plan(1, [a]), a, "w2", "unclear");
   progress = rateStudyWord(progress, plan(2, [b, c]), c, "w4", "unmastered");
-  progress = startReviewDay(progress, 4, ["w2", "w4"], true);
-  return rateReviewWord(progress, 4, "w2", "unclear");
+  const oldPlan = buildPlan({ groups: [a, c], schedule: [plan(1, [a]), plan(2, [c]), plan(3, [a])] } as Catalog);
+  progress = startReviewDay(progress, oldPlan, 4, true);
+  return rateReviewWord(progress, oldPlan, 4, "w2", "unclear");
 }
 
 test("moving study days preserves actual exposures and credits learned words in their new groups", () => {

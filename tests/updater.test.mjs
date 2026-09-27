@@ -4,6 +4,7 @@ import { EventEmitter } from "node:events";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import { createSessionStore } from "../electron/session-store.cjs";
+import { createExitGuard } from "../electron/exit-guard.cjs";
 
 async function updaterFixture() {
   const updater = new EventEmitter();
@@ -23,12 +24,16 @@ async function updaterFixture() {
   updater.quitAndInstall = () => { installs++; };
   const electron = {
     app: { isPackaged: true, getVersion: () => "0.4.4", getPath: () => "/mock", requestSingleInstanceLock: () => true, whenReady: () => new Promise(() => {}), on() {} },
-    ipcMain: { handle: (key, handler) => handlers.set(key, handler) },
+    ipcMain: { handle: (key, handler) => handlers.set(key, handler), on() {} },
     BrowserWindow: { getAllWindows: () => [{ isDestroyed: () => false, webContents: { send: (_, value) => published.push(value) } }] },
   };
   const mocks = {
     electron,
     "./session-store.cjs": { createSessionStore },
+    "./progress-store.cjs": { createProgressStore() { throw new Error("not used by updater"); } },
+    "./generated/progress-validation.cjs": { validStoredProgress: () => true },
+    "./generated/channel.json": { name: "production", origin: "https://cyword.chengyi.me", desktopId: "com.cyword.desktop" },
+    "./exit-guard.cjs": { createExitGuard },
     "./bundled-book.cjs": { readBundledBookFile: async () => { throw Error("not used by updater"); } },
     "electron-updater": { autoUpdater: updater },
     "node:fs/promises": { readFile: async () => { throw Object.assign(new Error(), { code: "ENOENT" }); } },

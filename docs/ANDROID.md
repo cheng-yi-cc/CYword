@@ -1,20 +1,14 @@
 # 安卓与进度同步
 
-**当前正式版本 Android 0.1.6 / Windows 0.4.8（2026-09-26）**：安装包预装完整词书、全部音频、原配图和音标字体，首次联网登录后直接学习，默认离线学习、本机保存，旧云端进度只读合并导入一次。原生进度提交也负责持久化导入标记，凭据仍使用 Keystore。云端配置完整保留，可显式恢复。详见 [OFFLINE.md](OFFLINE.md)。下方双向同步机制只适用于旧版本或显式启用的云端模式。
-
-安卓 0.1.5 提供 Android 7.0（API 24）及以上安装包。界面与排课逻辑复用 `src/`，通过 Capacitor 打包成本机应用。首次登录需联网，之后可离线使用。2026-09-20 已完成生产 D1 授权、`learning_progress` 建表和官网同步函数部署，未认证请求返回 401；真实账号跨设备读写尚未验证。2026-09-20 已发布 0.1.1（versionCode 502）及配套官网函数，包含单词搜索、已学词进度、缓存、凭据保护和同步修复。
+Android 0.1.11/code 512 与 Windows 0.4.13 共用增量同步。完整词书、发音、配图和字体随包离线可用；进度先可靠保存本机，再自动双向同步，同账号两端接续。计划按完成情况推进，不按自然日期推进。规则与恢复边界见 [OFFLINE.md](OFFLINE.md)，真机覆盖范围见 [验收记录](FIRST-RELEASE-ACCEPTANCE.md)。
 
 ## 使用与预览
 
-1. 安装 `release/CYword-Android-0.1.6.apk`；电脑端安装同目录的 0.4.8 Windows 安装器。
-2. 登录后直接使用包内词书及发音；手机“我的”和电脑侧栏显示本机保存与旧进度导入状态。
-3. 评级先保存本机，默认不上传；旧云端进度每台设备按账号导入一次。导入未完成可以重试，不阻断离线学习。
-4. 每个未评级词必须先选熟练度；本机写入成功后才前进，写入失败留在当前词并可重试。回看已评级词可直接前进。每日学习不再分段或显示中途休息页，连续完成当天；曝光顺序、词根分组和三学一复习规则保持不变。
-5. 顶栏左上角“单词搜索”按前缀筛选全书：输入展开候选，提交后搜索框收至顶部并显示完整结果，点击可打开强制评级详情。任一评级算已学，计入相关学习日；搜索不伪造计划曝光或复习记录。
+首次联网登录后使用包内资源；新设备先恢复云端进度，已有有效本机记录可离线启动。三档有效评级均算学习覆盖，本机提交成功后才推进下一词。复习日须完成所有前置学习及复习，搜索评级不伪造复习历史。
 
-`npm run dev:mobile` 启动 `http://127.0.0.1:5173/`。手机与电脑在同一网络时访问电脑局域网 IP 的 5173 端口。默认读取本地编译词书，开发验证码自动填入，模拟旧进度服务只存于开发服务器内存，与线上账号隔离；浏览器的账号进度仍保存在 localStorage。重启开发服务后重新登录。联调生产服务时，在 PowerShell 中设置 `$env:CYWORD_REAL_AUTH='1'` 后再启动；认证与旧进度导入切换到线上，词书仍默认直读本机（默认不上传），生产需要实际邮箱验证码。
+`npm run dev:mobile` 使用 `http://127.0.0.1:5173/`，默认模拟账号和同步服务，与线上账号隔离；词书直读本机编译结果。`CYWORD_REAL_AUTH=1` 切换实际认证和双向进度读写，会更新登录账号，故障注入只用专用账号和环境。
 
-以音记形与以熟带生复用同一套组件和审核数据，手机上点按参照词打开底部悬浮卡。0.1.1 与线上增强词书 `90284475439a197b` 已发布；默认本地预览可检查尚未发布的数据修改。当前只完成浏览器窄屏验证，未做增强功能的安卓真机验收。
+正式安装包通过 `npm run android:release` 生成。隔离验收设置独立 HTTPS `CYWORD_ACCEPTANCE_ORIGIN` 后运行 `node scripts/build-acceptance.mjs all`；产物在 `release/acceptance/`，安卓包名 `me.chengyi.cyword.acceptance`、Windows 名称和数据目录 `CYword Acceptance`，不覆盖日常应用。仅隔离 APK 开启 ADB WebView 调试；正式构建不启用。
 
 ## 应用内检查更新（0.1.2 起）
 
@@ -40,27 +34,19 @@
 
 临时文件写入应用缓存 `cyword-updates/<目标哈希>.apk`；中断或应用重启后再次下载会逐块复核并继续，不再下载已完成内容。需要容纳约一个完整 APK 的临时空间。整包 SHA-256、包名、版本名、递增 versionCode 和相同签名证书检查通过后显示“安装更新”；系统权限授权后返回再次点击即可安装。差量失败不会自动转为全量，账号菜单提供明确的完整 APK 浏览器下载入口。
 
-Android 0.1.4 及以前仍只支持浏览器完整下载，需先覆盖安装带此能力的新版本；之后的版本才使用差量。首次下载仍为完整预装词书安装包。本地重建与失败恢复已验证，真机权限与系统覆盖安装仍需验收；正式发布核验见 [运行手册](RUNBOOK.md)。
+Android 0.1.4 及以前仍只支持浏览器完整下载，需先覆盖安装带此能力的新版本；之后的版本才使用差量。首次下载仍为完整预装词书安装包。本地重建与失败恢复、隔离真机权限与系统覆盖安装已经验证；具体设备及版本见验收记录，正式发布核验见 [运行手册](RUNBOOK.md)。
 
-## 存储与迁移
+## 存储与同步
 
-默认本地模式与只读导入流程见 [OFFLINE.md](OFFLINE.md)。本节中的双向同步和云端待同步退出提示仅用于显式云端模式；两种模式遇到 401 都保留离线会话与本机学习。
+Windows 进度写入 `userData/accounts/<SHA-256 账号 ID>/progress.json`，文件同步后原子替换，并保留有效副本；会话令牌由 DPAPI 加密。Android 使用 Keystore AES-GCM 保存会话，Preferences 原生同步提交主进度及备份，失败回滚内存缓存。损坏原件保留后尝试恢复，凭据异常不删除学习记录，也不降级保存明文。
 
-Windows 进度原子写入 `userData/accounts/<SHA-256 账号 ID>/progress.json`。`session.json` 中的令牌改由 Electron `safeStorage` 使用 Windows DPAPI 加密；读取旧明文会话时原子替换为密文，保留账号信息，不产生明文备份。系统加密不可用时返回错误，不降级明文。DPAPI 保护范围是 Windows 用户，不能隔离同一用户权限下的其他程序。
+学习数据版本为 2。所有新评级使用每词逻辑版本 `(counter, actor)`，已观察版本加一；离线并发相同计数按 actor 字典序收敛，允许降低熟练度。学习覆盖、曝光键和同轮复习记录合并保留，统计和完成状态从合法记录派生。本机保存、远端合并与同步确认串行执行；未上传的新评级不能被较早响应标记为已同步。
 
-安卓通过自有 `DeviceStoragePlugin` 使用 Android Keystore 中的 AES 密钥，以 GCM 加密会话后存入 `CywordCredentials`。旧 `CapacitorStorage` 中的明文会话只有在密文提交成功后才移除；解密失败不会退回读取旧明文。账号进度仍使用 Preferences 的原键 `cyword-progress:<账号 ID>`，学习保存通过原生 `commit()` 确认落盘；失败时恢复内存缓存并向界面报错。浏览器预览继续使用 localStorage。
+默认自动同步，前台每 5 秒检查，启动、回前台、联网和评级后立即或短延时触发。401 暂停请求但继续本机学习；重新登录后补同步。新设备首次云端读取失败不会初始化并上传空进度。账号切换丢弃旧请求结果，待同步记录独立保存。
 
-旧版桌面 `progress.json` 只在启动时已登录账号与目标账号相同且尚未迁移时导入，保留原文件和 `progress-owner.json` 归属标记。安卓/浏览器旧预览进度同样只向升级启动时的已登录账号迁移，并写入一次性归属标记。凭据加密迁移不改写学习进度。旧文件没有可验证归属时不会自动上传，需要先人工确认归属再导入，避免把他人记录混入账号。
+`flush()` 返回本机保存与云端确认两种状态；关闭、退出、账号切换和安装更新都先等待本机保存。失败保留界面；仅云端未完成时可明确确认后离开。Android 进后台不要求上传完成，系统终止后依靠已提交记录恢复。
 
-进度仍为 `version: 2`，可选 `bookmarkChanges` 仅用于兼容旧收藏记录，无需破坏性迁移。新版“词汇掌握”直接依据已有评级整理，未学词不进入待巩固列表，已掌握词只移出列表、不删除进度。合并规则：
-
-- 实际已评级的“组 × 单词”取并集，再依据目录和已有词汇状态重算分组及学习日完成情况；任何已有评级均算已学，不为搜索评级补造曝光。
-- 熟练度沿用所有已发布客户端相同的 `lastSeenAt` 比较规则，首次学习时间取较早值；曝光和复习历史去重。保存时只对本次真正评级的词使用单调时间戳：取用户时间与该设备已观察到的该词时间加 1 毫秒中的较大值，避免看过快时钟设备的评级后无法重新评级。不增加协议字段；尚未见到远端记录的离线并发仍按既有时间及确定性平局规则合并，设备时钟仍应保持正确。
-- 旧收藏按变更时间合并，取消收藏的标记保留；不用于新版词汇掌握列表。
-- 同一复习会话合并完成集合并保留难度顺序；重新开始的会话按较新的开始时间选择。
-- 保存与云端合并串行执行，写盘成功后才发布新的内存状态；失败评级不会混入后续上传。界面保存时传入原渲染快照，避免将其中未改动的旧词误判为重新评级。
-- `flush()` 明确返回 `{ localSaved, cloudSynced, message }`。退出账号前本机保存失败则阻止退出；本机已保存但云端未完成时说明跨设备记录可能滞后，由用户选择继续退出或保留登录重试。
-- 网络失败保留本机记录和登录态；401 暂停远端请求，账号入口显示“未登录”，点击重新登录；本机记录与学习能力保留。账号切换后丢弃旧账号请求的延迟响应。
+不自动迁移无归属旧进度，不删除维护者已有文件，不提供手动导入导出。完整冲突与恢复规则见 [离线与同步说明](OFFLINE.md)。
 
 ## 详情加载与会话
 
@@ -74,40 +60,43 @@ Windows 进度原子写入 `userData/accounts/<SHA-256 账号 ID>/progress.json`
 
 ```powershell
 npx wrangler d1 execute cyword-db --cwd website --remote --file migrations/0001_progress.sql
+npx wrangler d1 execute cyword-db --cwd website --remote --file migrations/0002_progress_snapshots.sql
+npx wrangler d1 execute cyword-db --cwd website --remote --file migrations/0003_auth_mail_budget.sql
+npx wrangler d1 execute cyword-db --cwd website --remote --file migrations/0004_incremental_progress.sql
 npm run deploy:site
 ```
 
 Wrangler 需要既有 Pages 权限及 D1 写入范围。认证错误 `10000` 或缺少 `d1:write` 时，应补充用户授权后重试，不可绕开权限限制。2026-09-20 经用户授权补充 `d1:write`，执行建表成功，并通过 `PRAGMA table_info(learning_progress)` 核对线上结构。
 
-`GET /api/progress` 返回 `{ revision, progress }`。`PUT` 请求携带同样结构，使用 `Authorization: Bearer <登录令牌>`。服务端只以令牌中的用户身份选择记录，客户端不能指定其他账号。
+生产迁移须先于客户端发布执行；验收使用独立数据库与 Pages 项目，配置文件不提交。当前客户端使用 `POST /api/progress-incremental`，正文包含协议 2、词书和课程版本，`action` 为 `read`、`stage` 或 `commit`。使用 `Authorization: Bearer <登录令牌>`，服务端只以认证身份选择记录，客户端不能指定其他账号。
 
-- `200`：成功，写入后的修订号增加 1。
-- `409`：另一端已更新，返回最新快照；客户端合并后重试。
+- `200`：读取、暂存或提交成功，只有原子提交才使修订号增加 1；幂等重发不重复计数。读取返回空增量且修订号未变时，客户端内部视作 304，不重写本机。
+- `409`：另一端已更新；客户端读取增量、合并后重试。
 - `401`：令牌无效或过期，重新登录后同步。
 - `400` / `413`：数据结构无效或超限；`503`：认证配置、数据库或网络异常。
 
-D1 表 `learning_progress` 按 `(user_id, book_code)` 唯一，存储修订号、gzip 压缩快照与更新时间。请求最多 12 MB、压缩快照最多 1.8 MB。接口不缓存用户数据，不在错误响应中泄露数据库细节。`website/public/_routes.json` 包含精确路径 `/api/progress`。
+D1 `progress_heads_v2` 保存账号/词书修订号，`progress_records_v2` 保存每词及日期记录，暂存与可见记录分离。每次读取最多 32 条，每次暂存最多 24 条，请求最多 96000 字节。完整传输与恢复规则见 [OFFLINE.md](OFFLINE.md)。接口不缓存用户数据，不在错误响应中泄露数据库细节。`website/public/_routes.json` 包含精确路径 `/api/progress-incremental`；旧 `/api/progress` 和 `learning_progress` 保留。
 
 PowerShell 调用示例（令牌仅放在进程变量中，不写入仓库）：
 
 ```powershell
 $syncHeaders = @{ Authorization = "Bearer $env:CYWORD_USER_TOKEN" }
-$syncState = Invoke-RestMethod -Uri "https://cyword.chengyi.me/api/progress" -Headers $syncHeaders
-# 上传前将本地记录与 $syncState.progress 合并；不要直接覆盖另一端快照。
-# PUT 请求正文结构为 @{ revision = $syncState.revision; progress = $mergedProgress }。
+$syncBody = @{ protocol = 2; bookCode = 'cet6'; curriculumVersion = '<当前编译版本>'; action = 'read'; after = 0; cursor = '' } | ConvertTo-Json
+$syncState = Invoke-RestMethod -Method Post -Uri "https://cyword.chengyi.me/api/progress-incremental" -Headers $syncHeaders -ContentType 'application/json' -Body $syncBody
+# 诊断单页读取；实际同步使用 src/incremental-client.ts，不能把单页当成完整进度。
 ```
 
 ## 验证
 
-`npm test` 覆盖原有规则、缓存去重/版本/LRU、音频竞态、预装词书读取、进度合并、修订冲突、写盘失败不上传、快慢设备的单调评级时间、新旧客户端相同合并赢家、上传期间继续评级和账号切换后的延迟响应。`npm run test:ui` 覆盖取消分段后的连续评级和整日完成。真实本地 Worker+D1 测试覆盖授权与隔离，以及验证码并发核销、发码冷却、错误次数限制和账号创建/登录计数。`npm run check:site` 验证函数类型。
+`npm test` 覆盖原有规则、缓存去重/版本/LRU、音频竞态、预装词书读取、进度合并、修订冲突、写盘失败不上传、快慢设备的逻辑版本、离线并发确定性合并、上传期间继续评级和账号切换后的延迟响应。`npm run test:ui` 覆盖取消分段后的连续评级和整日完成。真实本地 Worker+D1 测试覆盖授权与隔离，以及验证码并发核销、发码冷却、错误次数限制和账号创建/登录计数。`npm run check:site` 验证函数类型。
 
-2026-09-20 已在 Windows 实际运行 Electron safeStorage/DPAPI，验证旧明文会话转密文、回读及退出清除；安卓 Release 构建通过，0.1.2 APK 签名证书与 0.1.0 / 0.1.1 一致，最低 API 24、目标 API 36。ADB 未连接真机，不能将构建成功视为 Keystore 真机迁移或真实账号跨设备同步已验收。
+2026-09-20 的历史验证包括 Windows Electron safeStorage/DPAPI 的旧明文会话转密文、回读及退出清除，以及 Android 0.1.2 构建和旧版签名一致；当时未连接真机。2026-09-27 已在 Android 16 USB 真机安装隔离候选、真实登录、断网重启、与 Windows 双向接续及覆盖升级，完整版本与限制见 [验收记录](FIRST-RELEASE-ACCEPTANCE.md)。本次不声称验证过历史 Keystore 迁移矩阵。
 
-浏览器移动尺寸检查应覆盖首页、计划、学习、词根/长难句、回看、词汇掌握（筛选/搜索/重新评级）、单词搜索（候选/提交/详情返回）和复习；0.1.5 正式 APK 已完成构建、完整预装资源与签名校验，官网完整下载哈希一致。此前搜索改版通过 390×844 浏览器尺寸检查；仍须在真机安装后确认键盘、安全区域、音频、覆盖升级和凭据迁移。
+浏览器移动尺寸检查覆盖首页、计划、学习、词根/长难句、回看、词汇掌握（筛选/搜索/重新评级）、单词搜索（候选/提交/详情返回）和复习。历史 0.1.5 已完成构建、预装资源及官网下载摘要校验；本次隔离候选进一步记录真机键盘、返回、发音、字体/横屏及覆盖升级结果，不以浏览器尺寸检查替代实机。
 
 ## 独立版本与官网发布
 
-安卓版本统一维护在 `android/version.json`；`versionName` 为公开版本号，`versionCode` 必须递增。首个公开版本为 0.1.0，内部序号为 501，以兼容此前序号 500 的本地测试包覆盖安装。当前正式版本为 0.1.6，内部序号 507，签名证书沿用旧版。桌面版本继续由 `package.json` 维护。
+安卓版本统一维护在 `android/version.json`；`versionName` 为公开版本号，`versionCode` 必须递增。首个公开版本为 0.1.0，内部序号为 501，以兼容此前序号 500 的本地测试包覆盖安装。当前正式版本为 0.1.11 / 512，签名证书保留；同版本隔离验收包使用独立包名，不能替代正式包。桌面版本继续由 `package.json` 维护。
 
 正式签名构建后，创建 `android-v<versionName>` 标签及同名 GitHub Release，将对应 APK 上传并将该 Release 标为非最新（`--latest=false`），保留 Windows Release 的最新标识。`.github/workflows/publish-android.yml` 在 Android Release 发布后读取同一份 APK，上传到专用 R2 桶的 `releases/android/<版本>/<sha256>/`，校验长度与 SHA-256 后最后更新 `releases/android/current.json`，已有同路径资产必须字节相同才能复用，不能覆盖。已有 Release 可手动触发工作流并传入标签重试上传，无需重新生成 APK。
 

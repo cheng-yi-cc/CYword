@@ -4,6 +4,7 @@ dist-site/
 release/
 data/
 .work/
+electron/generated/
 .artifact-work/
 outputs/
 *.log

@@ -1,6 +1,6 @@
 {
   "name": "cyword",
-  "version": "0.4.8",
+  "version": "0.4.13",
   "private": true,
   "license": "Apache-2.0",
   "type": "module",
@@ -11,7 +11,7 @@
     "data:verify": "node scripts/verify-book-data.mjs",
     "data:audit:pronunciation": "node scripts/audit-pronunciation.mjs",
     "data:audit:meaning-bridges": "node scripts/audit-meaning-bridges.mjs",
-    "data:build": "npm run data:verify && node scripts/build-app-data.mjs",
+    "data:build": "npm run data:verify && node scripts/build-app-data.mjs && node scripts/build-native.mjs",
     "data:api": "npm run data:build && node scripts/build-book-api-data.mjs",
     "dev": "npm run data:build && concurrently -k \"vite\" \"wait-on http-get://127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\"",
     "dev:web": "npm run data:build && vite",
@@ -21,7 +21,7 @@
     "android:release": "npm run android:sync && node scripts/build-android.mjs release",
     "dev:site": "vite --config website/vite.config.ts",
     "types:site": "wrangler types --cwd website",
-    "check:site": "npm run types:site && tsc --project website/tsconfig.functions.json",
+    "check:site": "npm run data:build && npm run types:site && tsc --project website/tsconfig.functions.json",
     "build:site": "npm run check:site && tsc --project website/tsconfig.json && vite build --config website/vite.config.ts",
     "preview:site": "vite preview --config website/vite.config.ts",
     "test:site:download": "npm run build:site && node scripts/test-site-download.mjs",
@@ -34,9 +34,11 @@
     "dist": "npm run build && electron-builder --win nsis --publish never",
     "dist:unpacked": "npm run build && electron-builder --win dir",
     "test": "npm run data:api && node --test tests/*.test.mjs tests/*.test.ts",
-    "test:ui": "npm run data:build && playwright test"
+    "test:ui": "npm run data:build && playwright test",
+    "test:bundled:ui": "playwright test --config playwright.bundled.config.ts"
   },
   "build": {
+    "afterPack": "./scripts/verify-packaged-app.cjs",
     "appId": "com.cyword.desktop",
     "productName": "CYword",
     "asar": true,
@@ -49,7 +51,8 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
-      "package.json"
+      "package.json",
+      "!node_modules/@capacitor/**/*"
     ],
     "win": {
       "icon": "electron/assets/icon.ico",
@@ -82,6 +85,7 @@
     "@capacitor/android": "^8.5.2",
     "@capacitor/app": "^8.1.1",
     "@capacitor/core": "^8.5.2",
+    "@capacitor/network": "^8.0.1",
     "@capacitor/preferences": "^8.0.1",
     "csv-parse": "^7.0.2",
     "dompurify": "^3.4.14",

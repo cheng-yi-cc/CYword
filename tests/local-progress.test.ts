@@ -10,47 +10,46 @@ function rated(id: string, time = "2026-09-21T00:00:00.000Z") {
   return result;
 }
 function fixture() {
-  const state = { local: rated("local"), remote: rated("cloud"), imported: false, reads: 0, writes: 0, failed: false, status: "", message: "", expire: false };
+  const state = { local: rated("local"), remote: rated("cloud"), revision: 1, reads: 0, writes: 0, failed: false, status: "", message: "", expire: false };
   const adapter: SyncAdapter = {
-    mode: "local", read: async () => structuredClone(state.local),
+    read: async () => structuredClone(state.local),
     write: async value => { if (state.failed) throw Error("disk full"); state.local = structuredClone(value); },
-    readImport: async () => state.imported,
-    finishImport: async () => { state.imported = true; return true; },
-    request: async payload => { if (payload) state.writes++; else state.reads++; return { status: state.expire ? 401 : 200, data: { revision: 1, progress: structuredClone(state.remote) } }; },
+    request: async payload => { if (payload && !state.expire) { state.writes++; state.remote = structuredClone(payload.progress); state.revision++; } else state.reads++; return { status: state.expire ? 401 : 200, data: { revision: state.revision, progress: structuredClone(state.remote) } }; },
     change: (_, status, message) => { state.status = status; state.message = message; },
     unauthorized: () => {},
   };
   return { state, adapter, sync: new ProgressSync(adapter) };
 }
-test("local mode imports once per account, persists merged data before marking, and never uploads", async () => {
+test("default mode saves merged records and keeps synchronizing after restart", async () => {
   const f = fixture(); await f.sync.open();
   assert.deepEqual(Object.keys(f.state.local.words).sort(), ["cloud", "local"]);
-  assert.equal(f.state.imported, true); assert.equal(f.state.reads, 1);
+  assert.equal(f.state.reads, 1); assert.equal(f.state.writes, 1);
   await f.sync.save(rated("new")); await f.sync.sync();
-  assert.deepEqual(await f.sync.flush(), { localSaved: true, cloudSynced: false, message: "进度已保存在本机" });
+  assert.equal((await f.sync.flush()).cloudSynced, true);
   f.sync.stop();
   const reopened = new ProgressSync(f.adapter); await reopened.open(); await reopened.sync();
-  assert.equal(f.state.reads, 1); assert.equal(f.state.writes, 0); reopened.stop();
+  assert.ok(f.state.reads > 1); assert.equal(f.state.remote.words.new.proficiency, "unclear"); reopened.stop();
 });
-test("failed import persistence leaves the completion marker unset and retries safely", async () => {
+test("failed cloud merge persistence preserves original local data and retries safely", async () => {
   const f = fixture(); f.state.failed = true; await f.sync.open();
-  assert.equal(f.state.imported, false); assert.equal(f.state.local.words.cloud, undefined);
+  assert.equal(f.state.local.words.cloud, undefined); assert.equal(f.state.writes, 0);
   f.state.failed = false; await f.sync.sync();
-  assert.equal(f.state.imported, true); assert.ok(f.state.local.words.cloud); assert.equal(f.state.writes, 0); f.sync.stop();
+  assert.ok(f.state.local.words.cloud); assert.equal(f.state.writes, 1); f.sync.stop();
 });
-test("offline or expired migration keeps local learning and logout usable without an upload", async () => {
+test("offline or expired authentication keeps existing local learning durable", async () => {
   for (const expired of [false, true]) {
     const f = fixture(); f.state.expire = expired;
     if (!expired) f.adapter.request = async () => { throw Error("offline"); };
     await f.sync.open(); await f.sync.save(rated("new"));
-    assert.equal(f.state.imported, false); assert.ok(f.state.local.words.new);
-    assert.equal((await f.sync.flush()).localSaved, true); assert.equal(f.state.status, "pending");
+    assert.ok(f.state.local.words.new);
+    assert.equal((await f.sync.flush()).localSaved, true); assert.equal(f.state.status, expired ? "expired" : "error");
     assert.equal(f.state.writes, 0); f.sync.stop();
   }
 });
-test("late legacy response merges with a saved rating and cannot overwrite it or another account", async () => {
+test("late cloud response merges saved ratings and is discarded after account switch", async () => {
   const f = fixture(); let resolve!: (value: Awaited<ReturnType<SyncAdapter["request"]>>) => void;
-  f.adapter.request = () => new Promise(done => { resolve = done; });
+  const request = f.adapter.request;
+  f.adapter.request = payload => payload ? request(payload) : new Promise(done => { resolve = done; });
   const opening = f.sync.open(); await new Promise(done => setTimeout(done, 0));
   await f.sync.save(rated("cloud", "2026-09-22T00:00:00.000Z"));
   resolve({ status: 200, data: { revision: 1, progress: f.state.remote } }); await opening;
@@ -59,12 +58,12 @@ test("late legacy response merges with a saved rating and cannot overwrite it or
   const g = fixture(); g.adapter.request = () => new Promise(done => { resolve = done; });
   const pending = g.sync.open(); await new Promise(done => setTimeout(done, 0)); g.sync.stop();
   resolve({ status: 200, data: { revision: 1, progress: rated("other") } }); await pending;
-  assert.equal(g.state.imported, false); assert.equal(g.state.local.words.other, undefined);
+  assert.equal(g.state.local.words.other, undefined);
 });
 test("local write failure never publishes a rating and blocks logout until saved", async () => {
   const f = fixture(); await f.sync.open(); f.state.failed = true;
   await assert.rejects(f.sync.save(rated("failed")), /disk full/);
   assert.equal(f.state.local.words.failed, undefined); assert.equal(f.sync.progress.words.failed, undefined);
-  assert.equal((await f.sync.flush()).localSaved, false); assert.equal(f.state.writes, 0);
+  assert.equal((await f.sync.flush()).localSaved, false); assert.equal(f.state.writes, 1);
   f.state.failed = false; await f.sync.save(rated("retry")); assert.equal((await f.sync.flush()).localSaved, true); f.sync.stop();
 });

@@ -1,9 +1,11 @@
 import { jsonError, readRequestJson } from "./book-api.ts";
+import { claimMailBudget } from "./auth-guard.ts";
 
 declare global {
   interface Env {
     RESEND_API_KEY: string;
     JWT_SECRET: string;
+    ACCEPTANCE_EMAIL?: string;
   }
 }
 
@@ -94,6 +96,8 @@ export async function verifyJWT(token: string, secret: string): Promise<JWTPaylo
     const parts = token.split(".");
     if (parts.length !== 3) return null;
     const [headerB64, payloadB64, signatureB64] = parts;
+    const header = JSON.parse(new TextDecoder().decode(base64UrlDecode(headerB64)));
+    if (header.alg !== "HS256" || header.typ !== "JWT") return null;
 
     const encoder = new TextEncoder();
     const dataToSign = `${headerB64}.${payloadB64}`;
@@ -111,7 +115,8 @@ export async function verifyJWT(token: string, secret: string): Promise<JWTPaylo
     const payloadText = new TextDecoder().decode(base64UrlDecode(payloadB64));
     const payload = JSON.parse(payloadText) as JWTPayload;
     const now = Math.floor(Date.now() / 1000);
-    if (payload.exp && payload.exp < now) return null;
+    if (!Number.isSafeInteger(payload.exp) || payload.exp <= now || !Number.isSafeInteger(payload.iat)
+      || typeof payload.sub !== "string" || !payload.sub || payload.sub.length > 200 || typeof payload.email !== "string" || !EMAIL_PATTERN.test(payload.email)) return null;
 
     return payload;
   } catch {
@@ -162,18 +167,19 @@ export async function sendOTPEmail(
         "Content-Type": "application/json",
       },
       body: JSON.stringify(buildOTPEmail(email, code)),
+      signal: AbortSignal.timeout(10_000),
     });
 
     if (!response.ok) {
-      const errorData = await response.text();
-      console.error("[CYWORD AUTH] Resend API error:", errorData);
+      console.error("[CYWORD AUTH] Mail provider rejected request", response.status);
       return { success: false, message: "邮件服务发送失败，请稍后重试" };
     }
 
     return { success: true };
   } catch (error) {
-    console.error("[CYWORD AUTH] Send email exception:", error);
-    return { success: false, message: "网络异常，邮件发送失败" };
+    const timedOut = error instanceof Error && ["TimeoutError", "AbortError"].includes(error.name);
+    console.error("[CYWORD AUTH] Mail request failed", timedOut ? "timeout" : "network");
+    return { success: false, message: timedOut ? "邮件服务响应超时，请稍后重新获取验证码" : "网络异常，邮件发送失败，请重试" };
   }
 }
 
@@ -198,6 +204,13 @@ export async function requestOTP(
      RETURNING email`
   ).bind(email, code, expiresAt, now, now - OTP_RESEND_COOLDOWN_SECONDS).first<{ email: string }>();
   if (!claimed) return { success: false, error: "请求过于频繁，请稍后重试", rateLimited: true };
+
+  if (!await claimMailBudget(db, now)) {
+    await db.prepare("DELETE FROM otp_codes WHERE email = ? AND code = ?").bind(email, code).run();
+    return { success: false, error: "当前验证码请求较多，请稍后重试", rateLimited: true };
+  }
+  // Expired codes are not an unbounded history of addresses.
+  await db.prepare("DELETE FROM otp_codes WHERE expires_at < ?").bind(now - 86400).run();
 
   // 4. 发送邮件
   const sendResult = await sendEmail(email, code, resendApiKey);

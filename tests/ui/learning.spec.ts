@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import fs from "node:fs";
+import { installSyncPreview } from '../install-sync-preview.mjs';
 
 const realCatalog = JSON.parse(fs.readFileSync("data/catalog.json", "utf8"));
 const symposiumId = Object.keys(realCatalog.words).find(id => realCatalog.words[id].spelling === "symposium")!;
@@ -49,6 +50,7 @@ test("Android update menu retries and downloads only on request without changing
 });
 
 async function setup(page: Page, learned: string[] = ["a"], sessionReadFails = false, androidUpdates = false, downloadBatchLimit = 64) {
+  await installSyncPreview(page);
   await page.addInitScript(({ catalog, details, empty, learned, sessionReadFails, androidUpdates, audioBase64, downloadBatchLimit }) => {
     const initial = structuredClone(empty) as any;
     for (const id of learned) initial.words[id] = { learnedAt: "2026-09-19T00:00:00.000Z", lastSeenAt: "2026-09-19T00:00:00.000Z", proficiency: "unclear", exposures: 0, reviewCount: 0 };
@@ -62,15 +64,13 @@ async function setup(page: Page, learned: string[] = ["a"], sessionReadFails = f
       },
       clearSession: async () => { if (state.clearFails) throw new Error("会话清理失败"); state.sessionCleared = true; return true; },
       readProgress: async () => structuredClone(state.local),
-      readProgressImport: async (account) => Boolean(localStorage.getItem(`test-import:${account}`)),
-      finishProgressImport: async (account) => { localStorage.setItem(`test-import:${account}`, "done"); return true; },
       downloadBookAudio: async () => { state.audioRequests++; return { base64: audioBase64, contentType: "audio/wav" }; },
       writeProgress: async next => { state.writes++; if (state.writeGate) await state.writeGate; if (state.failWrites) throw new Error("磁盘写入失败"); state.local = structuredClone(next); localStorage.setItem("test-progress", JSON.stringify(next)); return true; },
-      syncProgress: async (_token, payload) => {
-        if (payload) state.cloudWrites++; else state.cloudReads++;
+      progressRequest: async (_token, operation) => {
+        if (operation.action === 'commit') state.cloudWrites++; else if (operation.action === 'read') state.cloudReads++;
         if (state.offline) throw new Error("网络连接中断");
-        if (payload) { state.remote = structuredClone(payload.progress); state.revision++; }
-        return { status: 200, data: { revision: state.revision, progress: structuredClone(state.remote) } };
+        (state as any).request ??= (window as any).IncrementalMock.createProgressPreview(catalog, state);
+        return (state as any).request(operation);
       },
       readWords: async request => {
         state.wordRequests.push(request.wordIds);
@@ -101,7 +101,7 @@ async function setup(page: Page, learned: string[] = ["a"], sessionReadFails = f
   }
   await page.getByRole("button", { name: "下载词书", exact: true }).click();
   await expect(page.getByRole("button", { name: "继续学习" })).toBeVisible();
-  await expect(page.locator(".sync-status")).toContainText("进度已保存在本机");
+  await expect(page.locator(".sync-status")).toContainText("已同步");
   // Inject read faults at the local repository boundary, not the retired network path.
   await page.evaluate(async () => {
     const { offlineBook } = await import("/src/offline-book.ts");
@@ -117,6 +117,22 @@ async function setup(page: Page, learned: string[] = ["a"], sessionReadFails = f
 }
 
 const study = (page: Page) => page.getByRole("dialog", { name: "今日单词学习" });
+
+test("render boundary keeps saved progress and can recover a failed subtree", async ({ page }) => {
+  await setup(page);
+  const before = await page.evaluate(() => JSON.stringify((window as any).__test.local));
+  await page.evaluate(async () => {
+    const harness = await import("/tests/ui/error-boundary-harness.tsx");
+    (window as any).__boundary = harness.mountBoundaryFixture();
+  });
+  const fallback = page.locator("#boundary-fixture");
+  await expect(fallback).toContainText("这部分内容暂时无法显示");
+  await page.evaluate(() => (window as any).__boundary.repair());
+  await fallback.getByRole("button", { name: "重试" }).click();
+  await expect(fallback).toHaveText("内容已恢复");
+  expect(await page.evaluate(() => JSON.stringify((window as any).__test.local))).toBe(before);
+  await page.evaluate(() => (window as any).__boundary.close());
+});
 async function openStudy(page: Page) {
   await page.getByRole("button", { name: "继续学习" }).click();
   await expect(study(page)).toBeVisible();
@@ -324,16 +340,23 @@ test("expired login keeps the local account usable and reauthentication preserve
   await page.reload();
   await page.locator(".account-trigger").click();
   await page.evaluate(() => {
-    window.cyword.verifyAuthCode = async () => ({ success: true, token: "other", user: { id: "other", email: "other@example.test", createdAt: 0, lastLoginAt: 0, loginCount: 1 } });
+    (window as any).__verifyCalls = 0;
+    window.cyword.verifyAuthCode = async () => { (window as any).__verifyCalls++; return { success: true, token: "other", user: { id: "other", email: "other@example.test", createdAt: 0, lastLoginAt: 0, loginCount: 1 } }; };
     window.cyword.writeSession = async () => true;
     const read = window.cyword.readProgress;
     window.cyword.readProgress = async account => account === "other" ? { version: 2, planDays: {}, words: {}, bookmarks: {}, reviewHistory: [] } : read(account);
-    window.cyword.readProgressImport = async () => true;
+    window.cyword.progressRequest = async () => ({ status: 200, data: { protocol: 2, bookCode: "fixture", curriculumVersion: "fixture-v1", revision: 0, records: [], cursor: null } });
   });
   await page.getByLabel("电子邮箱").fill("other@example.test");
   await page.getByLabel("6 位验证码").fill("123456");
+  page.once("dialog", dialog => dialog.dismiss());
+  await page.locator(".auth-submit-btn").click();
+  await expect(page.locator(".auth-message")).toContainText("已取消切换");
+  expect(await page.evaluate(() => (window as any).__test.local.words.b.proficiency)).toBe("unmastered");
+  page.once("dialog", dialog => dialog.accept());
   await page.locator(".auth-submit-btn").click();
   await expect(page.locator(".sidebar-account summary")).toContainText("other");
+  expect(await page.evaluate(() => (window as any).__verifyCalls)).toBe(1);
   await page.getByRole("button", { name: "继续学习" }).click();
   await expect(study(page).locator("h1")).toHaveText("first");
 });
@@ -359,6 +382,8 @@ test("offline logout only requires local persistence and reports credential clea
   await page.locator(".sidebar-account summary").click();
   await page.locator(".btn-logout").click();
   const notice = page.getByRole("dialog", { name: "退出登录" });
+  await expect(notice).toContainText("云端同步未完成");
+  await notice.getByRole("button", { name: "继续退出" }).click();
   await expect(notice).toContainText("会话清理失败");
   expect(await page.evaluate(() => (window as any).__test.sessionCleared)).toBe(false);
 });
@@ -395,6 +420,43 @@ test("learning continues across legacy segment boundaries until the whole day is
   await study(page).locator(".session-rating button.mastered").click();
   await expect(study(page)).toHaveCount(0);
   expect(await page.evaluate(() => (window as any).__test.local.planDays["1"].completedAt)).toBeTruthy();
+  expect(await page.evaluate(() => (window as any).__test.local.planDays["2"])).toBeUndefined();
+  await page.getByRole("button", { name: "首页", exact: true }).click();
+  await expect(page.locator(".day-vessel .liquid-day-base")).toContainText("Day 2");
+});
+
+test("locked review cards explain prerequisites without creating a queue", async ({ page }) => {
+  await setup(page, ["a", "b", "c", "d"]);
+  await page.getByRole("button", { name: "词书计划", exact: true }).click();
+  const locked = page.getByRole("button", { name: "Day 4 复习，未解锁", exact: true });
+  await expect(locked.locator(".review-lock")).toBeVisible();
+  await locked.click();
+  await expect(page.getByRole("heading", { name: "复习尚未开放" })).toBeVisible();
+  await expect(page.locator(".review-setup")).toContainText("Day 3 还有 1 个单词未标记");
+  expect(await page.evaluate(() => (window as any).__test.local.planDays[4])).toBeUndefined();
+  await page.getByRole("button", { name: "词书计划", exact: true }).click();
+  await page.getByTitle("查看 Day 3 学习内容").click();
+  await expect(page.locator(".today-plan-header")).toContainText("Day 3");
+});
+
+test("empty review requires confirmation and all-plan completion survives reload", async ({ page }) => {
+  await setup(page, ids);
+  await page.evaluate(() => {
+    const state = (window as any).__test;
+    for (const word of Object.values(state.local.words) as any[]) word.proficiency = "mastered";
+    localStorage.setItem("test-progress", JSON.stringify(state.local));
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "继续学习" }).click();
+  await expect(page.getByText("本轮没有需要复习的单词", { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => (window as any).__test.local.planDays[4])).toBeUndefined();
+  await page.getByRole("button", { name: "确认完成本轮" }).click();
+  await expect(page.getByRole("heading", { name: "今天的复习已完成" })).toBeVisible();
+  expect(await page.evaluate(() => (window as any).__test.local.reviewHistory)).toEqual([]);
+  await page.getByRole("button", { name: "首页", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "全计划已完成" })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "全计划已完成" })).toBeVisible();
 });
 
 test("review reveals only on request and local word failure can be retried", async ({ page }) => {
@@ -438,18 +500,19 @@ test("cached words survive page changes and native summary participates in modal
   await expect(dialog.getByRole("button", { name: "‹ 返回列表" })).not.toBeFocused();
 });
 
-test("local logout never contacts cloud and the next account opens without stale notices", async ({ page }) => {
+test("expired cloud logout preserves local progress and the next account opens without stale notices", async ({ page }) => {
   await setup(page);
   await page.evaluate(() => {
-    window.cyword.syncProgress = async () => ({ status: 401, data: { error: "expired" } } as any);
+    window.cyword.progressRequest = async () => ({ status: 401, data: { error: "expired" } } as any);
     window.cyword.verifyAuthCode = async () => ({ success: true, token: "new-user", user: { id: "new-user", email: "new@example.test", createdAt: 0, lastLoginAt: 0, loginCount: 1 } });
     window.cyword.writeSession = async () => true;
   });
   await page.locator(".sidebar-account summary").click();
   await page.locator(".btn-logout").click();
+  await page.getByRole("button", { name: "继续退出" }).click();
   await expect(page.getByLabel("电子邮箱")).toBeVisible();
-  expect(await page.evaluate(() => (window as any).__test.cloudWrites)).toBe(0);
-  await page.evaluate(() => { window.cyword.syncProgress = async () => ({ status: 200, data: { revision: 0, progress: (window as any).__test.local } }); });
+  expect(await page.evaluate(() => Boolean((window as any).__test.local.words.a))).toBe(true);
+  await page.evaluate(() => { window.cyword.progressRequest = async (_token, operation) => (window as any).__test.request(operation); });
   await page.getByLabel("电子邮箱").fill("new@example.test");
   await page.getByLabel("6 位验证码").fill("123456");
   await page.locator(".auth-submit-btn").click();
@@ -491,7 +554,7 @@ test("incomplete download batches recover automatically and remain installed aft
   expect(await page.evaluate(() => (window as any).__test.local.words.a.proficiency)).toBe("unclear");
 });
 
-test("downloaded words, pronunciation and ratings survive restart without network or cloud writes", async ({ page }) => {
+test("downloaded words and pending ratings survive offline restart while sync retries", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await setup(page);
   await page.evaluate(() => { (window as any).__test.offline = true; });
@@ -499,20 +562,22 @@ test("downloaded words, pronunciation and ratings survive restart without networ
   await openStudy(page);
   await study(page).locator(".session-rating button.mastered").click();
   await expect(study(page).locator("h1")).toHaveText("third");
+  await page.addInitScript(() => { (window as any).__test.offline = true; });
   await page.reload();
   await expect(page.getByRole("button", { name: "继续学习" })).toBeVisible();
   await page.evaluate(() => {
     window.cyword.readCatalog = async () => { throw new Error("offline catalog"); };
     window.cyword.readWords = async () => { throw new Error("offline words"); };
     window.cyword.downloadBookAudio = async () => { throw new Error("offline audio"); };
-    window.cyword.syncProgress = async () => { throw new Error("cloud must not be called"); };
+    window.cyword.progressRequest = async () => { throw new Error("cloud must not be called"); };
   });
   await page.getByRole("button", { name: "继续学习" }).click();
   await expect(study(page).locator("h1")).toHaveText("third");
   await study(page).getByRole("button", { name: "播放发音", exact: true }).first().click();
   await expect(study(page).getByRole("button", { name: "停止发音", exact: true })).toBeVisible();
   expect(await page.evaluate(() => (window as any).__test.local.words.b.proficiency)).toBe("mastered");
-  expect(await page.evaluate(() => ({ reads: (window as any).__test.cloudReads, writes: (window as any).__test.cloudWrites, words: (window as any).__test.wordRequests.length, audio: (window as any).__test.audioRequests }))).toEqual({ reads: 0, writes: 0, words: 0, audio: 0 });
+  expect(await page.evaluate(() => ({ writes: (window as any).__test.cloudWrites, words: (window as any).__test.wordRequests.length, audio: (window as any).__test.audioRequests }))).toEqual({ writes: 0, words: 0, audio: 0 });
+  expect(await page.evaluate(() => (window as any).__test.local.localSync.pending)).toBe(true);
   await study(page).getByRole("button", { name: /返回/ }).click();
   await page.screenshot({ path: ".work/preflight/offline-home-mobile.png" });
 });

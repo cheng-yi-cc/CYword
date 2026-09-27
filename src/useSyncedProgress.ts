@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { ProgressSync, type SyncStatus, type FlushResult } from "./sync-client";
-import { reconcileCompletion } from "./progress";
 import type { AppProgress, Catalog, UserSession } from "./types";
 import { sessionExpiresAt } from "./auth-session";
-
-export const cloudProgressEnabled = import.meta.env.VITE_CYWORD_PROGRESS_MODE === "cloud";
+import { canonicalProgress } from "./progress-business";
+import { networkIsOnline } from "./network-state";
+import { IncrementalProgressTransport } from "./incremental-client";
 
 export function useSyncedProgress(session: UserSession | null, catalog: Catalog | null, onSessionExpired: () => void) {
   const [state, setState] = useState<{ account: string; progress: AppProgress | null; status: SyncStatus; message: string }>({ account: "", progress: null, status: "syncing", message: "正在准备进度" });
@@ -15,17 +15,16 @@ export function useSyncedProgress(session: UserSession | null, catalog: Catalog 
     if (!session || !catalog) return;
     let active = true;
     const { token, user } = session;
+    const transport = new IncrementalProgressTransport(catalog, (operation) => {
+      if (!window.cyword.progressRequest) throw new Error("请更新应用后使用增量同步");
+      return window.cyword.progressRequest(token, operation);
+    });
     const sync = new ProgressSync({
-      mode: cloudProgressEnabled ? "cloud" : "local",
-      readImport: () => window.cyword.readProgressImport!(user.id),
-      finishImport: () => window.cyword.finishProgressImport!(user.id),
+      isOnline: networkIsOnline,
       read: () => window.cyword.readProgress(user.id),
       write: (progress) => window.cyword.writeProgress(progress, user.id),
-      request: (payload) => {
-        if (!window.cyword.syncProgress) throw new Error("请更新电脑端后使用进度同步");
-        return window.cyword.syncProgress(token, payload);
-      },
-      reconcile: (progress) => reconcileCompletion(progress, catalog),
+      request: (payload, knownRevision) => transport.request(payload, knownRevision),
+      reconcile: (progress) => canonicalProgress(progress, catalog),
       change: (progress, status, message) => { if (active) setState({ account: user.id, progress, status, message }); },
       unauthorized: () => {
         if (!active) return;
@@ -37,14 +36,16 @@ export function useSyncedProgress(session: UserSession | null, catalog: Catalog 
     if (expiresAt !== null && expiresAt <= Date.now()) sync.expireSession();
     void sync.open().catch((error) => { if (active) setState({ account: user.id, progress: null, status: "error", message: `读取本机进度失败：${String(error)}` }); });
     const resume = () => { if (document.visibilityState !== "hidden") void sync.sync(); };
-    const interval = cloudProgressEnabled ? window.setInterval(resume, 15000) : undefined;
+    const interval = window.setInterval(() => { if (document.visibilityState !== "hidden") void sync.sync(false); }, 5000);
     window.addEventListener("online", resume);
+    window.addEventListener("offline", resume);
     window.addEventListener("focus", resume);
     window.addEventListener("cyword-resume", resume);
     document.addEventListener("visibilitychange", resume);
     return () => {
-      active = false; sync.stop(); ref.current = null; clearInterval(interval);
+      active = false; transport.stop(); sync.stop(); ref.current = null; clearInterval(interval);
       window.removeEventListener("online", resume); window.removeEventListener("focus", resume); window.removeEventListener("cyword-resume", resume); document.removeEventListener("visibilitychange", resume);
+      window.removeEventListener("offline", resume);
     };
   }, [session?.token, session?.user.id, catalog]);
   return {

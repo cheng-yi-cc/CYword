@@ -1,0 +1,37 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import { fullProgressFixture } from "./full-progress-fixture.ts";
+import { progressCatalog } from "../website/server/progress-curriculum.ts";
+import { buildPlan, currentPlanDayNumber, isPlanDayComplete, rateReviewWord, rateSearchWord } from "../src/progress.ts";
+import { canonicalProgress } from "../src/progress-business.ts";
+import { mergeProgress } from "../src/sync-merge.ts";
+import { packProgress, unpackProgress } from "../website/server/progress-sync.ts";
+
+test("full real curriculum completes all 40 days and large history remains idempotent", async () => {
+  const timing: Record<string, number> = {}, measure = <T>(name: string, action: () => T) => { const start = performance.now(); const result = action(); timing[name] = performance.now() - start; return result; };
+  const progress = measure("fixtureMs", () => fullProgressFixture(progressCatalog));
+  const plan = buildPlan(progressCatalog);
+  assert.equal(Object.keys(progress.words).length, 5166);
+  assert.equal(plan.length, 40);
+  assert.equal(plan.every(day => isPlanDayComplete(progress, day)), true);
+  assert.equal(currentPlanDayNumber(progress, plan), null);
+  measure("canonicalMs", () => canonicalProgress(progress, progressCatalog));
+  const merged = measure("mergeMs", () => mergeProgress(progress, progress));
+  assert.equal(merged.reviewHistory.length, progress.reviewHistory.length);
+  const id = Object.keys(progress.words)[0];
+  const rated = measure("ratingMs", () => rateSearchWord(progress, id, "unmastered"));
+  assert.equal(currentPlanDayNumber(rated, plan), null);
+  const lastReview = plan.at(-1)!;
+  const rerated = rateReviewWord(progress, plan, lastReview.day, lastReview.reviewWordIds![0], "mastered");
+  assert.equal(rerated.reviewHistory.length, progress.reviewHistory.length);
+  const start = performance.now(), packed = await packProgress(progress);
+  timing.packMs = performance.now() - start;
+  assert.ok(packed.byteLength < 1_800_000, "complete book must fit the production D1 blob limit");
+  assert.deepEqual(await unpackProgress(packed), progress);
+  await fs.mkdir(".work/preflight", { recursive: true });
+  const report = { platform: process.platform, node: process.version, words: Object.keys(progress.words).length, reviewHistory: progress.reviewHistory.length, jsonBytes: Buffer.byteLength(JSON.stringify(progress)), compressedBytes: packed.byteLength, ...timing };
+  await fs.writeFile(".work/preflight/full-progress-benchmark.json", JSON.stringify(report, null, 2));
+  await fs.writeFile(".work/preflight/full-progress-fixture.json", JSON.stringify(progress));
+  console.log(report);
+});

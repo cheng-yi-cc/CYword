@@ -40,9 +40,12 @@ export interface PlanDay {
   appearanceCount: number;
   uniqueWordCount: number;
   plannedReviewWordCount?: number;
+  reviewWordIds?: string[];
+  reviewRoundId?: string;
 }
 
 export interface Catalog {
+  curriculumVersion?: string;
   generatedAt?: string;
   dataVersion: string;
   book: {
@@ -129,6 +132,7 @@ export interface WordsResponse {
 }
 
 export interface WordProgress {
+  ratingVersion?: { counter: number; actor: string };
   learnedAt: string;
   lastSeenAt: string;
   proficiency: Proficiency;
@@ -145,10 +149,16 @@ export interface PlanDayProgress {
   reviewWordIds: string[];
   reviewedWordIds: string[];
   skipMastered: boolean;
+  reviewRoundId?: string;
+  emptyReviewConfirmed?: boolean;
+  reviewPriority?: Record<string, number>;
+  reviewSkippedWordIds?: string[];
 }
 
 export interface AppProgress {
   version: 2;
+  /** Device-only durability metadata; never sent to the progress API. */
+  localSync?: { restored: boolean; pending: boolean; recovered?: boolean };
   bookmarkChanges?: Record<string, { at: string; saved: boolean }>;
   planDays: Record<string, PlanDayProgress>;
   words: Record<string, WordProgress>;
@@ -158,6 +168,8 @@ export interface AppProgress {
     date: string;
     proficiency: Proficiency;
     planDay: number;
+    reviewRoundId?: string;
+    ratingVersion?: { counter: number; actor: string };
   }>;
 }
 
@@ -197,6 +209,8 @@ export interface UpdateStatus {
   message?: string;
 }
 
+export type FlushResult = { localSaved: boolean; cloudSynced: boolean; message: string };
+
 declare global {
   interface Window {
     cyword: {
@@ -206,11 +220,10 @@ declare global {
       readBundledBookFile?: (file: string) => Promise<unknown>;
       readWords: (request: WordsRequest) => Promise<WordsResponse>;
       readProgress: (accountId?: string) => Promise<unknown>;
-      readProgressImport?: (accountId: string) => Promise<boolean>;
-      finishProgressImport?: (accountId: string) => Promise<boolean>;
       downloadBookAudio?: (url: string) => Promise<{ base64: string; contentType: string }>;
       writeProgress: (progress: AppProgress, accountId?: string) => Promise<boolean>;
-      syncProgress?: (token: string, payload?: { revision: number; progress: AppProgress }) => Promise<{ status: number; data: { revision: number; progress: AppProgress; error?: string } }>;
+      progressRequest?: (token: string, operation: Record<string, unknown>) => Promise<import('./incremental-client').IncrementalResponse>;
+      syncProgress?: (token: string, payload?: { revision: number; progress: AppProgress; protocol?: number; bookCode?: string; curriculumVersion?: string }, etag?: string) => Promise<{ status: number; data: { revision: number; progress: AppProgress; error?: string; protocol?: number; bookCode?: string; curriculumVersion?: string } }>;
       sendAuthCode?: (email: string) => Promise<SendCodeResponse>;
       verifyAuthCode?: (email: string, code: string) => Promise<VerifyCodeResponse>;
       getAuthUser?: (token: string) => Promise<{ success: boolean; user: AuthUser }>;
@@ -220,6 +233,7 @@ declare global {
       getUpdateStatus?: () => Promise<UpdateStatus>;
       downloadUpdate?: () => Promise<UpdateStatus>;
       installUpdate?: () => Promise<boolean>;
+      onPrepareExit?: (prepare: () => Promise<FlushResult>, release: () => void) => () => void;
       onUpdateStatus?: (listener: (status: UpdateStatus) => void) => () => void;
     };
   }

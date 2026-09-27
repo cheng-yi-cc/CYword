@@ -60,7 +60,15 @@ export function normalizeProgress(raw: unknown): AppProgress {
   return { ...emptyProgress(), words };
 }
 
-export function buildPlan(catalog: Catalog): PlanDay[] {
+export interface PlanCatalog {
+  groups: Array<Pick<StudyGroup, "id" | "wordIds">>;
+  schedule: Catalog["schedule"];
+  book?: Pick<Catalog["book"], "code">;
+  dataVersion?: string;
+  curriculumVersion?: string;
+}
+
+export function buildPlan(catalog: PlanCatalog): PlanDay[] {
   const groupsById = new Map(catalog.groups.map((group) => [group.id, group]));
   const learnedIds = new Set<string>();
   const plan: PlanDay[] = [];
@@ -88,13 +96,15 @@ export function buildPlan(catalog: Catalog): PlanDay[] {
         appearanceCount: learnedIds.size,
         uniqueWordCount: learnedIds.size,
         plannedReviewWordCount: learnedIds.size,
+        reviewWordIds: [...learnedIds],
+        reviewRoundId: `${catalog.book?.code ?? "cet6"}:${catalog.curriculumVersion ?? catalog.dataVersion ?? "unversioned"}:review:${planDay - 1}`,
       });
     }
   });
   return plan;
 }
 
-export function studyExposures(plan: Pick<PlanDay, "groupIds" | "exposureOrder">, groups: StudyGroup[]) {
+export function studyExposures(plan: Pick<PlanDay, "groupIds" | "exposureOrder">, groups: PlanCatalog["groups"]) {
   const byId = new Map(groups.map(group => [group.id, group]));
   const flat = plan.groupIds.flatMap(id => (byId.get(id)?.wordIds ?? []).map(wordId => ({
     groupId: id, wordId, key: `${id}:${wordId}`,
@@ -106,25 +116,56 @@ export function studyExposures(plan: Pick<PlanDay, "groupIds" | "exposureOrder">
 export function completedStudyExposureKeys(progress: AppProgress, plan: PlanDay): string[] {
   const rated = progress.planDays[String(plan.day)]?.ratedExposureKeys ?? [];
   if (!plan.exposureKeys) return rated;
-  const actual = new Set(rated);
-  return plan.exposureKeys.filter((key) => actual.has(key) || Boolean(progress.words[key.slice(key.lastIndexOf(":") + 1)]));
+  return plan.exposureKeys.filter((key) => isProficiency(progress.words[key.slice(key.lastIndexOf(":") + 1)]?.proficiency));
 }
 
-export function currentPlanDayNumber(progress: AppProgress, totalDays: number): number {
-  let firstIncomplete = 1;
-  while (firstIncomplete <= totalDays && progress.planDays[String(firstIncomplete)]?.completedAt) {
-    firstIncomplete += 1;
+export function isProficiency(value: unknown): value is Proficiency {
+  return value === "unmastered" || value === "unclear" || value === "mastered";
+}
+
+/** null is the explicit end of the plan, never an invented next day. */
+export function currentPlanDayNumber(progress: AppProgress, plan: PlanDay[]): number | null {
+  return plan.find((day) => !isPlanDayComplete(progress, day))?.day ?? null;
+}
+
+export function reviewedWords(progress: AppProgress, plan: PlanDay): string[] {
+  const day = progress.planDays[String(plan.day)];
+  if (!day || day.kind !== "review" || day.reviewRoundId !== plan.reviewRoundId) return [];
+  const valid = new Set(progress.reviewHistory.filter((item) => item.planDay === plan.day
+    && item.reviewRoundId === plan.reviewRoundId && isProficiency(item.proficiency)).map((item) => item.wordId));
+  const reviewed = new Set(day.reviewedWordIds);
+  return [...new Set(day.reviewWordIds)].filter((id) => reviewed.has(id) && valid.has(id));
+}
+
+export function isPlanDayComplete(progress: AppProgress, plan: PlanDay): boolean {
+  if (plan.kind === "study") {
+    return completedStudyExposureKeys(progress, plan).length === plan.appearanceCount;
   }
-  const previous = firstIncomplete - 1;
-  if (
-    previous > 0 &&
-    progress.planDays[String(previous)]?.completedAt?.slice(0, 10) === todayKey()
-  ) return previous;
-  return Math.min(firstIncomplete, totalDays);
+  const day = progress.planDays[String(plan.day)];
+  if (!day || day.kind !== "review" || day.reviewRoundId !== plan.reviewRoundId) return false;
+  return day.reviewWordIds.length > 0
+    ? reviewedWords(progress, plan).length === new Set(day.reviewWordIds).size
+    : day.emptyReviewConfirmed === true;
 }
 
-export function isPlanDayComplete(progress: AppProgress, planDay: number): boolean {
-  return Boolean(progress.planDays[String(planDay)]?.completedAt);
+export function reviewAccess(progress: AppProgress, plan: PlanDay[], dayNumber: number): { allowed: boolean; reason: string } {
+  const target = plan.find((day) => day.day === dayNumber);
+  if (!target || target.kind !== "review") return { allowed: false, reason: "复习日不存在。" };
+  const missing = plan.find((day) => day.day < dayNumber && !isPlanDayComplete(progress, day));
+  if (!missing) return { allowed: true, reason: "" };
+  const remaining = missing.kind === "study"
+    ? new Set((missing.exposureKeys ?? []).filter((key) => !isProficiency(progress.words[key.slice(key.lastIndexOf(":") + 1)]?.proficiency))
+      .map((key) => key.slice(key.lastIndexOf(":") + 1))).size
+    : Math.max(0, (progress.planDays[String(missing.day)]?.reviewWordIds.length ?? 0) - reviewedWords(progress, missing).length);
+  const detail = missing.kind === "study" ? `还有 ${remaining} 个单词未标记。`
+    : remaining ? `还有 ${remaining} 个单词未完成本轮复习。` : "复习尚未完成。";
+  return { allowed: false, reason: `请先完成前面的学习与复习。Day ${missing.day} ${detail}` };
+}
+
+function requireReviewAccess(progress: AppProgress, plan: PlanDay[], dayNumber: number): PlanDay {
+  const access = reviewAccess(progress, plan, dayNumber);
+  if (!access.allowed) throw new Error(access.reason);
+  return plan.find((day) => day.day === dayNumber)!;
 }
 
 function freshDay(kind: "study" | "review", skipMastered = true): PlanDayProgress {
@@ -146,6 +187,9 @@ export function rateStudyWord(
   wordId: string,
   proficiency: Proficiency,
 ): AppProgress {
+  if (!isProficiency(proficiency) || plan.kind !== "study" || !plan.groupIds.includes(group.id) || !group.wordIds.includes(wordId)) {
+    throw new Error("无效的学习评级");
+  }
   const next = structuredClone(progress);
   const now = new Date().toISOString();
   const dayKey = String(plan.day);
@@ -166,58 +210,79 @@ export function rateStudyWord(
       }
     : { learnedAt: now, lastSeenAt: now, proficiency, reviewCount: 0, exposures: 1 };
 
-  const groupFinished = group.wordIds.every((id) => next.words[id] || day.ratedExposureKeys.includes(`${group.id}:${id}`));
+  const groupFinished = group.wordIds.every((id) => isProficiency(next.words[id]?.proficiency));
   if (groupFinished && !day.completedGroupIds.includes(group.id)) day.completedGroupIds.push(group.id);
   if (plan.groupIds.every((id) => day.completedGroupIds.includes(id))) day.completedAt = now;
   return next;
 }
 
-export function reviewCandidates(progress: AppProgress, skipMastered: boolean): string[] {
+export function reviewCandidates(progress: AppProgress, skipMastered: boolean, plan?: PlanDay): string[] {
   const order: Record<Proficiency, number> = { unmastered: 0, unclear: 1, mastered: 2 };
+  const scope = new Set(plan?.reviewWordIds);
   return Object.entries(progress.words)
-    .filter(([, item]) => !(skipMastered && item.proficiency === "mastered"))
+    .filter(([id, item]) => isProficiency(item.proficiency) && (!plan || scope.has(id)) && !(skipMastered && item.proficiency === "mastered"))
     .sort((a, b) => order[a[1].proficiency] - order[b[1].proficiency] || a[1].learnedAt.localeCompare(b[1].learnedAt))
     .map(([wordId]) => wordId);
 }
 
 export function startReviewDay(
   progress: AppProgress,
+  plan: PlanDay[],
   planDay: number,
-  wordIds: string[],
   skipMastered: boolean,
+  confirmEmpty = false,
 ): AppProgress {
+  const target = requireReviewAccess(progress, plan, planDay);
+  const existing = progress.planDays[String(planDay)];
+  if (existing?.reviewRoundId === target.reviewRoundId) return progress;
+  const wordIds = reviewCandidates(progress, skipMastered, target);
+  if (!wordIds.length && !confirmEmpty) throw new Error("本轮没有需要复习的单词，请确认后完成。");
   const next = structuredClone(progress);
   const day = freshDay("review", skipMastered);
-  day.reviewWordIds = [...new Set(wordIds)];
-  if (day.reviewWordIds.length === 0) day.completedAt = new Date().toISOString();
+  day.reviewWordIds = wordIds;
+  day.reviewRoundId = target.reviewRoundId;
+  const queued = new Set(wordIds);
+  day.reviewSkippedWordIds = (target.reviewWordIds ?? []).filter((id) => !queued.has(id));
+  day.reviewPriority = Object.fromEntries(wordIds.map((id) => [id, { unmastered: 0, unclear: 1, mastered: 2 }[progress.words[id].proficiency]]));
+  day.reviewWordIds.sort((a, b) => day.reviewPriority![a] - day.reviewPriority![b] || a.localeCompare(b));
+  if (!wordIds.length) {
+    day.emptyReviewConfirmed = true;
+    day.completedAt = day.startedAt;
+  }
   next.planDays[String(planDay)] = day;
   return next;
 }
 
 export function rateReviewWord(
   progress: AppProgress,
+  plan: PlanDay[],
   planDay: number,
   wordId: string,
   proficiency: Proficiency,
 ): AppProgress {
+  const target = requireReviewAccess(progress, plan, planDay);
+  if (!isProficiency(proficiency)) throw new Error("无效的复习评级");
   const next = structuredClone(progress);
   const now = new Date().toISOString();
   const day = next.planDays[String(planDay)];
-  if (!day || !day.reviewWordIds.includes(wordId)) return progress;
+  if (!day || day.reviewRoundId !== target.reviewRoundId || !day.reviewWordIds.includes(wordId)) throw new Error("请先开始本轮复习");
+  const firstReview = !reviewedWords(progress, target).includes(wordId);
   if (!day.reviewedWordIds.includes(wordId)) day.reviewedWordIds.push(wordId);
   const word = next.words[wordId];
   if (word) {
     word.proficiency = proficiency;
-    word.reviewCount += 1;
+    word.reviewCount += firstReview ? 1 : 0;
     word.lastSeenAt = now;
   }
-  next.reviewHistory.push({ wordId, date: now, proficiency, planDay });
-  if (day.reviewWordIds.every((id) => day.reviewedWordIds.includes(id))) day.completedAt = now;
+  next.reviewHistory = next.reviewHistory.filter((item) => !(item.wordId === wordId && item.planDay === planDay && item.reviewRoundId === target.reviewRoundId));
+  next.reviewHistory.push({ wordId, date: now, proficiency, planDay, reviewRoundId: target.reviewRoundId });
+  if (isPlanDayComplete(next, target)) day.completedAt = now;
   return next;
 }
 
 /** Reassessing a known word must not complete a study exposure or a planned review. */
 export function updateWordProficiency(progress: AppProgress, wordId: string, proficiency: Proficiency): AppProgress {
+  if (!isProficiency(proficiency)) throw new Error("无效的单词评级");
   if (!progress.words[wordId]) return progress;
   const next = structuredClone(progress);
   next.words[wordId].proficiency = proficiency;
@@ -227,6 +292,7 @@ export function updateWordProficiency(progress: AppProgress, wordId: string, pro
 
 /** Search can teach a new word, but does not create a planned exposure or review event. */
 export function rateSearchWord(progress: AppProgress, wordId: string, proficiency: Proficiency): AppProgress {
+  if (!isProficiency(proficiency)) throw new Error("无效的单词评级");
   if (progress.words[wordId]) return updateWordProficiency(progress, wordId, proficiency);
   const next = structuredClone(progress);
   const now = new Date().toISOString();
@@ -240,7 +306,7 @@ export function vocabularyOverview(progress: AppProgress, catalog: Catalog) {
   const ids: string[] = [];
   for (const id of Object.keys(catalog.words)) {
     const word = progress.words[id];
-    if (!word) { counts.unlearned += 1; continue; }
+    if (!word || !isProficiency(word.proficiency)) { counts.unlearned += 1; continue; }
     counts[word.proficiency] += 1;
     if (word.proficiency !== "mastered") ids.push(id);
   }
@@ -255,17 +321,17 @@ export function planDayFraction(progress: AppProgress, plan: PlanDay): number {
     return Math.min(1, completedStudyExposureKeys(progress, plan).length / Math.max(1, plan.appearanceCount));
   }
   if (!day) return 0;
-  if (day.completedAt) return 1;
-  return Math.min(1, day.reviewedWordIds.length / Math.max(1, day.reviewWordIds.length));
+  if (isPlanDayComplete(progress, plan)) return 1;
+  return Math.min(1, reviewedWords(progress, plan).length / Math.max(1, day.reviewWordIds.length));
 }
 
 export function proficiencyCounts(progress: AppProgress) {
   const counts: Record<Proficiency, number> = { unmastered: 0, unclear: 0, mastered: 0 };
-  for (const word of Object.values(progress.words)) counts[word.proficiency] += 1;
+  for (const word of Object.values(progress.words)) if (isProficiency(word.proficiency)) counts[word.proficiency] += 1;
   return counts;
 }
 
-export function reconcileCompletion(progress: AppProgress, catalog: Catalog): AppProgress {
+export function reconcileCompletion(progress: AppProgress, catalog: PlanCatalog): AppProgress {
   const next = structuredClone(progress);
   const groups = new Map(catalog.groups.map((group) => [group.id, group]));
   // Exposure identity is group × word, independent of the day it used to belong to.
@@ -284,7 +350,7 @@ export function reconcileCompletion(progress: AppProgress, catalog: Catalog): Ap
     const ratedExposureKeys = keys.filter((key) => exposures.has(key)).sort();
     const credited = new Map(keys.flatMap((key) => {
       const word = next.words[key.slice(key.lastIndexOf(":") + 1)];
-      const learnedAt = word?.learnedAt ?? exposures.get(key);
+      const learnedAt = isProficiency(word?.proficiency) ? word.learnedAt : undefined;
       return learnedAt ? [[key, learnedAt] as const] : [];
     }));
     if (!credited.size) continue;

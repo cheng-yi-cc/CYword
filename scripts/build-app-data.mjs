@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { parse } from "csv-parse/sync";
 import { extractDependencies, buildLearningSchedule } from "./learning-schedule.mjs";
 import { loadPronunciationGuides } from "./pronunciation-data.mjs";
@@ -213,7 +214,10 @@ for (const word of wordMap.values()) {
   );
 }
 
+const curriculum = { bookCode, groups: groups.map(({ id, wordIds }) => ({ id, wordIds })), schedule };
+const curriculumVersion = createHash("sha256").update(JSON.stringify(curriculum)).digest("hex").slice(0, 16);
 const catalog = {
+  curriculumVersion,
   generatedAt: new Date().toISOString(),
   book: {
     code: bookManifest.code,
@@ -236,8 +240,7 @@ const catalog = {
 };
 fs.writeFileSync(path.join(outDir, "catalog.json"), JSON.stringify(catalog), "utf8");
 // Shared ordering for installed books and the legacy browser download path.
-const curriculum = { bookCode, groups: groups.map(({ id, wordIds }) => ({ id, wordIds })), schedule };
-fs.writeFileSync(path.join(outDir, "curriculum.json"), JSON.stringify(curriculum), "utf8");
+fs.writeFileSync(path.join(outDir, "curriculum.json"), JSON.stringify({ ...curriculum, curriculumVersion }), "utf8");
 
 console.log(
   `Built ${wordsRaw.length} word files, ${groups.length} study groups, ${schedule.length} study days.`,
