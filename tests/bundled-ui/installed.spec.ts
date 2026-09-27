@@ -57,14 +57,21 @@ test("production bundle opens the complete book, reads local media, saves and re
 });
 
 test("a missing installed image keeps the word readable and can retry in place", async ({ page }) => {
-  await page.route("**/book/images/**", route => route.abort());
+  // Keep the fault active until an actual retry click; unblocking earlier can
+  // let an unrelated render recover the image before Playwright clicks it.
+  await page.addInitScript(() => document.addEventListener("click", event => {
+    if (event.target instanceof Element && event.target.closest(".image-retry")) (window as any).__allowImages = true;
+  }, true));
+  await page.route("**/book/images/**", async route => {
+    if (await page.evaluate(() => Boolean((window as any).__allowImages))) await route.continue();
+    else await route.abort();
+  });
   await setup(page);
   await page.getByRole("button", { name: "继续学习" }).click();
   const session = page.getByRole("dialog", { name: "今日单词学习" });
   await expect(session.locator("h1")).toHaveText(first.spelling);
   await expect(session.getByRole("button", { name: "配图加载失败，点击重试" }).first()).toBeVisible();
   expect(await page.evaluate(id => (window as any).__installed.local.words[id], firstId)).toBeUndefined();
-  await page.unroute("**/book/images/**");
   await session.getByRole("button", { name: "配图加载失败，点击重试" }).first().click();
   await expect.poll(() => session.locator(".rich-text img").first().evaluate((element: HTMLImageElement) => element.naturalWidth)).toBeGreaterThan(0);
   await expect(session.getByRole("button", { name: /不清楚/ })).toBeEnabled();
