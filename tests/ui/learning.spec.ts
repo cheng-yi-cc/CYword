@@ -147,10 +147,14 @@ for (const width of [1280, 390]) {
       // 控制音频生命周期，验证结束、失败和停止，不依赖设备播放时长。
       window.Audio = class extends EventTarget {
         constructor() { super(); (window as any).__audio = this; }
-        play() { return Promise.resolve(); }
-        pause() {}
+        play() { (window as any).__playingAudio = this; return Promise.resolve(); }
+        pause() { if ((window as any).__playingAudio === this) (window as any).__playingAudio = undefined; }
       } as any;
     });
+    const finishAudio = async (type: "ended" | "error") => {
+      await expect.poll(() => page.evaluate(() => Boolean((window as any).__playingAudio))).toBe(true);
+      await page.evaluate(event => (window as any).__playingAudio.dispatchEvent(new Event(event)), type);
+    };
     const spelling = study(page).locator("h1 .sound-spelling");
     const audio = study(page).locator(".study-word-hero .audio-button");
     await expect(spelling).toHaveAttribute("aria-pressed", "false");
@@ -160,23 +164,23 @@ for (const width of [1280, 390]) {
     await expect(spelling).toHaveAttribute("aria-pressed", "false");
     await audio.locator("strong").click();
     await expect(spelling).toHaveAttribute("aria-pressed", "true");
-    await page.evaluate(() => (window as any).__audio.dispatchEvent(new Event("ended")));
+    await finishAudio("ended");
     await expect(spelling).toHaveAttribute("aria-pressed", "false");
 
     await spelling.focus(); await page.keyboard.press("Enter");
     await audio.click();
-    await page.evaluate(() => (window as any).__audio.dispatchEvent(new Event("ended")));
+    await finishAudio("ended");
     await expect(spelling).toHaveAttribute("aria-pressed", "true");
     await spelling.click();
     await audio.click(); await audio.click();
     await expect(spelling).toHaveAttribute("aria-pressed", "false");
     await audio.click();
-    await page.evaluate(() => (window as any).__audio.dispatchEvent(new Event("error")));
+    await finishAudio("error");
     await expect(spelling).toHaveAttribute("aria-pressed", "false");
     await expect(audio).toHaveAttribute("aria-label", "重试发音");
     await audio.click();
     await expect(spelling).toHaveAttribute("aria-pressed", "true");
-    await page.evaluate(() => (window as any).__audio.dispatchEvent(new Event("ended")));
+    await finishAudio("ended");
 
     await spelling.click();
     await page.screenshot({ path: `.work/preflight/segmentation-${width}.png` });
@@ -296,7 +300,7 @@ test("titlebar search shortcut, book menu and release history replace the old si
   await expect(search).toHaveCount(0);
   await page.locator(".release-notes-entry").click();
   const releases = page.getByRole("dialog", { name: "更新日志" });
-  await expect(releases.locator(".release-detail")).toContainText("Windows 0.4.8");
+  await expect(releases.locator(".release-detail")).toContainText("Windows 0.4.13");
   await releases.getByRole("button", { name: /v0.4.3/ }).click();
   await expect(releases.locator(".release-detail")).toContainText("熟练度");
   await page.screenshot({ path: ".work/preflight/release-history.png" });
