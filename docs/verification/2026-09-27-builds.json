@@ -1,0 +1,124 @@
+{
+  "date": "2026-09-27",
+  "sourceCommit": "eb0ae5d483306c8eddd71dc28196dc4fbd9ab2e7",
+  "applicationCodeCommit": "9fa62184ded59406dc88872dc487daae31912664",
+  "productionIdentity": {
+    "windows": {
+      "channel": {
+        "name": "production",
+        "origin": "https://cyword.chengyi.me",
+        "desktopId": "com.cyword.desktop",
+        "productName": "CYword"
+      },
+      "version": "0.4.13",
+      "updater": {
+        "provider": "generic",
+        "url": "https://cyword.chengyi.me/downloads/",
+        "channel": "latest",
+        "useMultipleRangeRequest": false,
+        "updaterCacheDirName": "cyword-updater"
+      },
+      "testOriginAbsent": true
+    },
+    "android": {
+      "package": "me.chengyi.cyword",
+      "version": "0.1.11",
+      "versionCode": 512,
+      "origin": "https://cyword.chengyi.me",
+      "testOriginAbsent": true,
+      "webDebugging": false,
+      "debuggable": false,
+      "certificateSha256": "389ff03f29e59fcf25ad2c2969b132bff20e2635a0960f24afe176b1b9a578fa"
+    }
+  },
+  "fullPackagedResources": {
+    "windows": {
+      "date": "2026-09-27T08:42:30.734Z",
+      "source": "Production package app.asar and unpacked resources; not a new installed-device run",
+      "words": 5166,
+      "planDays": 40,
+      "dataVersion": "0390ce7dbe850fdd",
+      "curriculumVersion": "883d4374d248f8e0",
+      "audioReferences": 5166,
+      "imageReferences": 1196,
+      "assetFiles": 6179,
+      "assetBytes": 1081303388,
+      "font": "assets/Gentium-Regular-Bm-MIvyU.woff2",
+      "passed": true
+    },
+    "android": {
+      "date": "2026-09-27T08:51:17.812Z",
+      "source": "signed APK entries",
+      "words": 5166,
+      "planDays": 40,
+      "dataVersion": "0390ce7dbe850fdd",
+      "curriculumVersion": "883d4374d248f8e0",
+      "audioReferences": 5166,
+      "imageReferences": 1196,
+      "assetFiles": 6179,
+      "assetBytes": 1081303388,
+      "font": "assets/Gentium-Regular-Bm-MIvyU.woff2",
+      "passed": true
+    }
+  },
+  "validation": {
+    "productionBundledUi": 6,
+    "applicationUi": 25,
+    "websiteUi": 2,
+    "localDownloadChecks": 24,
+    "asarFiles": 428,
+    "unitTests": 159,
+    "ci": {
+      "conclusion": "success",
+      "databaseId": 36307974638,
+      "headSha": "eb0ae5d483306c8eddd71dc28196dc4fbd9ab2e7",
+      "updatedAt": "2026-09-27T09:10:15Z",
+      "url": "https://github.com/cheng-yi-cc/CYword/actions/runs/36307974638"
+    },
+    "fullBookRender": {
+      "words": 5166,
+      "tabs": 20030
+    }
+  },
+  "backend": {
+    "origin": "https://cyword.chengyi.me",
+    "at": "2026-09-27T08:42:03.159Z",
+    "results": [
+      {
+        "path": "/api/progress-incremental",
+        "status": 401
+      },
+      {
+        "path": "/api/progress",
+        "status": 401
+      },
+      {
+        "path": "/api/auth/me",
+        "status": 401
+      },
+      {
+        "path": "/api/auth/send-code",
+        "status": 403
+      },
+      {
+        "path": "/api/auth/send-code",
+        "status": 400
+      },
+      {
+        "path": "/downloads/latest.json",
+        "status": 200
+      },
+      {
+        "path": "/downloads/android/latest.json",
+        "status": 200
+      }
+    ],
+    "scope": "Production unauthorized/auth-input/download capability checks; no email sent and no progress written."
+  },
+  "scope": "Production rebuild of accepted application code; actual installed cross-device tests used isolated identities/backend and are detailed in FIRST-RELEASE-ACCEPTANCE.md. No new authenticated production progress was written during these release checks.",
+  "releaseWorkflows": {
+    "windows": "https://github.com/cheng-yi-cc/CYword/actions/runs/36308010618",
+    "android": "https://github.com/cheng-yi-cc/CYword/actions/runs/36308043734",
+    "conclusion": "success"
+  }
+}

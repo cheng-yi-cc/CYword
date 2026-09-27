@@ -1,0 +1,37 @@
+{
+  "at": "2026-09-27T09:12:23.792Z",
+  "results": [
+    {
+      "platform": "windows",
+      "version": "0.4.13",
+      "filename": "CYword-Setup-0.4.13.exe",
+      "bytes": 1210486113,
+      "sha256": "7a3bf880b70d0d3c376757fdf1380a2fd640bfe2b927ef9425fad8cf2a9420c1",
+      "url": "https://cyword.chengyi.me/downloads/releases/0.4.13/7a3bf880b70d0d3c376757fdf1380a2fd640bfe2b927ef9425fad8cf2a9420c1/CYword-Setup-0.4.13.exe",
+      "elapsedMs": 416181,
+      "interruptedAt": 2097152,
+      "rangeResume": true,
+      "head": true,
+      "stableRedirect": true,
+      "updateMetadata": true,
+      "network": "Current Windows connection to production Cloudflare Pages/R2",
+      "method": "Full network byte stream hashed without retaining a second installer copy"
+    },
+    {
+      "platform": "android",
+      "version": "0.1.11",
+      "filename": "CYword-Android-0.1.11.apk",
+      "bytes": 1136256861,
+      "sha256": "4a259f70b493f5b4face9ba3909bc559a86ee4b6c8a58eeb17e56aed54fac74f",
+      "url": "https://cyword.chengyi.me/downloads/releases/android/0.1.11/4a259f70b493f5b4face9ba3909bc559a86ee4b6c8a58eeb17e56aed54fac74f/CYword-Android-0.1.11.apk",
+      "elapsedMs": 403546,
+      "interruptedAt": 2111552,
+      "rangeResume": true,
+      "head": true,
+      "stableRedirect": true,
+      "updateMetadata": true,
+      "network": "Current Windows connection to production Cloudflare Pages/R2",
+      "method": "Full network byte stream hashed without retaining a second installer copy"
+    }
+  ]
+}

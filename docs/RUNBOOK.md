@@ -1,5 +1,26 @@
 # 运行手册
 
+## Windows 0.4.13 / Android 0.1.11 正式发布（2026-09-27）
+
+源码标签 `v0.4.13`、`android-v0.1.11` 均指向 `eb0ae5d`。正式身份、官网后端和安卓原签名重新构建，应用代码与已通过隔离实机验收的版本一致，另加入正式版本说明；后续两次提交仅修正测试时序与版本断言。两个 GitHub Release 均先上传并核对原件摘要，再发布及切换官网指针，未重建或覆盖已发布资产。
+
+| 正式产物 | 字节数 | SHA-256 |
+|---|---:|---|
+| `CYword-Setup-0.4.13.exe` | 1210486113 | `7a3bf880b70d0d3c376757fdf1380a2fd640bfe2b927ef9425fad8cf2a9420c1` |
+| `CYword-Android-0.1.11.apk` | 1136256861 | `4a259f70b493f5b4face9ba3909bc559a86ee4b6c8a58eeb17e56aed54fac74f` |
+
+Android 包名 `me.chengyi.cyword`、versionCode 512，证书 SHA-256 为 `389ff03f29e59fcf25ad2c2969b132bff20e2635a0960f24afe176b1b9a578fa`，与旧版一致；正式包关闭 WebView 调试。Windows 使用 `com.cyword.desktop` 和官网 generic 更新源。
+
+生产 D1 已应用 0002、0003、0004 增量迁移，保留旧账号、进度、表和加密 Secrets。同步函数先部署至 `2ccb41fe.cyword.pages.dev`，确认匿名拒绝、来源/输入校验及下载 v2 能力后再发布客户端。Workers 保持免费档。单账号恢复仍按下节操作，禁止整库回滚。
+
+[Windows 发布工作流](https://github.com/cheng-yi-cc/CYword/actions/runs/36308010618)和[Android 发布工作流](https://github.com/cheng-yi-cc/CYword/actions/runs/36308043734)均成功。[最终 CI](https://github.com/cheng-yi-cc/CYword/actions/runs/36307974638)通过 159 项自动化测试、25 项界面回归、6 项随包回归、5166 词/20030 标签渲染及全部媒体核验。本地官网界面 2 项与下载协议 24 项通过。
+
+官网版本说明与回退元数据最终部署为 `c2d29054.cyword.pages.dev`，[生产页面检查](verification/2026-09-27-website.json)通过。两端完整网络字节流校验、约 2 MiB 中断后 Range 续传、HEAD、稳定入口跳转及更新元数据均通过；并行下载实测 Windows 416181 ms、Android 403546 ms，详见 [下载证据](verification/2026-09-27-downloads.json)。仅代表当前网络，不推广为全部地区体验。
+
+本地 `release/` 仅保留这次正式 EXE、APK、两种差量清单、`latest.yml` 和 `SHA256SUMS.txt`。临时验收包、日志、截图及构建/预览生成物已清理，源码、测试工具、已安装依赖和正式证据保留；签名密钥与维护者日常数据未删除。
+
+正式包完整资源、身份、签名及生产接口检查见 [构建证据](verification/2026-09-27-builds.json)。真实双端、断网与故障恢复验收在隔离应用和后端完成，范围及冷恢复 82–260 秒限制见 [验收记录](FIRST-RELEASE-ACCEPTANCE.md)；发布检查没有向生产账号写入测试学习记录。
+
 ## 单账号快照恢复
 
 先暂停待恢复账号的学习操作，核对数据库、内部账号 ID 和目标快照。使用 `node scripts/restore-progress.mjs --account <Cloudflare账号ID> --database <D1数据库ID> --user <内部账号ID>` 只读列出当前修订号与快照；不要把邮箱当内部账号 ID。命令使用 `CLOUDFLARE_API_TOKEN` 或本机 Wrangler 登录凭据，凭据不打印、不写入仓库。

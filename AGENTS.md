@@ -75,3 +75,4 @@
 - [官网交互、下载协议与验证](docs/WEBSITE.md)
 - [安卓构建与进度同步](docs/ANDROID.md)
 - [离线词书、自动同步与恢复](docs/OFFLINE.md)
+- [双端真机验收与发布证据](docs/FIRST-RELEASE-ACCEPTANCE.md)
