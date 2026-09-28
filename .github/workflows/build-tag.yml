@@ -1,6 +1,12 @@
 name: Build or publish Windows Beta installer
 
 on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag
+        required: true
+        type: string
   push:
     tags:
       - "v*"
@@ -21,6 +27,8 @@ jobs:
     steps:
       - name: Check out tagged source
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -31,7 +39,7 @@ jobs:
       - name: Verify tag matches package version
         shell: pwsh
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           $packageVersion = node -p "require('./package.json').version"
           $expectedTag = "v$packageVersion"
@@ -47,7 +55,7 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           $headers = @{ Authorization = "Bearer $env:GH_TOKEN"; Accept = "application/vnd.github+json"; "X-GitHub-Api-Version" = "2026-03-10" }
           $tag = [Uri]::EscapeDataString($env:RELEASE_TAG)
@@ -85,7 +93,7 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           # 重跑沿用首次发布的原件，避免重建产生新的 releaseDate 或安装包字节。
           $version = node -p "require('./package.json').version"
@@ -102,7 +110,7 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           $installers = @(Get-ChildItem -LiteralPath release -Filter "CYword-Setup-*.exe" -File)
           if ($installers.Count -ne 1) {
