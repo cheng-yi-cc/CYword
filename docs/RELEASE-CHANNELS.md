@@ -37,7 +37,7 @@ Windows appId、NSIS 安装身份、安装目录、快捷方式和 userData 均�
 
 ## 本地预览
 
-在此工作区运行 npm run dev 可预览独立正式版桌面窗口；npm run dev:web 在 http://127.0.0.1:5173/ 打开无登录浏览器预览，npm run dev:mobile 支持局域网手机。npm run dev:site 在 http://127.0.0.1:5174/ 预览官网。
+在 codex/stable-release 分支工作区运行 npm run dev 可预览独立正式版桌面窗口；npm run dev:web 在 http://127.0.0.1:5173/ 打开无登录浏览器预览，npm run dev:mobile 支持局域网手机。npm run dev:site 在 http://127.0.0.1:5174/ 预览官网。
 
 浏览器进度使用 cyword-stable:progress:cet6，与 Beta 的 cyword-progress:<账号> 键隔离；不扫描旧目录、不复制数据。开发预览按需读取本机资源，发布安装包包含全部资源。
 
