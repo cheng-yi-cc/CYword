@@ -1,5 +1,15 @@
 # CYword 项目约定
 
+## 正式版与 Beta 渠道（2026-09-28 起）
+
+- 本分支维护无账号、无云端同步的正式版；Windows / Android 首版均为 0.1.0。Beta 独立维护登录和同步，已发布的 Windows 0.4.13 / Android 0.1.11 改为 GitHub Pre-release，原资产和标签不变。
+- 正式版与 Beta 的安装标识、存储目录、版本和更新指针独立；正式版首次从空白进度开始，不读取、复制或迁移 Beta 会话与进度。
+- Windows 正式版使用 com.cyword.desktop.stable、安装名称 CYword Stable、userData/CYword Stable；安卓使用 me.chengyi.cyword.stable，versionCode 从 513 继续递增。应用界面品牌仍只显示 CYword。
+- 官网只展示正式版。正式版 Windows 使用 /downloads/latest-stable.yml；两端清单使用 /downloads/stable/latest.json、/downloads/stable/android/latest.json；R2 使用 releases/stable/ 前缀。旧下载与同步服务为 Beta 兼容保留，不得把正式版写入旧指针。
+- 正式版 Windows 标签 v<版本>，安卓标签 android-stable-v<版本>；历史 android-v0.1.0 绝不覆盖。Beta 发布必须勾选 Pre-release，不能标为 Latest；正式版不是 Pre-release。
+- 本文下方涉及登录、账号、同步、令牌和旧发布指针的约定仅适用于 Beta 及保留的服务端。正式版预览没有模拟登录步骤，学习进度只保存在本机。更多见 docs/RELEASE-CHANNELS.md。
+
+
 - 界面文案偏好：保持简洁，避免重复标题、显而易见或过度解释的辅助小字；优先用布局、主标签和控件本身表达含义，仅在确实帮助用户判断或操作时补充说明。例如进度卡只保留“总进度”“当日进度”，不再添加“词书计划”“学习日／复习日”等解释性小字。
 - 应用与官网统一隐藏横向、纵向滚动条，保留滚轮、触控和键盘滚动；不要恢复可见滚动条或预留滚动条空槽。
 - 官网学习示例的长难句展开/收起沿用应用的右侧竖排入口、栏宽动画与内容淡入淡出顺序；手机标签按“单词、词根、长难句”排列。

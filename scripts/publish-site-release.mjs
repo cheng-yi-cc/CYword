@@ -39,9 +39,9 @@ async function prepareRelease() {
     if (!info.isFile() || info.size === 0) throw new Error("安卓安装包无效");
     const sha256 = await fileDigest(installer, "sha256", "hex");
     const pointer = {
-      schemaVersion: 2, version, publishedAt: new Date().toISOString(), filename,
+      schemaVersion: 2, channel: "stable", version, publishedAt: new Date().toISOString(), filename,
       sizeBytes: info.size, sha256,
-      assetPath: `releases/android/${version}/${sha256}/${filename}`,
+      assetPath: `releases/stable/android/${version}/${sha256}/${filename}`,
       notesUrl: releaseNotesUrl,
     };
     const work = path.join(root, ".work", "site-release", `android-${version}-${sha256.slice(0, 16)}`);
@@ -61,7 +61,7 @@ async function prepareRelease() {
   const filename = `CYword-Setup-${version}.exe`;
   const installer = path.join(releaseDirectory, filename);
   const blockmap = `${installer}.blockmap`;
-  const sourceManifest = path.join(releaseDirectory, "latest.yml");
+  const sourceManifest = path.join(releaseDirectory, "latest-stable.yml");
   const [installerStat, blockmapStat, manifest] = await Promise.all([
     stat(installer),
     stat(blockmap),
@@ -87,7 +87,7 @@ async function prepareRelease() {
   if (files[0].size !== installerStat.size) throw new Error("latest.yml 的文件长度与安装包不一致");
   await verifyBlockmap(installer, blockmap);
 
-  const baseKey = `releases/${version}/${sha256}`;
+  const baseKey = `releases/stable/${version}/${sha256}`;
   const assetPath = `${baseKey}/${filename}`;
   const blockmapPath = `${assetPath}.blockmap`;
   const updaterMetadataPath = `${baseKey}/latest.yml`;
@@ -102,6 +102,7 @@ async function prepareRelease() {
   const publishedAt = Number.isNaN(parsedDate.getTime()) ? new Date().toISOString() : parsedDate.toISOString();
   const pointer = {
     schemaVersion: 2,
+    channel: "stable",
     version,
     publishedAt,
     filename,
@@ -202,7 +203,7 @@ if (prepareOnly) {
   const endpoint = `https://${accountId}.r2.cloudflarestorage.com`;
   const immutable = "public, max-age=31536000, immutable, no-transform";
 
-  await assertReleaseSchemaSupport(android);
+  await assertReleaseSchemaSupport(android, fetch, true);
 
   // 内容寻址资产先全部上传；current.json 是官网和自动更新共同的唯一发布开关，必须最后写入。
   await upload(endpoint, prepared.installer, prepared.pointer.assetPath, android ? "application/vnd.android.package-archive" : "application/octet-stream", immutable);
@@ -211,6 +212,6 @@ if (prepareOnly) {
     await upload(endpoint, prepared.updaterMetadataFile, prepared.pointer.updaterMetadataPath, "application/x-yaml", immutable);
   }
   if (android) await upload(endpoint, prepared.apkBlocks, prepared.pointer.differential.path.slice("/downloads/".length), "application/json", immutable);
-  await upload(endpoint, prepared.pointerFile, android ? "releases/android/current.json" : "releases/current.json", "application/json", "no-store");
+  await upload(endpoint, prepared.pointerFile, android ? "releases/stable/android/current.json" : "releases/stable/current.json", "application/json", "no-store");
   console.log(`官网最新版指针已切换到 v${prepared.pointer.version}。`);
 }

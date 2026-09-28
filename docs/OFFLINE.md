@@ -1,5 +1,7 @@
 # 离线词书、自动同步与恢复
 
+> 2026-09-28 渠道拆分：当前分支为无账号、无同步的正式版 0.1.0；下文历史版本、账号与同步说明属于 Beta。当前安装身份、数据和发布入口见 [RELEASE-CHANNELS.md](RELEASE-CHANNELS.md)。
+
 本文描述 Windows 0.4.13 / Android 0.1.11 的离线、自动同步和恢复行为。真实设备结果及测试覆盖限制见 [验收记录](FIRST-RELEASE-ACCEPTANCE.md)。
 
 ## 使用规则

@@ -28,12 +28,12 @@ test("site release preparation validates and rewrites updater assets", async () 
     for (let index = 0; index < installer.length; index++) installer[index] = index % 251;
     const sha256 = createHash("sha256").update(installer).digest("hex");
     const sha512 = createHash("sha512").update(installer).digest("base64");
-    const assetPath = `releases/${version}/${sha256}/${filename}`;
+    const assetPath = `releases/stable/${version}/${sha256}/${filename}`;
     await mkdir(fixtureRoot, { recursive: true });
     await Promise.all([
       writeFile(path.join(fixtureRoot, filename), installer),
       writeFile(path.join(fixtureRoot, `${filename}.blockmap`), blockmapFor(installer)),
-      writeFile(path.join(fixtureRoot, "latest.yml"), [
+      writeFile(path.join(fixtureRoot, "latest-stable.yml"), [
         `version: ${version}`,
         "files:",
         `  - url: ${filename}`,
@@ -66,7 +66,7 @@ test("site release preparation validates and rewrites updater assets", async () 
     assert.ok(isReleasePointer(pointer));
     assert.ok(isPublicRelease(toPublicRelease(pointer)));
     assert.equal(pointer.assetPath, assetPath);
-    assert.equal(pointer.updaterMetadataPath, `releases/${version}/${sha256}/latest.yml`);
+    assert.equal(pointer.updaterMetadataPath, `releases/stable/${version}/${sha256}/latest.yml`);
     assert.equal(pointer.sha256, sha256);
     assert.match(manifest, new RegExp(`url: ${assetPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
     assert.match(manifest, new RegExp(`path: ${assetPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
@@ -128,10 +128,10 @@ test("release preparation rejects mismatched metadata, extra assets and empty bl
       valid + `version: 9.9.9\n`,
       valid + `files: [{url: "https://example.com/extra.exe"}]\n`,
     ]) {
-      await writeFile(path.join(fixtureRoot, "latest.yml"), malformed);
+      await writeFile(path.join(fixtureRoot, "latest-stable.yml"), malformed);
       await assert.rejects(run(process.execPath, [path.join(root, "scripts/publish-site-release.mjs"), fixtureRoot, "--prepare-only"], { cwd: root, windowsHide: true }));
     }
-    await writeFile(path.join(fixtureRoot, "latest.yml"), valid);
+    await writeFile(path.join(fixtureRoot, "latest-stable.yml"), valid);
     await writeFile(path.join(fixtureRoot, `${filename}.blockmap`), "");
     await assert.rejects(run(process.execPath, [path.join(root, "scripts/publish-site-release.mjs"), fixtureRoot, "--prepare-only"], { cwd: root, windowsHide: true }));
   } finally {
@@ -150,7 +150,7 @@ test("Android release preparation produces an independent public manifest", asyn
     await run(process.execPath, [path.join(root, "scripts/publish-site-release.mjs"), fixtureRoot, "--android", "--prepare-only"], { cwd: root, windowsHide: true });
     const pointer = JSON.parse(await readFile(path.join(root, ".work", "site-release", `android-${version}-${sha256.slice(0, 16)}`, "current.json"), "utf8"));
     assert.equal(pointer.schemaVersion, 2);
-    assert.equal(pointer.assetPath, `releases/android/${version}/${sha256}/${filename}`);
+    assert.equal(pointer.assetPath, `releases/stable/android/${version}/${sha256}/${filename}`);
     assert.ok(isReleasePointer(pointer, true));
     assert.ok(isPublicRelease(toPublicRelease(pointer), true));
     assert.equal(isReleasePointer(pointer), false);

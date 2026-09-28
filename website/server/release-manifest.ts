@@ -1,5 +1,6 @@
 export type ReleasePointer = {
   schemaVersion: 1 | 2;
+  channel?: "stable";
   version: string;
   publishedAt: string;
   filename: string;
@@ -19,7 +20,7 @@ export type ReleasePointer = {
 };
 
 export type PublicRelease = Pick<ReleasePointer,
-  "version" | "publishedAt" | "filename" | "sizeBytes" | "sha256" | "notesUrl" | "differential"> & { downloadPath: string };
+  "channel" | "version" | "publishedAt" | "filename" | "sizeBytes" | "sha256" | "notesUrl" | "differential"> & { downloadPath: string };
 
 export const releaseNotesUrl = "/#release-notes";
 const legacyRepositoryUrl = "https://github.com/cheng-yi-cc/CYword";
@@ -43,7 +44,8 @@ function hasReleaseIdentity(value: Record<string, unknown>, android: boolean): b
 
 export function isReleasePointer(value: unknown, android = false): value is ReleasePointer {
   if (!isRecord(value) || !hasReleaseIdentity(value, android)) return false;
-  const basePath = `releases/${android ? "android/" : ""}${value.version}/${value.sha256}`;
+  if (value.channel !== undefined && value.channel !== "stable") return false;
+  const basePath = `releases/${value.channel === "stable" ? "stable/" : ""}${android ? "android/" : ""}${value.version}/${value.sha256}`;
   if (!validDifferential(value, `/downloads/${basePath}/${value.filename}`, android)) return false;
   if (value.assetPath !== `${basePath}/${value.filename}` || (!android &&
     (value.blockmapPath !== `${basePath}/${value.filename}.blockmap` || value.updaterMetadataPath !== `${basePath}/latest.yml`))) return false;
@@ -60,6 +62,7 @@ export function isReleasePointer(value: unknown, android = false): value is Rele
 
 export function toPublicRelease(pointer: ReleasePointer): PublicRelease {
   return {
+    ...(pointer.channel ? { channel: pointer.channel } : {}),
     version: pointer.version, publishedAt: pointer.publishedAt, filename: pointer.filename,
     sizeBytes: pointer.sizeBytes, sha256: pointer.sha256,
     downloadPath: `/downloads/${pointer.assetPath}`, notesUrl: releaseNotesUrl,
@@ -69,7 +72,8 @@ export function toPublicRelease(pointer: ReleasePointer): PublicRelease {
 
 export function isPublicRelease(value: unknown, android = false): value is PublicRelease {
   if (!isRecord(value) || !hasReleaseIdentity(value, android)) return false;
-  const path = `/downloads/releases/${android ? "android/" : ""}${value.version}/${value.sha256}/${value.filename}`;
+  if (value.channel !== undefined && value.channel !== "stable") return false;
+  const path = `/downloads/releases/${value.channel === "stable" ? "stable/" : ""}${android ? "android/" : ""}${value.version}/${value.sha256}/${value.filename}`;
   const legacyTag = `${android ? "android-v" : "v"}${value.version}`;
   if (!validDifferential(value, path, android)) return false;
   return (value.downloadPath === path || (!android && value.downloadPath === `/downloads/${value.filename}`)) &&

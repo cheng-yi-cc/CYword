@@ -1,8 +1,8 @@
 const origin = "https://cyword.chengyi.me";
 
 /** Check the deployed reader before publishing a pointer it might not understand. */
-export async function assertReleaseSchemaSupport(android = false, request = fetch) {
-  const endpoint = `${origin}/downloads/${android ? "android/" : ""}latest.json`;
+export async function assertReleaseSchemaSupport(android = false, request = fetch, stable = false) {
+  const endpoint = `${origin}/downloads/${stable ? "stable/" : ""}${android ? "android/" : ""}latest.json`;
   let response;
   try {
     response = await request(endpoint, {
@@ -16,6 +16,7 @@ export async function assertReleaseSchemaSupport(android = false, request = fetc
   if (!supported.includes("2")) {
     throw new Error("官网函数尚未确认支持发布清单 v2，未写入 R2。请先部署官网函数（npm run deploy:site），再发布安装包。");
   }
+  if (stable && !response.headers.get("X-CYword-Release-Channels")?.split(",").includes("stable")) throw new Error("官网尚未支持独立正式版渠道，请先部署兼容函数。");
   if (android && response.headers.get("X-CYword-Android-Differential") !== "zip-sha256-1m") {
     throw new Error("官网尚不支持安卓差量更新，未写入 R2。请先部署官网函数（npm run deploy:site）。");
   }

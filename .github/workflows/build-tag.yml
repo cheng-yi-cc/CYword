@@ -1,6 +1,12 @@
 name: Build or publish Windows installer
 
 on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag
+        required: true
+        type: string
   push:
     tags:
       - "v*"
@@ -21,6 +27,8 @@ jobs:
     steps:
       - name: Check out tagged source
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -31,7 +39,7 @@ jobs:
       - name: Verify tag matches package version
         shell: pwsh
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           $packageVersion = node -p "require('./package.json').version"
           $expectedTag = "v$packageVersion"
@@ -47,7 +55,7 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           $headers = @{ Authorization = "Bearer $env:GH_TOKEN"; Accept = "application/vnd.github+json"; "X-GitHub-Api-Version" = "2026-03-10" }
           $tag = [Uri]::EscapeDataString($env:RELEASE_TAG)
@@ -56,11 +64,11 @@ jobs:
             "exists=false" >> $env:GITHUB_OUTPUT
           } elseif ($response.StatusCode -eq 200) {
             $published = $response.Content | ConvertFrom-Json
-            if ($published.tag_name -cne $env:RELEASE_TAG -or $published.draft) {
+            if ($published.tag_name -cne $env:RELEASE_TAG -or $published.draft -or $published.prerelease) {
               throw "The existing release must be published and match the requested tag."
             }
             $version = node -p "require('./package.json').version"
-            $requiredAssets = @("CYword-Setup-$version.exe", "CYword-Setup-$version.exe.blockmap", "latest.yml")
+            $requiredAssets = @("CYword-Setup-$version.exe", "CYword-Setup-$version.exe.blockmap", "latest-stable.yml")
             foreach ($name in $requiredAssets) {
               $asset = @($published.assets | Where-Object { $_.name -ceq $name })
               if ($asset.Count -ne 1 -or $asset[0].state -ne "uploaded" -or $asset[0].size -le 0) {
@@ -85,13 +93,13 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           # 重跑沿用首次发布的原件，避免重建产生新的 releaseDate 或安装包字节。
           $version = node -p "require('./package.json').version"
           New-Item -ItemType Directory -Path release -Force | Out-Null
           gh release download $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --dir release `
-            --pattern "CYword-Setup-$version.exe" --pattern "CYword-Setup-$version.exe.blockmap" --pattern "latest.yml"
+            --pattern "CYword-Setup-$version.exe" --pattern "CYword-Setup-$version.exe.blockmap" --pattern "latest-stable.yml"
           if ($LASTEXITCODE -ne 0) { throw "Failed to restore the published release assets." }
 
       - name: Verify installer and updater metadata
@@ -102,14 +110,14 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           $installers = @(Get-ChildItem -LiteralPath release -Filter "CYword-Setup-*.exe" -File)
           if ($installers.Count -ne 1) {
             throw "Expected exactly one Windows installer, found $($installers.Count)."
           }
 
-          $metadata = @(Get-ChildItem -LiteralPath release -Filter "latest.yml" -File)
+          $metadata = @(Get-ChildItem -LiteralPath release -Filter "latest-stable.yml" -File)
           if ($metadata.Count -ne 1) {
             throw "Expected exactly one updater metadata file, found $($metadata.Count)."
           }
@@ -123,7 +131,7 @@ jobs:
             --repo $env:GITHUB_REPOSITORY `
             --verify-tag `
             --title "CYword $env:RELEASE_TAG" `
-            --generate-notes
+            --generate-notes --latest
 
           if ($LASTEXITCODE -ne 0) {
             throw "GitHub Release publishing failed."

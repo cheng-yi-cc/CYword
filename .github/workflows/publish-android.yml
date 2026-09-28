@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing Android release tag (android-v0.1.0)
+        description: Existing Android release tag (android-stable-v0.1.0)
         required: true
         type: string
 
@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   publish:
-    if: startsWith(github.event.release.tag_name || inputs.tag, 'android-v')
+    if: startsWith(github.event.release.tag_name || inputs.tag, 'android-stable-v') && !github.event.release.prerelease
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -36,8 +36,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
         run: |
+          test "$(gh release view "$RELEASE_TAG" --json isPrerelease --jq .isPrerelease)" = "false"
           VERSION=$(node -p "require('./android/version.json').versionName")
-          test "$RELEASE_TAG" = "android-v$VERSION"
+          test "$RELEASE_TAG" = "android-stable-v$VERSION"
           gh release download "$RELEASE_TAG" --pattern "CYword-Android-$VERSION.apk" --dir release
       - name: Publish APK and update Android pointer
         env:

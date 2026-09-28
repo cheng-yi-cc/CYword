@@ -1,5 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, dialog, safeStorage, screen } = require("electron");
-const { createSessionStore } = require("./session-store.cjs");
+const { app, BrowserWindow, ipcMain, shell, dialog, screen } = require("electron");
 const { createProgressStore } = require("./progress-store.cjs");
 const { createExitGuard } = require("./exit-guard.cjs");
 const { validStoredProgress, encodeProgressWire, decodeProgressWire } = require("./generated/progress-validation.cjs");
@@ -9,7 +8,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const { createHash, randomUUID } = require("node:crypto");
 const channel = require("./generated/channel.json");
-if (channel.name === "acceptance") {
+{
   app.setName(channel.productName);
   app.setPath("userData", path.join(app.getPath("appData"), channel.productName));
 }
@@ -59,8 +58,8 @@ const exitGuard = createExitGuard({
     catch (error) { exitAllowed = false; throw error; }
   },
 });
-function accountStore(accountId) {
-  if (typeof accountId !== "string" || !accountId || accountId.length > 200) throw new Error("账号无效");
+function accountStore() {
+  const accountId = "local";
   if (!progressStores.has(accountId)) progressStores.set(accountId, createProgressStore(progressPath(accountId), validStoredProgress, { encode: encodeProgressWire, decode: decodeProgressWire }));
   return progressStores.get(accountId);
 }
@@ -129,14 +128,7 @@ function checkForUpdatesOnce() {
   });
 }
 
-function progressPath(accountId) {
-  if (accountId) return path.join(app.getPath("userData"), "accounts", createHash("sha256").update(String(accountId)).digest("hex"), "progress.json");
-  return path.join(app.getPath("userData"), "progress.json");
-}
-
-function sessionPath() {
-  return path.join(app.getPath("userData"), "session.json");
-}
+function progressPath() { return path.join(app.getPath("userData"), "progress.json"); }
 
 async function fetchBookJson(pathname, options = {}) {
   const response = await fetch(`${bookApiUrl}${pathname}`, {
@@ -148,25 +140,6 @@ async function fetchBookJson(pathname, options = {}) {
     throw new Error(`词库服务暂时不可用（${response.status}），请检查网络后重试`);
   }
   return response.json();
-}
-
-async function fetchAuthJson(pathname, options = {}) {
-  const response = await fetch(`${authApiUrl}${pathname}`, {
-    ...options,
-    cache: "no-store",
-    signal: AbortSignal.timeout(30_000),
-  });
-  const text = await response.text();
-  let data;
-  try {
-    data = text ? JSON.parse(text) : {};
-  } catch {
-    throw new Error(`认证服务响应格式异常（HTTP ${response.status}）`);
-  }
-  if (!response.ok) {
-    throw new Error(data?.error || `认证服务异常（${response.status}）`);
-  }
-  return data;
 }
 
 async function registerIpc() {
@@ -182,10 +155,6 @@ async function registerIpc() {
     pending.resolve({ localSaved: result.localSaved, cloudSynced: result.cloudSynced, message: typeof result.message === "string" ? result.message.slice(0, 500) : "" });
   });
   ipcMain.handle("book:installed-file", (_event, file) => readBundledBookFile(path.join(app.getAppPath(), "dist", "book"), file));
-  const sessions = createSessionStore(sessionPath(), safeStorage);
-  let sessionRestoreError = null;
-  // Credential damage must reach the login UI, never abort window creation.
-  await sessions.read().catch((error) => { sessionRestoreError = error; return null; });
   ipcMain.handle("book:audio", async (_event, value) => {
     const url = new URL(value);
     if (url.origin !== "https://cdn.aimwords.com" || !/^\/audio\/[a-f0-9]+\.(?:mp3|wav)$/i.test(url.pathname) || url.search || url.username || url.password) throw new Error("词书音频地址无效");
@@ -207,79 +176,12 @@ async function registerIpc() {
     });
   });
 
-  ipcMain.handle("auth:send-code", (_event, email) => {
-    return fetchAuthJson("/send-code", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-  });
-
-  ipcMain.handle("auth:verify-code", (_event, email, code) => {
-    return fetchAuthJson("/verify-code", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, code }),
-    });
-  });
-
-  ipcMain.handle("auth:me", (_event, token) => {
-    return fetchAuthJson("/me", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-    });
-  });
-
-  ipcMain.handle("session:read", async () => {
-    if (sessionRestoreError) throw sessionRestoreError;
-    return sessions.read();
-  });
-
-  ipcMain.handle("session:write", async (_event, session) => {
-    const saved = await sessions.write(session);
-    sessionRestoreError = null;
-    return saved;
-  });
-
-  ipcMain.handle("session:clear", async () => {
-    const cleared = await sessions.clear();
-    sessionRestoreError = null;
-    return cleared;
-  });
-
   ipcMain.handle("progress:read", async (_event, accountId) => {
     return accountStore(accountId).read();
   });
 
   ipcMain.handle("progress:write", async (_event, progress, accountId) => {
     return accountStore(accountId).write(progress);
-  });
-
-  ipcMain.handle("progress:sync", async (_event, token, payload, etag) => {
-    if (typeof token !== "string" || token.length > 10000) throw new Error("登录状态无效");
-    const endpoint = devUrl ? `${devUrl.replace(/\/$/, "")}/api/progress` : `${channel.origin}/api/progress`;
-    const response = await fetch(endpoint, {
-      method: payload ? "PUT" : "GET",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "X-CYword-Progress-Format": "compact-v1", ...(!payload && typeof etag === "string" && etag.length < 250 ? { "If-None-Match": etag } : {}) },
-      body: payload ? JSON.stringify({ ...payload, progress: await encodeProgressWire(payload.progress) }) : undefined,
-      signal: AbortSignal.timeout(30000),
-    });
-    const data = response.status === 304 ? {} : await response.json();
-    if (response.status === 200 || response.status === 409) data.progress = await decodeProgressWire(data.progress);
-    return { status: response.status, data };
-  });
-
-  ipcMain.handle("progress:incremental", async (_event, token, operation) => {
-    if (typeof token !== "string" || token.length > 10000) throw new Error("登录状态无效");
-    const body = JSON.stringify(operation);
-    if (!body || Buffer.byteLength(body) > 96000) throw new Error("增量请求过大");
-    const endpoint = `${(devUrl || channel.origin).replace(/\/$/, "")}/api/progress-incremental`;
-    const response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body, signal: AbortSignal.timeout(30000) });
-    return { status: response.status, data: await response.json() };
   });
 
   ipcMain.handle("update:get-state", () => updateState);

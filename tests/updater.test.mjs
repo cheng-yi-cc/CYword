@@ -23,7 +23,7 @@ async function updaterFixture() {
   };
   updater.quitAndInstall = () => { installs++; };
   const electron = {
-    app: { isPackaged: true, getVersion: () => "0.4.4", getPath: () => "/mock", requestSingleInstanceLock: () => true, whenReady: () => new Promise(() => {}), on() {} },
+    app: { isPackaged: true, getVersion: () => "0.4.4", setName() {}, setPath() {}, getPath: () => "/mock", requestSingleInstanceLock: () => true, whenReady: () => new Promise(() => {}), on() {} },
     ipcMain: { handle: (key, handler) => handlers.set(key, handler), on() {} },
     BrowserWindow: { getAllWindows: () => [{ isDestroyed: () => false, webContents: { send: (_, value) => published.push(value) } }] },
   };

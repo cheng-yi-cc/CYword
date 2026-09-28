@@ -15,7 +15,7 @@ export function applyCurriculum(catalog: Catalog): Catalog {
     const source = remote.get(group.id);
     const members = new Set(source?.wordIds);
     return !source || members.size !== group.wordIds.length || group.wordIds.some(id => !members.has(id));
-  })) throw new Error("词书分组已更新，请更新应用后继续学习。已学记录保留在当前账号中。");
+  })) throw new Error("词书分组已更新，请更新应用后继续学习。已学记录保留在本机。");
   return {
     ...catalog,
     curriculumVersion: curriculum.curriculumVersion,

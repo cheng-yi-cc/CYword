@@ -59,12 +59,12 @@ function errorResponse(request: Request, status: number, message: string, extra:
   });
 }
 
-async function readCurrentRelease(bucket: R2Bucket, android = false): Promise<ReleasePointer | null> {
-  const object = await bucket.get(android ? "releases/android/current.json" : currentReleaseKey);
+async function readCurrentRelease(bucket: R2Bucket, android = false, stable = false): Promise<ReleasePointer | null> {
+  const object = await bucket.get(stable ? `releases/stable/${android ? "android/" : ""}current.json` : android ? "releases/android/current.json" : currentReleaseKey);
   if (!object) return null;
   if (object.size > 16 * 1024) throw new Error("Release pointer exceeds 16 KiB");
   const value = await object.json<unknown>();
-  if (!isReleasePointer(value, android)) throw new Error("Release pointer is invalid");
+  if (!isReleasePointer(value, android) || (stable ? value.channel !== "stable" : value.channel !== undefined)) throw new Error("Release pointer is invalid");
   return value;
 }
 
@@ -94,14 +94,14 @@ function redirectToLatest(request: Request, release: PublicRelease): Response {
 }
 
 function resolveVersionedAsset(pathname: string): DownloadAsset | null {
-  const apkMap = /^\/downloads\/(releases\/android\/(\d+\.\d+\.\d+)\/[a-f0-9]{64}\/CYword-Android-(\d+\.\d+\.\d+)\.apk\.blocks\.json)$/.exec(pathname);
+  const apkMap = /^\/downloads\/(releases\/(?:stable\/)?android\/(\d+\.\d+\.\d+)\/[a-f0-9]{64}\/CYword-Android-(\d+\.\d+\.\d+)\.apk\.blocks\.json)$/.exec(pathname);
   if (apkMap && apkMap[2] === apkMap[3]) return { key: apkMap[1], contentType: "application/json", immutable: true, allowRange: false };
-  const apk = /^\/downloads\/(releases\/android\/(\d+\.\d+\.\d+)\/[a-f0-9]{64}\/(CYword-Android-(\d+\.\d+\.\d+)\.apk))$/.exec(pathname);
+  const apk = /^\/downloads\/(releases\/(?:stable\/)?android\/(\d+\.\d+\.\d+)\/[a-f0-9]{64}\/(CYword-Android-(\d+\.\d+\.\d+)\.apk))$/.exec(pathname);
   if (apk && apk[2] === apk[4]) return {
     key: apk[1], filename: apk[3], contentType: "application/vnd.android.package-archive",
     immutable: true, allowRange: true,
   };
-  const match = /^\/downloads\/(releases\/(\d+\.\d+\.\d+)\/([a-f0-9]{64})\/(CYword-Setup-(\d+\.\d+\.\d+)\.exe(?:\.blockmap)?))$/.exec(pathname);
+  const match = /^\/downloads\/(releases\/(?:stable\/)?(\d+\.\d+\.\d+)\/([a-f0-9]{64})\/(CYword-Setup-(\d+\.\d+\.\d+)\.exe(?:\.blockmap)?))$/.exec(pathname);
   if (!match || match[2] !== match[5]) return null;
   const filename = match[4];
   const blockmap = filename.endsWith(".blockmap");
@@ -130,9 +130,9 @@ async function serveObject(request: Request, bucket: R2Bucket, asset: DownloadAs
   if (!metadata) {
     // electron-updater substitutes the version but leaves the new installer hash in
     // the old blockmap URL. Resolve only this known shape to a unique old release.
-    const oldMap = /^releases\/(\d+\.\d+\.\d+)\/[a-f0-9]{64}\/(CYword-Setup-\1\.exe\.blockmap)$/.exec(asset.key);
+    const oldMap = /^releases\/(?:stable\/)?(\d+\.\d+\.\d+)\/[a-f0-9]{64}\/(CYword-Setup-\1\.exe\.blockmap)$/.exec(asset.key);
     if (oldMap) {
-      const prefix = `releases/${oldMap[1]}/`;
+      const prefix = `releases/${asset.key.startsWith("releases/stable/") ? "stable/" : ""}${oldMap[1]}/`;
       const listing = await bucket.list({ prefix, limit: 100 });
       const candidates = listing.objects.filter(object => new RegExp(`^[a-f0-9]{64}/${oldMap[2].replaceAll(".", "\\.")}$`).test(object.key.slice(prefix.length)));
       if (!listing.truncated && candidates.length === 1) return new Response(null, { status: 302, headers: {
@@ -206,22 +206,25 @@ const serveDownload: PagesFunction<Env> = async ({ request, env }) => {
     return errorResponse(request, 405, "Method not allowed", { Allow: "GET, HEAD" });
   }
 
-  const pathname = new URL(request.url).pathname;
+  const requestedPath = new URL(request.url).pathname;
+  const stable = requestedPath.startsWith("/downloads/stable/") || requestedPath === "/downloads/latest-stable.yml";
+  const pathname = requestedPath.replace(/^\/downloads\/stable\//, "/downloads/").replace("/downloads/latest-stable.yml", "/downloads/latest.yml");
   try {
     if (pathname === "/downloads/android/latest" || pathname === "/downloads/android/latest.json") {
-      const pointer = await readCurrentRelease(env.DOWNLOADS, true);
+      const pointer = await readCurrentRelease(env.DOWNLOADS, true, stable);
       if (!pointer) return errorResponse(request, 404, "Android release not published");
       const release = toPublicRelease(pointer);
       return pathname.endsWith(".json") ? jsonResponse(request, release) : redirectToLatest(request, release);
     }
     if (pathname === "/downloads/latest" || pathname === "/downloads/latest.json") {
-      const pointer = await readCurrentRelease(env.DOWNLOADS);
+      const pointer = await readCurrentRelease(env.DOWNLOADS, false, stable);
+      if (stable && !pointer) return errorResponse(request, 404, "Stable release not published");
       const release = pointer ? toPublicRelease(pointer) : fallbackRelease;
       return pathname.endsWith(".json") ? jsonResponse(request, release) : redirectToLatest(request, release);
     }
 
     if (pathname === "/downloads/latest.yml") {
-      const pointer = await readCurrentRelease(env.DOWNLOADS);
+      const pointer = await readCurrentRelease(env.DOWNLOADS, false, stable);
       if (!pointer?.updaterMetadataPath) return errorResponse(request, 404, "Update metadata not published");
       return await serveObject(request, env.DOWNLOADS, {
         key: pointer.updaterMetadataPath,
@@ -248,10 +251,11 @@ const serveDownload: PagesFunction<Env> = async ({ request, env }) => {
 export const onRequest: PagesFunction<Env> = async (context) => {
   const response = await serveDownload(context);
   const pathname = new URL(context.request.url).pathname;
-  if (pathname === "/downloads/latest.json" || pathname === "/downloads/android/latest.json") {
+  if (/^\/downloads\/(?:stable\/)?(?:android\/)?latest\.json$/.test(pathname)) {
     // Capability is independent of whether a current release has been published.
     response.headers.set("X-CYword-Release-Schemas", "1,2");
-    if (pathname === "/downloads/android/latest.json") response.headers.set("X-CYword-Android-Differential", "zip-sha256-1m");
+    response.headers.set("X-CYword-Release-Channels", "stable,beta");
+    if (pathname.endsWith("/android/latest.json")) response.headers.set("X-CYword-Android-Differential", "zip-sha256-1m");
   }
   return response;
 };

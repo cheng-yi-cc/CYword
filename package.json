@@ -1,6 +1,6 @@
 {
-  "name": "cyword",
-  "version": "0.4.13",
+  "name": "cyword-stable",
+  "version": "0.1.0",
   "private": true,
   "license": "Apache-2.0",
   "type": "module",
@@ -39,8 +39,8 @@
   },
   "build": {
     "afterPack": "./scripts/verify-packaged-app.cjs",
-    "appId": "com.cyword.desktop",
-    "productName": "CYword",
+    "appId": "com.cyword.desktop.stable",
+    "productName": "CYword Stable",
     "asar": true,
     "asarUnpack": [
       "dist/book/**/*"
@@ -76,7 +76,7 @@
       {
         "provider": "generic",
         "url": "https://cyword.chengyi.me/downloads/",
-        "channel": "latest",
+        "channel": "latest-stable",
         "useMultipleRangeRequest": false
       }
     ]

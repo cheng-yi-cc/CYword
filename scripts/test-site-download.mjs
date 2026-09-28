@@ -15,7 +15,7 @@ import { HttpExecutor, CancellationToken } from "builder-util-runtime";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const work = path.join(root, ".work", "download-tests");
-const state = path.join(work, "state");
+const state = path.join(work, `state-${process.pid}-${Date.now()}`);
 const cli = path.join(root, "node_modules", "wrangler", "bin", "wrangler.js");
 const config = JSON.parse(await readFile(path.join(root, "website", "wrangler.jsonc"), "utf8"));
 const bucket = config.r2_buckets.find(({ binding }) => binding === "DOWNLOADS").bucket_name;
@@ -307,6 +307,48 @@ try {
     const response = await request({}, "GET", `${origin}/`);
     assert.equal(response.status, 200);
     assert.match(await response.text(), /CYword/);
+  });
+  await check("stable channel never falls back to Beta and has isolated assets", async () => {
+    const stableUrl = origin + "/downloads/stable/latest.json";
+    const missing = await request({}, "GET", stableUrl);
+    assert.equal(missing.status, 404);
+    assert.equal(missing.headers.get("X-CYword-Release-Channels"), "stable,beta");
+    const base = "releases/stable/0.0.0/" + fixtureDigest;
+    const stableAsset = base + "/" + fixtureName;
+    const metadata = updaterMetadata.replaceAll(assetKey, stableAsset);
+    const metadataFile = path.join(work, "stable-latest.yml");
+    await writeFile(metadataFile, metadata);
+    const stable = { schemaVersion: 2, channel: "stable", version: pointer.version, publishedAt: pointer.publishedAt,
+      filename: fixtureName, sizeBytes: fixture.length, sha256: fixtureDigest, assetPath: stableAsset,
+      blockmapPath: stableAsset + ".blockmap", updaterMetadataPath: base + "/latest.yml",
+      blockmapSha256: digest(blockmap), blockmapSizeBytes: blockmap.length,
+      updaterMetadataSha256: digest(Buffer.from(metadata)), updaterMetadataSizeBytes: Buffer.byteLength(metadata), notesUrl: "/#release-notes" };
+    const file = path.join(work, "stable-current.json");
+    await writeFile(file, JSON.stringify(stable));
+    await put(stableAsset, fixturePath); await put(stable.blockmapPath, blockmapPath);
+    await put(stable.updaterMetadataPath, metadataFile); await put("releases/stable/current.json", file);
+    const result = await (await request({}, "GET", stableUrl)).json();
+    assert.equal(result.channel, "stable"); assert.equal(result.downloadPath, "/downloads/" + stableAsset);
+    const oldMap = await request({}, "GET", origin + "/downloads/releases/stable/0.0.0/" + digest(newFixture) + "/" + fixtureName + ".blockmap");
+    assert.equal(oldMap.url, origin + "/downloads/" + stable.blockmapPath);
+    assert.deepEqual(await bytes(oldMap), blockmap);
+    assert.equal(await (await request({}, "GET", origin + "/downloads/latest-stable.yml")).text(), metadata);
+    assert.deepEqual(await bytes(await request({Range:"bytes=10-19"}, "GET", origin + result.downloadPath)), fixture.subarray(10,20));
+    assert.equal((await (await request({}, "GET", origin + "/downloads/latest.json")).json()).channel, undefined);
+    // A valid legacy pointer in the stable slot must fail closed.
+    await put("releases/stable/current.json", pointerPath);
+    assert.equal((await request({}, "GET", stableUrl)).status, 503);
+    await put("releases/stable/current.json", file);
+    const androidStableKey = androidKey.replace("releases/android/", "releases/stable/android/");
+    const stableAndroid = { ...androidPointer, channel: "stable", assetPath: androidStableKey,
+      differential: { ...androidPointer.differential, path: "/downloads/" + androidStableKey + ".blocks.json" } };
+    const androidFile = path.join(work, "stable-android.json");
+    await writeFile(androidFile, JSON.stringify(stableAndroid));
+    await put(androidStableKey, fixturePath); await put(androidStableKey + ".blocks.json", blockmapPath);
+    await put("releases/stable/android/current.json", androidFile);
+    const current = await (await request({}, "GET", origin + "/downloads/stable/android/latest.json")).json();
+    assert.equal(current.channel, "stable"); assert.equal(current.downloadPath, "/downloads/" + androidStableKey);
+    assert.equal((await request({}, "HEAD", origin + current.differential.path)).status, 200);
   });
   console.log(`${passed} download integration checks passed (local R2 only).`);
 } catch (error) {

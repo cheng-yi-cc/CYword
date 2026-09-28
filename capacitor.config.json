@@ -1,7 +1,14 @@
 {
-  "appId": "me.chengyi.cyword",
-  "appName": "CYword",
+  "appId": "me.chengyi.cyword.stable",
+  "appName": "CYword Stable",
   "webDir": "dist",
-  "android": { "backgroundColor": "#f7f4ee" },
-  "plugins": { "SystemBars": { "style": "LIGHT", "insetsHandling": "css" } }
+  "android": {
+    "backgroundColor": "#f7f4ee"
+  },
+  "plugins": {
+    "SystemBars": {
+      "style": "LIGHT",
+      "insetsHandling": "css"
+    }
+  }
 }

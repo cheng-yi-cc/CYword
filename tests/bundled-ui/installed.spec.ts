@@ -6,8 +6,31 @@ const catalog = JSON.parse(fs.readFileSync("dist/book/catalog.json", "utf8"));
 const firstId = studyExposures(buildPlan(catalog)[0], catalog.groups)[0].wordId;
 const first = catalog.words[firstId];
 
+test('stable first run ignores Beta credentials and progress and never contacts auth or sync', async ({ page }) => {
+  const requests: string[] = [];
+  await page.route('**/api/**', route => { requests.push(route.request().url()); return route.abort(); });
+  await page.addInitScript(() => {
+    localStorage.setItem('cyword_session', '{"token":"beta-token","user":{"id":"beta-user"}}');
+    localStorage.setItem('cyword-progress:beta-user', 'beta-record-must-survive');
+  });
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: '继续学习' })).toBeVisible();
+  await expect(page.locator('.auth-modal, .sidebar-account, .sync-status')).toHaveCount(0);
+  expect(await page.evaluate(() => typeof window.cyword.readSession)).toBe('undefined');
+  await page.getByRole('button', { name: '继续学习' }).click();
+  const session = page.getByRole('dialog', { name: '今日单词学习' });
+  await expect(session.locator('h1')).toHaveText(first.spelling);
+  await session.getByRole('button', { name: /不清楚/ }).click();
+  await expect(session.locator('h1')).not.toHaveText(first.spelling);
+  await page.reload();
+  await page.getByRole('button', { name: '继续学习' }).click();
+  await expect(session.locator('h1')).not.toHaveText(first.spelling);
+  expect(await page.evaluate(() => localStorage.getItem('cyword-progress:beta-user'))).toBe('beta-record-must-survive');
+  expect(requests).toEqual([]);
+});
+
 async function setup(page: Page) {
-  await installSyncPreview(page);
+
   await page.addInitScript(({ catalog }) => {
     const empty = { version: 2, planDays: {}, words: {}, bookmarks: {}, reviewHistory: [] };
     const state = { local: JSON.parse(localStorage.getItem("test-installed-progress") || "null"), remote: structuredClone(empty), revision: 0, apiReads: 0, exitPrepare: null as any, exitRelease: null as any };
@@ -15,7 +38,7 @@ async function setup(page: Page) {
     // Only account transport is isolated. All book, image, audio and font bytes
     // are fetched from the actual production build, with no downloaded-book API.
     window.cyword = {
-      readSession: async () => ({ token: "isolated-ui-fixture", user: { id: "isolated-ui", email: "isolated@example.test", createdAt: 0, lastLoginAt: 0, loginCount: 1 } }),
+      readSession: async () => { throw new Error("正式版不得读取 Beta 登录"); },
       readProgress: async () => state.local,
       writeProgress: async progress => { state.local = structuredClone(progress); localStorage.setItem("test-installed-progress", JSON.stringify(progress)); return true; },
       readCatalog: async () => { state.apiReads++; throw new Error("Installed book must not use the catalog API"); },

@@ -29,7 +29,7 @@ test("installer auto-updater uses the website generic provider", () => {
   assert.deepEqual(packageJson.build.publish, [{
     provider: "generic",
     url: "https://cyword.chengyi.me/downloads/",
-    channel: "latest",
+    channel: "latest-stable",
     useMultipleRangeRequest: false,
   }]);
 });

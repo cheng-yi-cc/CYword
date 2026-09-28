@@ -12,10 +12,10 @@ android {
     namespace = "me.chengyi.cyword"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "me.chengyi.cyword"
+        applicationId "me.chengyi.cyword.stable"
         if (acceptanceOrigin) applicationIdSuffix ".acceptance"
         buildConfigField 'String', 'API_ORIGIN', '"' + apiOrigin + '"'
-        manifestPlaceholders = [cywordAppLabel: acceptanceOrigin ? 'CYword 验收' : 'CYword']
+        manifestPlaceholders = [cywordAppLabel: acceptanceOrigin ? 'CYword 验收' : 'CYword Stable']
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode androidVersion.versionCode

@@ -1,5 +1,7 @@
 # 架构
 
+> 2026-09-28 渠道拆分：当前分支为无账号、无同步的正式版 0.1.0；下文历史版本、账号与同步说明属于 Beta。当前安装身份、数据和发布入口见 [RELEASE-CHANNELS.md](RELEASE-CHANNELS.md)。
+
 仓库包含 Windows 桌面应用、Capacitor 安卓应用和独立官网。客户端将完整词书、全部发音、原配图和音标字体放入 Windows / 安卓安装包，首次联网登录后直接从包内读取；进度按账号可靠保存本机，再自动双向同步。没有一次性导入或仅本机模式开关。设计和保障边界见 [OFFLINE.md](OFFLINE.md)。
 
 Pages Functions 的认证、同步、只读词书和下载路由，以及 D1、R2、Secrets 均保留；官网仅展示独立示例，不读取用户进度。当前默认双向同步与前台轮询，登录失效保留本机学习并由账号入口重新验证。真实验收范围见 [FIRST-RELEASE-ACCEPTANCE.md](FIRST-RELEASE-ACCEPTANCE.md)。

@@ -31,7 +31,7 @@ public class AppUpdatesPlugin extends Plugin {
     private long lastProgress;
 
     private static boolean validUrl(String url) {
-        return url.matches(java.util.regex.Pattern.quote(ORIGIN) + "/downloads/releases/android/(\\d+\\.\\d+\\.\\d+)/[a-f0-9]{64}/CYword-Android-\\1\\.apk");
+        return url.matches(java.util.regex.Pattern.quote(ORIGIN) + "/downloads/releases/stable/android/(\\d+\\.\\d+\\.\\d+)/[a-f0-9]{64}/CYword-Android-\\1\\.apk");
     }
     private void progress(String phase, long completed, long total, long downloaded) {
         long now = System.nanoTime();
