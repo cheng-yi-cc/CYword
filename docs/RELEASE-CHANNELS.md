@@ -43,4 +43,12 @@ Windows appId、NSIS 安装身份、安装目录、快捷方式和 userData 均�
 
 ## 本轮证据
 
-发布尚在进行，最终安装包摘要、部署及工作流结果将在核验后补充。
+2026-09-28 已发布。两端安装包来自提交 347374b8f4f218388207d868b030f40b77b2a474，发布后没有重建或覆盖资产。
+
+- [Windows 0.1.0](https://github.com/cheng-yi-cc/CYword/releases/tag/v0.1.0) 为 Latest；[Android 0.1.0](https://github.com/cheng-yi-cc/CYword/releases/tag/android-stable-v0.1.0) 为独立正式 Release。既有 Windows 0.4.13 / Android 0.1.11 均已改为 Pre-release，保留原件。
+- [Windows 发布工作流](https://github.com/cheng-yi-cc/CYword/actions/runs/36379609765)和 [Android 发布工作流](https://github.com/cheng-yi-cc/CYword/actions/runs/36380176120)成功；完整 GitHub 与 R2 对象摘要通过，公网验证指针、HEAD、首尾范围、差量清单和跳转，两份 Beta 指针前后完全一致。
+- [官网](https://cyword.chengyi.me)已部署，桌面 1280px、手机 390px 及禁用 JavaScript 的备用入口均只提供正式版。生产部署为 https://1231be40.cyword.pages.dev；认证与同步仍使用既有生产实现。
+- Windows 已在 D:/CYword Stable 安装，并与 D:/CYword 的 Beta 0.4.13 同时启动验证：用户目录独立，初始进度为空，桥接 API 不提供登录或同步。安卓包名、版本码、签名及 11,356 个 APK 文件通过校验；未连接安卓设备，未做真机安装验收。
+- 自动化检查通过：162 项单元/服务测试、16 项学习界面、9 项完整资源界面、2 项官网界面、25 项本地 R2 下载测试。词书校验 5166 词，原文及媒体保留。
+
+产物字节数、SHA-256、签名、公网地址及页面结果见[机器可读证据](verification/2026-09-28-stable-release.json)。

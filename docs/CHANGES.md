@@ -1,11 +1,11 @@
 # 变更记录
 
-## 正式版 0.1.0（发布准备，2026-09-28）
+## 正式版 0.1.0（已发布，2026-09-28）
 
 - Windows / Android 首个正式版统一为 0.1.0，移除登录与同步，首次启动即可离线学习。
 - 正式版与 Beta 独立安装、存储及更新，从空白本机进度开始；Windows 外部安装名为 CYword Stable，安卓包名新增 .stable。
 - GitHub 保留 Windows 0.4.13 / Android 0.1.11 原件并标记 Pre-release；官网只展示正式版。历史版本记录不追溯改写。
-- 发布与实测证据将在完成后补入 [RELEASE-CHANNELS.md](RELEASE-CHANNELS.md)。
+- 发布与实测证据见 [RELEASE-CHANNELS.md](RELEASE-CHANNELS.md) 与[校验记录](verification/2026-09-28-stable-release.json)。
 
 ## Windows 0.4.13 / Android 0.1.11 · 2026-09-27 正式发布
 

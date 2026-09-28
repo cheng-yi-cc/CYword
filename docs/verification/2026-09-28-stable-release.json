@@ -1,0 +1,171 @@
+{
+  "date": "2026-09-28",
+  "source": "347374b8f4f218388207d868b030f40b77b2a474",
+  "channels": {
+    "stable": {
+      "windows": "0.1.0",
+      "android": "0.1.0"
+    },
+    "beta": {
+      "windows": "0.4.13",
+      "android": "0.1.11"
+    }
+  },
+  "windows": {
+    "version": "0.1.0",
+    "filename": "CYword-Setup-0.1.0.exe",
+    "sha256": "b5907d1167003c2f2cfb0800dde9a614396f55ef29b00f0590171fcca7fd7325",
+    "sizeBytes": 1210479286,
+    "name": "CYword Stable",
+    "userData": "%APPDATA%/CYword Stable",
+    "installedPath": "D:/CYword Stable",
+    "installedSideBySideWith": "D:/CYword/CYword.exe (0.4.13)",
+    "installerExitCode": 0
+  },
+  "android": {
+    "filename": "CYword-Android-0.1.0.apk",
+    "sizeBytes": 1136245903,
+    "sha256": "548c9bb2bbe7ac8f30ade29419d81e274680fbdf381d7d6630f7ea3c6534dec2",
+    "package": "me.chengyi.cyword.stable",
+    "versionCode": 513,
+    "certificateSha256": "389ff03f29e59fcf25ad2c2969b132bff20e2635a0960f24afe176b1b9a578fa",
+    "file": "release/CYword-Android-0.1.0.apk",
+    "checkedFiles": 11356,
+    "allMatchDist": true,
+    "deviceInstallVerified": false
+  },
+  "checks": {
+    "unit": 162,
+    "learningUI": 16,
+    "bundledUI": 9,
+    "siteUI": 2,
+    "downloadIntegration": 25,
+    "bookWords": 5166,
+    "audioReferences": 5166,
+    "imageReferences": 1196,
+    "verifiedAssetFiles": 6179,
+    "noAuthOrSyncInFrontendBundle": true,
+    "betaCredentialsAndProgressIgnored": true,
+    "localFailureRetryAndRestart": true
+  },
+  "compatibilityDeployment": "https://75427ce8.cyword.pages.dev",
+  "publication": "complete",
+  "publicDownloads": {
+    "windows": {
+      "platform": "windows",
+      "verifiedAt": "2026-09-28T04:59:59.454Z",
+      "publicRelease": {
+        "channel": "stable",
+        "version": "0.1.0",
+        "publishedAt": "2026-09-28T04:41:17.512Z",
+        "filename": "CYword-Setup-0.1.0.exe",
+        "sizeBytes": 1210479286,
+        "sha256": "b5907d1167003c2f2cfb0800dde9a614396f55ef29b00f0590171fcca7fd7325",
+        "downloadPath": "/downloads/releases/stable/0.1.0/b5907d1167003c2f2cfb0800dde9a614396f55ef29b00f0590171fcca7fd7325/CYword-Setup-0.1.0.exe",
+        "notesUrl": "/#release-notes"
+      },
+      "head": true,
+      "firstAndLast64KiB": true,
+      "redirect": true,
+      "blockmapSha256": "610c15dafa53914663ea37f107c8adf4a15a8f61b27c232d144f120892fc39ec",
+      "betaPointersUnchanged": true,
+      "fullObjectHashValidation": "GitHub Release digest and successful R2 publishing workflow"
+    },
+    "android": {
+      "platform": "android",
+      "verifiedAt": "2026-09-28T05:04:54.889Z",
+      "publicRelease": {
+        "channel": "stable",
+        "version": "0.1.0",
+        "publishedAt": "2026-09-28T05:03:00.003Z",
+        "filename": "CYword-Android-0.1.0.apk",
+        "sizeBytes": 1136245903,
+        "sha256": "548c9bb2bbe7ac8f30ade29419d81e274680fbdf381d7d6630f7ea3c6534dec2",
+        "downloadPath": "/downloads/releases/stable/android/0.1.0/548c9bb2bbe7ac8f30ade29419d81e274680fbdf381d7d6630f7ea3c6534dec2/CYword-Android-0.1.0.apk",
+        "notesUrl": "/#release-notes",
+        "differential": {
+          "path": "/downloads/releases/stable/android/0.1.0/548c9bb2bbe7ac8f30ade29419d81e274680fbdf381d7d6630f7ea3c6534dec2/CYword-Android-0.1.0.apk.blocks.json",
+          "sha256": "b1363c22df378b2910fac6187765f5150c9417a63e8068d86d00624beb9405c5",
+          "sizeBytes": 4098982
+        }
+      },
+      "head": true,
+      "firstAndLast64KiB": true,
+      "redirect": true,
+      "blockmapSha256": "b1363c22df378b2910fac6187765f5150c9417a63e8068d86d00624beb9405c5",
+      "betaPointersUnchanged": true,
+      "fullObjectHashValidation": "GitHub Release digest and successful R2 publishing workflow"
+    }
+  },
+  "website": {
+    "verifiedAt": "2026-09-28T05:09:21.515Z",
+    "url": "https://cyword.chengyi.me",
+    "results": [
+      {
+        "width": 1280,
+        "versions": [
+          "v0.1.0",
+          "v0.1.0"
+        ],
+        "links": [
+          "https://cyword.chengyi.me/downloads/releases/stable/android/0.1.0/548c9bb2bbe7ac8f30ade29419d81e274680fbdf381d7d6630f7ea3c6534dec2/CYword-Android-0.1.0.apk",
+          "https://cyword.chengyi.me/downloads/releases/stable/0.1.0/b5907d1167003c2f2cfb0800dde9a614396f55ef29b00f0590171fcca7fd7325/CYword-Setup-0.1.0.exe"
+        ],
+        "releaseNotes": "版本记录\n\n这里记录已发布的客户端改动，安装包版本以下载区为准。\n\n2026.09.28\nWindows 0.1.0 / Android 0.1.0\n\n首个正式版，无需登录，安装后即可离线学习。完整六级词书、发音和配图随包提供，学习进度只保存在本机。可与 Beta 同时安装，数据与更新独立，首次从空白进度开始。",
+        "horizontalOverflow": false
+      },
+      {
+        "width": 390,
+        "versions": [
+          "v0.1.0",
+          "v0.1.0"
+        ],
+        "links": [
+          "https://cyword.chengyi.me/downloads/releases/stable/android/0.1.0/548c9bb2bbe7ac8f30ade29419d81e274680fbdf381d7d6630f7ea3c6534dec2/CYword-Android-0.1.0.apk",
+          "https://cyword.chengyi.me/downloads/releases/stable/0.1.0/b5907d1167003c2f2cfb0800dde9a614396f55ef29b00f0590171fcca7fd7325/CYword-Setup-0.1.0.exe"
+        ],
+        "releaseNotes": "版本记录\n\n这里记录已发布的客户端改动，安装包版本以下载区为准。\n\n2026.09.28\nWindows 0.1.0 / Android 0.1.0\n\n首个正式版，无需登录，安装后即可离线学习。完整六级词书、发音和配图随包提供，学习进度只保存在本机。可与 Beta 同时安装，数据与更新独立，首次从空白进度开始。",
+        "horizontalOverflow": false
+      }
+    ],
+    "fallbackLinks": [
+      "https://cyword.chengyi.me/downloads/stable/latest",
+      "https://cyword.chengyi.me/downloads/stable/android/latest"
+    ]
+  },
+  "productionDeployment": "https://1231be40.cyword.pages.dev",
+  "workflows": [
+    {
+      "platform": "windows",
+      "conclusion": "success",
+      "url": "https://github.com/cheng-yi-cc/CYword/actions/runs/36379609765"
+    },
+    {
+      "platform": "android",
+      "conclusion": "success",
+      "url": "https://github.com/cheng-yi-cc/CYword/actions/runs/36380176120"
+    }
+  ],
+  "github": [
+    {
+      "tag": "v0.1.0",
+      "prerelease": false,
+      "latest": true
+    },
+    {
+      "tag": "android-stable-v0.1.0",
+      "prerelease": false,
+      "latest": false
+    },
+    {
+      "tag": "v0.4.13",
+      "prerelease": true,
+      "latest": false
+    },
+    {
+      "tag": "android-v0.1.11",
+      "prerelease": true,
+      "latest": false
+    }
+  ]
+}

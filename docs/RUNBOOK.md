@@ -2,6 +2,10 @@
 
 > 2026-09-28 渠道拆分：当前分支为无账号、无同步的正式版 0.1.0；下文历史版本、账号与同步说明属于 Beta。当前安装身份、数据和发布入口见 [RELEASE-CHANNELS.md](RELEASE-CHANNELS.md)。
 
+## Windows / Android 正式版 0.1.0（2026-09-28）
+
+GitHub、R2 和官网已发布，Windows 安装共存验证通过；安卓未做真机安装验收。渠道、源码、工作流与摘要见 [RELEASE-CHANNELS.md](RELEASE-CHANNELS.md) 和[发布证据](verification/2026-09-28-stable-release.json)。
+
 ## Windows 0.4.13 / Android 0.1.11 正式发布（2026-09-27）
 
 源码标签 `v0.4.13`、`android-v0.1.11` 均指向 `eb0ae5d`。正式身份、官网后端和安卓原签名重新构建，应用代码与已通过隔离实机验收的版本一致，另加入正式版本说明；后续两次提交仅修正测试时序与版本断言。两个 GitHub Release 均先上传并核对原件摘要，再发布及切换官网指针，未重建或覆盖已发布资产。
