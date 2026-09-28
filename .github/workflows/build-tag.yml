@@ -1,4 +1,4 @@
-name: Build or publish Windows installer
+name: Build or publish Windows Beta installer
 
 on:
   push:
@@ -56,7 +56,7 @@ jobs:
             "exists=false" >> $env:GITHUB_OUTPUT
           } elseif ($response.StatusCode -eq 200) {
             $published = $response.Content | ConvertFrom-Json
-            if ($published.tag_name -cne $env:RELEASE_TAG -or $published.draft) {
+            if ($published.tag_name -cne $env:RELEASE_TAG -or $published.draft -or -not $published.prerelease) {
               throw "The existing release must be published and match the requested tag."
             }
             $version = node -p "require('./package.json').version"
@@ -122,8 +122,8 @@ jobs:
           gh release create $env:RELEASE_TAG $releaseAssets `
             --repo $env:GITHUB_REPOSITORY `
             --verify-tag `
-            --title "CYword $env:RELEASE_TAG" `
-            --generate-notes
+            --title "CYword Beta $env:RELEASE_TAG" `
+            --generate-notes --prerelease --latest=false
 
           if ($LASTEXITCODE -ne 0) {
             throw "GitHub Release publishing failed."

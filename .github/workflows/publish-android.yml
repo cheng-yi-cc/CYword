@@ -1,4 +1,4 @@
-name: Publish signed Android release to website
+name: Publish signed Android Beta update
 
 on:
   release:
@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   publish:
-    if: startsWith(github.event.release.tag_name || inputs.tag, 'android-v')
+    if: startsWith(github.event.release.tag_name || inputs.tag, 'android-v') && (github.event_name == 'workflow_dispatch' || github.event.release.prerelease)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -36,6 +36,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
         run: |
+          test "$(gh release view "$RELEASE_TAG" --json isPrerelease --jq .isPrerelease)" = "true"
           VERSION=$(node -p "require('./android/version.json').versionName")
           test "$RELEASE_TAG" = "android-v$VERSION"
           gh release download "$RELEASE_TAG" --pattern "CYword-Android-$VERSION.apk" --dir release
